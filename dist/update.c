@@ -20,23 +20,24 @@
 
 #define SERVER_PORT 443
 #define BUFFER_SIZE 4096
-#define IMAGE_PATH "/tmp/update.bin"
+#define DEFAULT_IMAGE_PATH "/tmp/update.bin"
 
 typedef struct Up {
     SSL_CTX *ctx;
     SSL *ssl;
     int sockfd;
+    char *url;
+    char *checksum;
 } Up;
-
 
 /********************************** Forwards **********************************/
 
 static int applyUpdate(cchar *path, cchar *script);
-static int download(Up *up, cchar *path, char *checksum);
+static int download(Up *up, cchar *path);
 static int getImageChecksum(cchar *path, char sum[EVP_MAX_MD_SIZE]);
 static int initUp(Up *up);
 static char *json(cchar *json, cchar *key);
-static int readResponse(Up *up, char **url, char **checksum);
+static int readResponse(Up *up);
 static int sendRequest(Up *up, char *method, char *url, char *headers, char *body);
 static void termUp(Up *up);
 
@@ -56,61 +57,60 @@ int update(cchar *host, cchar *product, cchar *token, cchar *device, cchar *vers
 {
     Up up;
     char body[BUFFER_SIZE], request[BUFFER_SIZE], endpoint[256], headers[256];
-    char *checksum, *url;
 
+    if (!host || !product || !token || !device || !version || !path) {
+        fprintf(stderr, "Bad usage");
+        return -1;
+    }
     if (!path) {
-        path = IMAGE_PATH;
+        path = DEFAULT_IMAGE_PATH;
+    }
+    if (initUp(&up) < 0) {
+        return -1;
     }
 
     /*
-        Issue update request to determine if there is an update
+        Issue update request to determine if there is an update.
+        Format the POST request body, URL endpoint and HTTP request headers.
     */
     snprintf(body, sizeof(body),
         "{\"id\":\"%s\",\"product\":\"%s\",\"version\":\"%s\",%s}", device, product, version, properties);
-
     snprintf(endpoint, sizeof(endpoint), "%s/tok/provision/update", host);
     snprintf(headers, sizeof(headers), "Content-Type: application/json\r\nAuthorization: %s\r\n", token);
-    if (sendRequest(&up, "POST", endpoint, headers, body) < 0) {
+    if (sendRequest(&up, "POST", endpoint, headers, body) < 0 || readResponse(&up) < 0) {
         termUp(&up);
         return -1;
     }
-    if (readResponse(&up, &url, &checksum) < 0) {
-        termUp(&up);
-        return -1;
-    }
-    termUp(&up);
 
-    if (url) {
+    /*
+        The download URL will be defined if there is an update to apply
+     */
+    if (up.url) {
         snprintf(headers, sizeof(headers), "Accept: */*\r\n");
-        if (sendRequest(&up, "GET", url, headers, NULL) < 0) {
+        if (sendRequest(&up, "GET", up.url, headers, NULL) < 0 || download(&up, path) < 0) {
             termUp(&up);
             return -1;
         }
-        if (download(&up, path, checksum) < 0) {
-            termUp(&up);
-            return -1;
-        }
-        free(checksum);
-        free(url);
-        termUp(&up);
-
         if (script && applyUpdate(path, script) < 0) {
+            termUp(&up);
             return -1;
         }
     } else {
         printf("No update required\n");
     }
+    termUp(&up);
     return 0;
 }
 
+/*
+    Send a small HTTP request.
+ */
 static int sendRequest(Up *up, char *method, char *url, char *headers, char *body) 
 {
     struct sockaddr_in server_addr;
     struct hostent *server;
     char request[BUFFER_SIZE], uri[BUFFER_SIZE];
     char *host, *path;
-
-    initUp(up);
 
     strncpy(uri, url, sizeof(uri));
     if ((host = strstr(uri, "https://")) != NULL) {
@@ -168,7 +168,7 @@ static int sendRequest(Up *up, char *method, char *url, char *headers, char *bod
     return 0;
 }
 
-static int readResponse(Up *up, char **url, char **checksum) 
+static int readResponse(Up *up)
 {
     char *body, response[BUFFER_SIZE];
 
@@ -185,16 +185,15 @@ static int readResponse(Up *up, char **url, char **checksum)
     /*
         Response is a JSON buffer with properties: {checksum, version, url}
      */
-    *url = json(body, "url");
-    *checksum = json(body, "checksum");
-    if (url && !checksum) {
-        fprintf(stderr, "Bad update response: %s", response);
-        return -1;
-    }
+    up->url = json(body, "url");
+    up->checksum = json(body, "checksum");
     return 0;
 }
 
-static int download(Up *up, cchar *path, char *checksum) 
+/*
+    Download the update and verify the checksum
+*/
+static int download(Up *up, cchar *path) 
 {
     char buf[BUFFER_SIZE], sum[EVP_MAX_MD_SIZE * 2 + 1], *body;
     int bytes, fd, seenHeaders;
@@ -226,8 +225,9 @@ static int download(Up *up, cchar *path, char *checksum)
     }
     close(fd);
     getImageChecksum(path, sum);
-    if (strcmp(sum, checksum) != 0) {
-        fprintf(stderr, "Checksum does not match\n%s vs\n%s\n", sum, checksum);
+    if (strcmp(sum, up->checksum) != 0) {
+        fprintf(stderr, "Checksum does not match\n%s vs\n%s\n", sum, up->checksum);
+        unlink(path);
         return -1;
     }
     return 0;
@@ -239,16 +239,18 @@ static int download(Up *up, cchar *path, char *checksum)
  */
 static int applyUpdate(cchar *path, cchar *script)
 {
+    FILE *fp;
     char  command[BUFFER_SIZE];
     int   status;
 
     snprintf(command, sizeof(command), "%s \"%s\"", script, path);
-    status = system(command);
-    if (status != 0) {
-        fprintf(stderr, "Update command failed: %d", status);
-    } else {
-        printf("Update successfully applied\n");
+    if ((fp = popen(command, "r")) == NULL) {
+        fprintf(stderr, "Cannot run apply update command");
+        return -1;
     }
+    if ((status = pclose(fp)) != 0) {
+        fprintf(stderr, "Command failed %s", status);
+    };
     return status;
 }
 
@@ -256,10 +258,10 @@ static int initUp(Up *up)
 {
     const SSL_METHOD *method;
 
+    memset(up, 0, sizeof(Up));
 #if INIT_OPENSSL
     init_openssl();
 #endif
-    memset(up, 0, sizeof(Up));
     method = TLS_client_method();
     up->ctx = SSL_CTX_new(method);
     if (!up->ctx) {
@@ -273,14 +275,27 @@ static int initUp(Up *up)
 
 static void termUp(Up *up) 
 {
+    if (up->url) {
+        free(up->url);
+    }
+    if (up->checksum) {
+        free(up->checksum);
+    }
     SSL_free(up->ssl);
     SSL_CTX_free(up->ctx);
 #if INIT_OPENSSL
     cleanup_openssl();
 #endif
-    close(up->sockfd);
+    if (up->sockfd) {
+        close(up->sockfd);
+    }
+    memset(up, 0, sizeof(Up));
 }
 
+/*
+    Lookup a key value in a json formatted string.
+    Caller must free result.
+ */
 static char *json(cchar *json, cchar *key) 
 {
     char *end, *keyPos, *start;
@@ -306,7 +321,7 @@ static char *json(cchar *json, cchar *key)
     return NULL;
 }
 
-static int getImageChecksum(cchar *path, char *sum) 
+static int getImageChecksum(cchar *path, char sum[EVP_MAX_MD_SIZE])
 {
     FILE *file;
     EVP_MD_CTX *mdctx;

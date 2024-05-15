@@ -3,7 +3,7 @@
  */
 
 #ifndef HAS_CCHAR
-    typedef const char cchar;
+typedef const char cchar;
 #endif
 
 /**

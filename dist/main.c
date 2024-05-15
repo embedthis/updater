@@ -16,12 +16,12 @@
 
 /********************************** Locals ************************************/
 
-#define IMAGE_PATH "/tmp/update.bin"
+#define IMAGE_PATH  "/tmp/update.bin"
 #define SERVER_PORT 443
 #define BUFFER_SIZE 4096
 
 static cchar *cmd, *device, *file, *host, *product, *token, *version;
-static char *properties;
+static char  *properties;
 
 /********************************** Forwards **********************************/
 
@@ -32,18 +32,18 @@ static int parseArgs(int argc, char **argv);
 static int usage(void)
 {
     fprintf(stderr, "usage: update [options] [key=value,...]\n"
-        "--cmd script        # Script to invoke to apply the update\n"
-        "--device ID         # Unique device ID\n"
-        "--file image/path   # Path to save the downloaded update\n"
-        "--host host.domain  # Device cloud endpoint from the Builder cloud edit panel\n"
-        "--product ProductID # ProductID from the Buidler token list\n"
-        "--token TokenID     # CloudAPI access token from the Builder token list\n"
-        "--version SemVer    # Current device firmware version\n"
-        "key:value,...       # Device-specific properties for the distribution policy\n");
+            "--cmd script        # Script to invoke to apply the update\n"
+            "--device ID         # Unique device ID\n"
+            "--file image/path   # Path to save the downloaded update\n"
+            "--host host.domain  # Device cloud endpoint from the Builder cloud edit panel\n"
+            "--product ProductID # ProductID from the Buidler token list\n"
+            "--token TokenID     # CloudAPI access token from the Builder token list\n"
+            "--version SemVer    # Current device firmware version\n"
+            "key:value,...       # Device-specific properties for the distribution policy\n");
     exit(2);
 }
 
-int main(int argc, char **argv) 
+int main(int argc, char **argv)
 {
     if (parseArgs(argc, argv) < 0) {
         return -1;
@@ -59,8 +59,8 @@ int main(int argc, char **argv)
 
 static int parseArgs(int argc, char **argv)
 {
-    char    *argp, *key, *value, pbuf[BUFFER_SIZE];
-    int     count, mark, nextArg;
+    char *argp, *key, *value, pbuf[BUFFER_SIZE];
+    int  count, mark, nextArg;
 
     file = IMAGE_PATH;
     for (nextArg = 1; nextArg < argc; nextArg++) {
