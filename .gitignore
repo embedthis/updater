@@ -1,6 +1,6 @@
 .local.mk
 *.o
-update
-update.sh
-update.bin
-update.dSYM/
+updater
+updater.sh
+updater.bin
+updater.dSYM/

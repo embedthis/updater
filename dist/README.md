@@ -8,7 +8,13 @@ This source builds a stand-alone **updater** program that can be used to downloa
 
 Devices can use the **updater** command or library to enhance their devices with Over-The-Air software update capabilities. The EmbedThis Builder provides hosting and global distribution for updates. It also offers policy based update distribution, and gradual rollout of updates. Graphical metrics and reporting are available from the [Builder](https://admin.embedthis.com/).
 
-## Updater Commandline
+## Device Agents
+
+The [Ioto](https://www.embedthis.com/ioto/) device agent includes the updater functionality internally. The [Appweb](https://www.embedthis.com/appweb/) and [GoAhead](https://www.embedthis.com/goahead/) web servers include this repositiory under their **src/updater** directories.
+
+All devices using other embedded web servers and device agents can include this Updater to include OTA software update functionality.
+
+## Updater Command
 
     updater [options] key=value,...
 
