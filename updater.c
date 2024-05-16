@@ -135,7 +135,7 @@ int update(cchar *host, cchar *product, cchar *token, cchar *device, cchar *vers
     } else {
         free(response);
         if (verbose) {
-            printf("No update required\n");
+            printf("No update available\n");
         }
     }
     return 0;
