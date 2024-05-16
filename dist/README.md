@@ -1,12 +1,20 @@
 # EmbedThis Updater
 
-The EmbedThis Updater is a command line utility and library to download and apply device software updates published on the [EmbedThis Builder](https://admin.embedthis.com).
+The EmbedThis Updater is a command-line utility and library for downloading and applying device software updates published on the [EmbedThis Builder](https://admin.embedthis.com).
 
 ## Description
 
-This source builds a stand-alone **updater** program that can be used to download software updates published by you on the [Builder site](https://admin.embedthis.com).
+Devices can use the **updater** command or library to enable Over-The-Air software update capabilities. The EmbedThis Builder offers hosting and global distribution for updates, policy-based update distribution, and gradual rollout and control of updates. Additionally, graphical metrics and reporting are available.
 
-Devices can use the **updater** command or library to enhance their devices with Over-The-Air software update capabilities. The EmbedThis Builder provides hosting and global distribution for updates. It also offers policy based update distribution, and gradual rollout of updates. Graphical metrics and reporting are available from the [Builder](https://admin.embedthis.com/).
+## Variants
+
+This repository provides different versions of a standalone **updater** program.
+
+* A C code command line utility
+* A NodeJS command line utility
+* A C updater library for integration in your programs
+
+A shell script sample **updater.sh** is also provided. This must be customized with necessary arguments.
 
 ## Device Agents
 
@@ -62,3 +70,5 @@ apply.sh | Script to apply the update to the device. Customize as you need.
 main.c | Main program for the updater.
 updater.c | Update library source.
 updater.h | Update library header.
+updater.sh | Sample shell script to customize.
+updater.js | NodeJS command line updater utility.

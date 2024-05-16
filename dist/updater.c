@@ -135,7 +135,7 @@ int update(cchar *host, cchar *product, cchar *token, cchar *device, cchar *vers
     } else {
         free(response);
         if (verbose) {
-            printf("No update required\n");
+            printf("No update available\n");
         }
     }
     return 0;
@@ -159,13 +159,13 @@ static int applyUpdate(cchar *path, cchar *script)
 /*
     Post update status back to the builder for metrics and version tracking
  */
-static int postReport(int success, cchar *host, cchar *device, cchar *update, cchar *token)
+static int postReport(int status, cchar *host, cchar *device, cchar *update, cchar *token)
 {
     Fetch *fp;
     char  body[UBSIZE], url[256], headers[256];
 
     snprintf(body, sizeof(body), "{\"success\":%s,\"id\":\"%s\",\"update\":\"%s\"}",
-             success == 0 ? "true" : "false", device, update);
+             status == 0 ? "true" : "false", device, update);
     snprintf(url, sizeof(url), "%s/tok/provision/updateReport", host);
     snprintf(headers, sizeof(headers), "Content-Type: application/json\r\nAuthorization: %s\r\n", token);
 
@@ -175,7 +175,7 @@ static int postReport(int success, cchar *host, cchar *device, cchar *update, cc
     }
     fetchFree(fp);
     if (verbose) {
-        printf("%s update status reported\n", success ? "Successful" : "Failed");
+        printf("%s update status reported\n", status == 0 ? "Successful" : "Failed");
     }
     return 0;
 }
