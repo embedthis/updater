@@ -8,6 +8,15 @@ This source builds a stand-alone **updater** program that can be used to downloa
 
 Devices can use the **updater** command or library to enhance their devices with Over-The-Air software update capabilities. The EmbedThis Builder provides hosting and global distribution for updates. It also offers policy based update distribution, and gradual rollout of updates. Graphical metrics and reporting are available from the [Builder](https://admin.embedthis.com/).
 
+## Variants
+
+Two variants of the updater are provided:
+
+* A C code updater command line utility
+* A NodeJS updater command line utility
+
+A shell script sample **updater.sh** is also provided. This must be customized with necessary arguments.
+
 ## Device Agents
 
 The [Ioto](https://www.embedthis.com/ioto/) device agent includes the updater functionality internally. The [Appweb](https://www.embedthis.com/appweb/) and [GoAhead](https://www.embedthis.com/goahead/) web servers include this repositiory under their **src/updater** directories.
@@ -62,3 +71,5 @@ apply.sh | Script to apply the update to the device. Customize as you need.
 main.c | Main program for the updater.
 updater.c | Update library source.
 updater.h | Update library header.
+updater.sh | Sample shell script to customize.
+updater.js | NodeJS command line updater utility.

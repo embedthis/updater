@@ -1,5 +1,6 @@
 {
     "name": "updater",
     "version": "1.0.0",
-    "owner": "embedthis"
+    "owner": "embedthis",
+    "type": "module"
 }
