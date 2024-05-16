@@ -2,3 +2,5 @@
 *.o
 update
 update.sh
+update.bin
+update.dSYM/

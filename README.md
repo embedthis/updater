@@ -1,15 +1,16 @@
-# EmbedThis Software Update
+# EmbedThis Updater
 
-Utility program and library to check for published device software updates and download and apply
+The EmbedThis Updater is a command line utility and library to download and apply device software updates published on the [EmbedThis Builder](https://admin.embedthis.com).
 
 ## Description
 
-This source builds a stand-alone **update** program that can be used to download software updates published by you
-on the [Builder site](https://admin.embedthis.com).
+This source builds a stand-alone **updater** program that can be used to download software updates published by you on the [Builder site](https://admin.embedthis.com).
 
-## Usage
+Devices can use the **updater** command or library to enhance their devices with Over-The-Air software update capabilities. The EmbedThis Builder provides hosting and global distribution for updates. It also offers policy based update distribution, and gradual rollout of updates. Graphical metrics and reporting are available from the [Builder](https://admin.embedthis.com/).
 
-    update [options] key=value,...
+## Updater Commandline
+
+    updater [options] key=value,...
 
 Where options are:
 
@@ -28,24 +29,30 @@ update policy to determine which devices receive the update.
 
 ### Example:
 
-    update -v --device "A123456789" \
+    updater -v --device "A123456789" \
         --host "https://ygp2t8ckqj.execute-api.ap-southeast-1.amazonaws.com" \
         --product "XABCDACC2T1234567890123455" \
         --token "TT488ETG5H1234567890123456" \
         --version "2.1.2" \
         --cmd ./apply.sh \
         pro=true
+    
+Replace the host, product and token with values from your Builder account.
 
 ## Library
 
-You can use the update.c source file and invoke the update() API from your programs.
+You can use the updater.c source file and invoke the update() API from your programs.
+
+## Building
+
+You can use the supplied Makefile to build the updater program and library.
 
 ## Files
 
 File | Description
 -|-
-Makefile | Local Makefile to build update program
-apply.sh | Script to customize to apply the update to the device
-main.c | Main program for the updater
-update.c | Update library source
-update.h | Update library header
+Makefile | Local Makefile to build update program.
+apply.sh | Script to apply the update to the device. Customize as you need.
+main.c | Main program for the updater.
+updater.c | Update library source.
+updater.h | Update library header.

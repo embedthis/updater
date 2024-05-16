@@ -4,6 +4,5 @@
 #
 
 IMAGE=$1
-echo apply.sh ${IMAGE}
-/bin/ls -l ${IMAGE}
+echo Running apply.sh ${IMAGE}
 exit 0

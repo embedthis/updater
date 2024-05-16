@@ -10,19 +10,19 @@ endif
 
 all: compile
 
-compile build: update
+compile build: updater
 
-update.o: update.c
-	clang $(IFLAGS) -c update.c
+updater.o: updater.c
+	clang -g $(IFLAGS) -c updater.c
 
-update: update.o 
-	clang $(IFLAGS) $(LFLAGS) -o update main.c update.o -lssl -lcrypto
+updater: updater.o 
+	clang $(IFLAGS) $(LFLAGS) -o updater main.c updater.o -lssl -lcrypto
 
 clean:
-	rm -f update.o main.o update
+	rm -f updater.o main.o updater updater.bin
 
 cache: clean
-	cp README* apply.sh main.c update.h update.c Makefile dist
+	cp README* apply.sh main.c updater.h updater.c Makefile dist
 	cache
 
 LOCAL_MAKEFILE := $(strip $(wildcard ./.local.mk))

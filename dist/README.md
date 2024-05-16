@@ -1,10 +1,10 @@
-# EmbedThis Software Update
+# EmbedThis Updater
 
-Utility program and library to check for published device software updates and download and apply
+The EmbedThis Updater is a command line utility and library to download and apply device software updates published on the [EmbedThis Builder](https://admin.embedthis.com).
 
 ## Description
 
-This source builds a stand-alone **update** program that can be used to download software updates published by you
+This source builds a stand-alone **updater** program that can be used to download software updates published by you
 on the [Builder site](https://admin.embedthis.com).
 
 ## Usage

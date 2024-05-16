@@ -1,5 +1,5 @@
 /*
-    update.h - Check for software upgrades
+    updater.h - Check for software upgrades
  */
 
 #ifndef HAS_CCHAR

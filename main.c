@@ -12,7 +12,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#include "update.h"
+#include "updater.h"
 
 /********************************** Locals ************************************/
 
@@ -22,6 +22,7 @@
 
 static cchar *cmd, *device, *file, *host, *product, *token, *version;
 static char  *properties;
+static int   verbose = 0;
 
 /********************************** Forwards **********************************/
 
@@ -39,6 +40,7 @@ static int usage(void)
             "--product ProductID # ProductID from the Buidler token list\n"
             "--token TokenID     # CloudAPI access token from the Builder token list\n"
             "--version SemVer    # Current device firmware version\n"
+            "--verbose           # Trace execution\n"
             "key:value,...       # Device-specific properties for the distribution policy\n");
     exit(2);
 }
@@ -51,7 +53,7 @@ int main(int argc, char **argv)
     if (!host || !product || !token || !device || !version) {
         usage();
     }
-    if (update(host, product, token, device, version, properties, file, cmd) < 0) {
+    if (update(host, product, token, device, version, properties, file, cmd, verbose) < 0) {
         return -1;
     }
     return 0;
@@ -109,6 +111,10 @@ static int parseArgs(int argc, char **argv)
                 usage();
             }
             version = argv[++nextArg];
+
+        } else if (strcmp(argp, "--verbose") == 0 || strcmp(argp, "-v") == 0) {
+            verbose = 1;
+
         } else {
             usage();
         }

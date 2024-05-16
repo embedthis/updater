@@ -1,5 +1,5 @@
 /*
-    update.c - Check for software updates
+    updater.c - Download and apply software updates published via EmbedThis Builder
 
     This uses a minimal fetch() client suitable for the needs of the update REST API only.
  */
@@ -17,7 +17,7 @@
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 
-#include "update.h"
+#include "updater.h"
 
 /********************************** Locals ************************************/
 
@@ -82,7 +82,7 @@ int update(cchar *host, cchar *product, cchar *token, cchar *device, cchar *vers
 
     /*
         Issue update request to determine if there is an update.
-        Format the POST request body, URL endpoint and HTTP request headers.
+        Authentication is using the CloudAPI builder token.
      */
     snprintf(url, sizeof(url), "%s/tok/provision/update", host);
     snprintf(body, sizeof(body), "{\"id\":\"%s\",\"product\":\"%s\",\"version\":\"%s\",%s}",
@@ -98,6 +98,10 @@ int update(cchar *host, cchar *product, cchar *token, cchar *device, cchar *vers
     }
     fetchFree(fp);
 
+    /*
+        If an update is available, the "url" will be defined to point to the update image
+        The "update" field contains the selected update ID and is use when posting update status.
+     */
     if ((downloadUrl = json(response, "url")) != NULL) {
         checksum = json(response, "checksum");
         update = json(response, "update");
@@ -107,12 +111,16 @@ int update(cchar *host, cchar *product, cchar *token, cchar *device, cchar *vers
         if ((fp = fetch("GET", downloadUrl, headers, NULL)) == NULL) {
             return -1;
         }
+        //  Fetch the update and save to the given path
         if (fetchFile(fp, path) < 0) {
             fetchFree(fp);
             return -1;
         }
         fetchFree(fp);
 
+        /*
+            Validate the SHA-256 checksum
+         */
         getFileSum(path, fileSum);
         if (strcmp(fileSum, checksum) != 0) {
             fprintf(stderr, "Checksum does not match\n%s vs\n%s\n", fileSum, checksum);
@@ -148,6 +156,9 @@ static int applyUpdate(cchar *path, cchar *script)
     return system(command);
 }
 
+/*
+    Post update status back to the builder for metrics and version tracking
+ */
 static int postReport(int success, cchar *host, cchar *device, cchar *update, cchar *token)
 {
     Fetch *fp;
@@ -170,7 +181,7 @@ static int postReport(int success, cchar *host, cchar *device, cchar *update, cc
 }
 
 /*
-    Start a HTTP action
+    Mini-fetch API. Start an HTTP action. This is NOT a generic fetch API implementation.
  */
 static Fetch *fetch(char *method, char *url, char *headers, char *body)
 {
@@ -280,6 +291,9 @@ static Fetch *fetch(char *method, char *url, char *headers, char *body)
     return fp;
 }
 
+/*
+    Return a small response body as a string. Caller must free.
+ */
 static char *fetchString(Fetch *fp)
 {
     char   *bp, *body;
@@ -310,7 +324,7 @@ static char *fetchString(Fetch *fp)
 }
 
 /*
-    Download the update and verify the checksum
+    Return a response body to a file.
  */
 static int fetchFile(Fetch *fp, cchar *path)
 {
@@ -344,6 +358,9 @@ static int fetchFile(Fetch *fp, cchar *path)
     return 0;
 }
 
+/*
+    Return a response HTTP header. Caller must free.
+ */
 static char *fetchHeader(Fetch *fp, char *key)
 {
     char   *end, *start, kbuf[80], *value;
@@ -364,6 +381,9 @@ static char *fetchHeader(Fetch *fp, char *key)
     return value;
 }
 
+/*
+    Read response data
+ */
 static size_t fetchRead(Fetch *fp, char *buf, size_t buflen)
 {
     size_t bytes;
@@ -375,6 +395,9 @@ static size_t fetchRead(Fetch *fp, char *buf, size_t buflen)
     return bytes;
 }
 
+/*
+    Write request data
+ */
 static size_t fetchWrite(Fetch *fp, char *buf, size_t buflen)
 {
     size_t bytes;
@@ -386,6 +409,9 @@ static size_t fetchWrite(Fetch *fp, char *buf, size_t buflen)
     return bytes;
 }
 
+/*
+    Allocate a Fetch control structure. This primarily sets up an OpenSSL context.
+ */
 static Fetch *fetchAlloc(int fd)
 {
     Fetch            *fp;
@@ -412,7 +438,7 @@ static Fetch *fetchAlloc(int fd)
 }
 
 /*
-    Disconnect a HTTP connection
+    Deallocate a Fetch control structure.
  */
 static void fetchFree(Fetch *fp)
 {
@@ -444,6 +470,7 @@ static void fetchFree(Fetch *fp)
 
 /*
     Trivial routine to lookup a key value in a json formatted string.
+    This is NOT a generic JSON parser and does NOT handle use other than required by the Updater API.
     Caller must free result.
  */
 static char *json(cchar *json, cchar *key)
@@ -472,6 +499,9 @@ static char *json(cchar *json, cchar *key)
     return NULL;
 }
 
+/*
+    Calculate a SHA-256 checksum for a file
+ */
 static int getFileSum(cchar *path, char sum[EVP_MAX_MD_SIZE])
 {
     FILE          *file;

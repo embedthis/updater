@@ -1,5 +1,5 @@
 /*
-    update.h - Check for software upgrades
+    updater.h - Check for software upgrades
  */
 
 #ifndef HAS_CCHAR
@@ -17,5 +17,7 @@ typedef const char cchar;
     @param properties String of additional device properties of the form: "key:value, ..."
     @param path File name to save the downloaded update. The script should remove after applying
     @param script Optional script to invoke to apply the update. The path to the update is supplied as the only argument.
+    @param verbose Set to true to trace execution
  */
-int update(cchar *host, cchar *product, cchar *token, cchar *device, cchar *version, cchar *properties, cchar *path, cchar *script);
+int update(cchar *host, cchar *product, cchar *token, cchar *device, cchar *version, cchar *properties,
+           cchar *path, cchar *script, int verbose);
