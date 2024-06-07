@@ -71,7 +71,7 @@ int update(cchar *host, cchar *product, cchar *token, cchar *device, cchar *vers
 {
     Fetch *fp;
     char  body[UBSIZE], request[UBSIZE], url[UBSIZE], headers[256], fileSum[EVP_MAX_MD_SIZE];
-    char  *checksum, *downloadUrl, *response, *update;
+    char  *checksum, *downloadUrl, *response, *update, *updateVersion;
     int   status;
 
     if (!host || !product || !token || !device || !version || !path) {
@@ -89,6 +89,7 @@ int update(cchar *host, cchar *product, cchar *token, cchar *device, cchar *vers
              device, product, version, properties);
     snprintf(headers, sizeof(headers), "Content-Type: application/json\r\nAuthorization: %s\r\n", token);
 
+    printf("\nCheck for update at: %s\n", url);
     if ((fp = fetch("POST", url, headers, body)) == NULL) {
         return -1;
     }
@@ -105,9 +106,11 @@ int update(cchar *host, cchar *product, cchar *token, cchar *device, cchar *vers
     if ((downloadUrl = json(response, "url")) != NULL) {
         checksum = json(response, "checksum");
         update = json(response, "update");
+        updateVersion = json(response, "version");
         snprintf(headers, sizeof(headers), "Accept: */*\r\n");
         free(response);
 
+        printf("Update %s available\n", updateVersion);
         if ((fp = fetch("GET", downloadUrl, headers, NULL)) == NULL) {
             return -1;
         }
@@ -121,6 +124,7 @@ int update(cchar *host, cchar *product, cchar *token, cchar *device, cchar *vers
         /*
             Validate the SHA-256 checksum
          */
+        printf("Verify update checksum in %s\n", path);
         getFileSum(path, fileSum);
         if (strcmp(fileSum, checksum) != 0) {
             fprintf(stderr, "Checksum does not match\n%s vs\n%s\n", fileSum, checksum);
@@ -134,9 +138,7 @@ int update(cchar *host, cchar *product, cchar *token, cchar *device, cchar *vers
         }
     } else {
         free(response);
-        if (verbose) {
-            printf("No update available\n");
-        }
+        printf("No update available\n");
     }
     return 0;
 }
@@ -148,12 +150,13 @@ int update(cchar *host, cchar *product, cchar *token, cchar *device, cchar *vers
 static int applyUpdate(cchar *path, cchar *script)
 {
     char command[UBSIZE];
+    int  status;
 
     snprintf(command, sizeof(command), "%s \"%s\"", script, path);
-    if (verbose) {
-        printf("Running command to apply update\n%s\n", command);
-    }
-    return system(command);
+    printf("Applying update: %s\n", command);
+    status = system(command);
+    printf("Update %s\n\n", status == 0 ? "Successful" : "Failed");
+    return status;
 }
 
 /*
@@ -174,9 +177,6 @@ static int postReport(int status, cchar *host, cchar *device, cchar *update, cch
         return -1;
     }
     fetchFree(fp);
-    if (verbose) {
-        printf("%s update status reported\n", status == 0 ? "Successful" : "Failed");
-    }
     return 0;
 }
 
@@ -242,6 +242,7 @@ static Fetch *fetch(char *method, char *url, char *headers, char *body)
     if (verbose) {
         printf("\nFetch Request:\n%s\n\n", request);
     }
+
     /*
         Write the request and wait for a response
      */
@@ -332,9 +333,7 @@ static int fetchFile(Fetch *fp, cchar *path)
     int    bytes, fd, seenHeaders;
     size_t len;
 
-    if (verbose) {
-        printf("Downloading update image to %s\n", path);
-    }
+    printf("Downloading update to %s\n", path);
     if ((fd = open(path, O_WRONLY | O_CREAT | O_TRUNC, 0600)) < 0) {
         fprintf(stderr, "Cannot open image temp file");
         return -1;
