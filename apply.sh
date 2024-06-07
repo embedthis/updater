@@ -4,5 +4,8 @@
 #
 
 IMAGE=$1
-echo Running apply.sh ${IMAGE}
-exit 0
+: ${STATUS:=0}
+
+# Apply update ${IAMGE} here and set STATUS
+
+exit $STATUS

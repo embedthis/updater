@@ -1,5 +1,5 @@
 #
-#	Update Makefile
+#	Updater Makefile
 #
 OS := $(shell uname | sed 's/CYGWIN.*/windows/;s/Darwin/macosx/' | tr '[A-Z]' '[a-z]')
 

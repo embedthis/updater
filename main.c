@@ -1,5 +1,5 @@
 /*
-    update -- Fetch software updates
+    updater -- Main program
 
     update --host Domain --token Token --product ProductID --device DeviceID --version 1.2.3 \
         key=value key=value ...

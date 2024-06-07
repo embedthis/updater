@@ -4,3 +4,5 @@ updater
 updater.bin
 updater.dSYM/
 local.sh
+demo.sh
+.vscode
