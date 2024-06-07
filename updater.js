@@ -51,43 +51,47 @@ async function main() {
     if (!response.ok) {
         throw new Error('Cannot fetch update')
     }
-    let data = await response.json()
+    let data = await response.text()
     if (verbose) {
         console.log('Update response\n', data, '\n')
     }
+    if (!data) {
+        console.log('No update required')
+    } else {
+        data = JSON.parse(data)
+        /*
+            Update available if "url" defined
+        */
+        if (data.url) {
+            //  Download update image to "path"
+            await download(data.url, file)
 
-    /*
-        Update available if "url" defined
-     */
-    if (data.url) {
-        //  Download update image to "path"
-        await download(data.url, file)
-
-        //  Verify checksum
-        let sum = await getChecksum(file)
-        if (sum != data.checksum) {
-            throw new Error('Update checksum does not match')
-        }
-        if (cmd) {
-            let success = await applyUpdate(cmd, file)
-
-            //  Post update report
-            let body = {
-                success,
-                id: device,
-                update: data.update,
+            //  Verify checksum
+            let sum = await getChecksum(file)
+            if (sum != data.checksum) {
+                throw new Error('Update checksum does not match')
             }
-            if (verbose) {
-                console.log(`Post update results ${success ? 'success' : 'failed'}`)
+            if (cmd) {
+                let success = await applyUpdate(cmd, file)
+
+                //  Post update report
+                let body = {
+                    success,
+                    id: device,
+                    update: data.update,
+                }
+                if (verbose) {
+                    console.log(`Post update results ${success ? 'success' : 'failed'}`)
+                }
+                await fetch(`${host}/tok/provision/updateReport`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': token,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(body), 
+                })
             }
-            await fetch(`${host}/tok/provision/updateReport`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': token,
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(body), 
-            })
         }
     }
 }
