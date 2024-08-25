@@ -6,3 +6,5 @@ updater.dSYM/
 local.sh
 demo.sh
 .vscode
+src
+.cdrc
