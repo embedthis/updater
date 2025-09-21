@@ -22,7 +22,7 @@ function usage() {
     process.exit(2)
 }
 
-let file = '/tmp/update.bin'
+let file = 'update.bin'
 let properties = {}
 let cmd, device, host, product, token, version, verbose
 
@@ -104,7 +104,7 @@ async function applyUpdate(cmd, path) {
         console.log(`Apply update ${path} using ${cmd}`)
     }
     let status = await new Promise((resolve, reject) => {
-        exec(`bash ${cmd}`, (error) => {
+        exec(cmd, [path], (error) => {
             if (error) {
                 resolve(false)
             } else {

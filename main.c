@@ -16,7 +16,7 @@
 
 /********************************** Locals ************************************/
 
-#define IMAGE_PATH  "/tmp/update.bin"
+#define IMAGE_PATH  "update.bin"
 #define SERVER_PORT 443
 #define BUFFER_SIZE 4096
 
@@ -47,16 +47,16 @@ static int usage(void)
 
 int main(int argc, char **argv)
 {
+    int rc;
     if (parseArgs(argc, argv) < 0) {
         return -1;
     }
     if (!host || !product || !token || !device || !version) {
         usage();
     }
-    if (update(host, product, token, device, version, properties, file, cmd, verbose) < 0) {
-        return -1;
-    }
-    return 0;
+    rc = update(host, product, token, device, version, properties, file, cmd, verbose);
+    free(properties);
+    return rc;
 }
 
 static int parseArgs(int argc, char **argv)

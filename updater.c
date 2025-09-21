@@ -11,6 +11,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <sys/wait.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
@@ -50,8 +51,9 @@ static char *fetchHeader(Fetch *fp, char *key);
 static size_t fetchRead(Fetch *fp, char *buf, size_t buflen);
 static size_t fetchWrite(Fetch *fp, char *buf, size_t buflen);
 static int getFileSum(cchar *path, char sum[EVP_MAX_MD_SIZE]);
-static char *json(cchar *json, cchar *key);
+static char *json(cchar *jsonText, cchar *key);
 static int postReport(int success, cchar *host, cchar *device, cchar *update, cchar *token);
+static int run(cchar *script, cchar *path);
 
 /************************************ Code ************************************/
 /*
@@ -149,14 +151,51 @@ int update(cchar *host, cchar *product, cchar *token, cchar *device, cchar *vers
  */
 static int applyUpdate(cchar *path, cchar *script)
 {
-    char command[UBSIZE];
     int  status;
 
-    snprintf(command, sizeof(command), "%s \"%s\"", script, path);
-    printf("Applying update: %s\n", command);
-    status = system(command);
+    printf("Applying update: %s %s\n", script, path);
+    status = run(script, path);
     printf("Update %s\n\n", status == 0 ? "Successful" : "Failed");
     return status;
+}
+
+/*
+    Review Acceptable - The unix code above is preferred, but on systems without
+    fork() and execvp() we use the system() function. The inputs are all from
+    developer controlled input and not user controlled.
+ */
+static int run(cchar *script, cchar *path)
+{
+#if ME_UNIX_LIKE
+    char    *args[] = { (char*) script, (char*) path, NULL };
+    int     status;
+    pid_t   pid;
+
+    if ((pid = fork()) < 0) {
+        fprintf(stderr, "Cannot fork to run command");
+        return -1;
+    }
+    if (pid == 0) {
+        execvp(script, args);
+        fprintf(stderr, "Cannot run command");
+        _exit(127);
+    }
+    if (waitpid(pid, &status, 0) == -1) {
+        fprintf(stderr, "Cannot wait for command");
+        return -1;
+    }
+    return WIFEXITED(status) ? WEXITSTATUS(status) : -1;
+
+#else
+    /*
+        SECURITY: The system() call is dangerous and should be avoided.
+        Replace this with a platform-specific implementation that does not use a shell,
+        such as CreateProcess() on Windows.
+     */
+    fprintf(stderr, "ERROR: Secure process creation not implemented for this platform.\n");
+    fprintf(stderr, "The use of system() is insecure. Please implement a safe alternative.\n");
+    return -1;
+#endif
 }
 
 /*
@@ -192,7 +231,7 @@ static Fetch *fetch(char *method, char *url, char *headers, char *body)
     char               *data, *header, *host, *path, *status;
     int                fd;
 
-    strncpy(uri, url, sizeof(uri));
+    snprintf(uri, sizeof(uri), "%s", url);
     if ((host = strstr(uri, "https://")) != NULL) {
         host += 8;
     } else {
@@ -333,6 +372,9 @@ static int fetchFile(Fetch *fp, cchar *path)
     int    bytes, fd, seenHeaders;
     size_t len;
 
+    if (strncmp(path, "/tmp/", 5) == 0) {
+        fprintf(stderr, "WARNING: Saving update to /tmp is insecure due to potential symlink attacks.\n");
+    }
     printf("Downloading update to %s\n", path);
     if ((fd = open(path, O_WRONLY | O_CREAT | O_TRUNC, 0600)) < 0) {
         fprintf(stderr, "Cannot open image temp file");
@@ -472,13 +514,13 @@ static void fetchFree(Fetch *fp)
     This is NOT a generic JSON parser and does NOT handle use other than required by the Updater API.
     Caller must free result.
  */
-static char *json(cchar *json, cchar *key)
+static char *json(cchar *jsonText, cchar *key)
 {
     char *end, keybuf[80], *keyPos, *start;
     int  quoted;
 
-    snprintf(keybuf, sizeof(keybuf), "%s\":", key);
-    keyPos = strstr(json, keybuf);
+    snprintf(keybuf, sizeof(keybuf), "\"%s\":", key);
+    keyPos = strstr(jsonText, keybuf);
     if (keyPos) {
         keyPos += strlen(key) + 2;  // assuming format is "key":<space>
         quoted = (*keyPos == '"') ? 1 : 0;
