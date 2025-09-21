@@ -8,6 +8,9 @@ output_tab_size		= 4		# new tab size
 indent_columns		= output_tab_size
 indent_label		= 1		# pos: absolute col, neg: relative column
 
+code_width          = 120
+cmt_width           = 120
+
 
 #
 #   inter-symbol newlines
