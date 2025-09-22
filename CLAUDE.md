@@ -13,6 +13,16 @@ The EmbedThis Updater is a standalone Over-The-Air (OTA) software update utility
 
 The updater communicates with the EmbedThis Builder cloud service to check for, download, and apply device firmware updates.
 
+## Embedthis Builder
+
+The Embedthis Builder is a cloud service that provides a platform for managing and distributing software updates to IoT devices. It allows you to create and manage updates, and distribute them to your devices over-the-air. [Embedthis Builder](https://admin.embedthis.com)
+
+## Embedthis Builder API
+
+The Embedthis Builder API is a RESTful API that provides a platform for managing and distributing software updates to IoT devices. It allows you to create and manage updates, and distribute them to your devices over-the-air. [Embedthis Builder API](https://api.embedthis.com)
+
+See the [Embedthis Builder API](https://www.embedthis.com/doc) documentation for more information.
+
 ## Build Commands
 
 ### Primary Build
@@ -29,6 +39,8 @@ make format            # Format code using uncrustify
 ```
 
 ### Testing Commands
+
+Test commands are provided in the `test/` directory.
 
 ```bash
 make test              # Test C updater with configured parameters
@@ -93,11 +105,6 @@ All implementations require these parameters:
 - **`src/`** - Contains package files and alternative implementations
 - **`dist/`** - Distribution files and copies
 
-### Testing Strategy
-- Uses live Builder service endpoints for testing
-- Separate QA and production environments configured in `.local.mk`
-- Test scripts validate full update workflow including download and checksum verification
-
 ### Integration Notes
 - Library can be embedded in other C/C++ programs via `updater.h`
 - Single `update()` function provides complete OTA functionality
@@ -107,4 +114,4 @@ All implementations require these parameters:
 ## Important Notes
 - It is assumed that the program is run in a secure environment with a secure file system.
 - The user is a developer with control of the system. 
-
+- Code comments prefixed with "Review Acceptable" indicate intentional security tradeoffs

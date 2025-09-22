@@ -74,3 +74,7 @@ updater.c | Update library source.
 updater.h | Update library header.
 updater.sh | Sample shell script to customize.
 updater.js | NodeJS command line updater utility.
+
+## Repository
+
+You can find the source for the updater at [https://github.com/embedthis/updater](https://github.com/embedthis/updater).

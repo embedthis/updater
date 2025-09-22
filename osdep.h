@@ -19,7 +19,7 @@
  */
 
 #ifndef OSDEP_USE_ME
-#define OSDEP_USE_ME 1
+#define OSDEP_USE_ME 0
 #endif
 
 #if OSDEP_USE_ME

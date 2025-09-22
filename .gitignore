@@ -11,7 +11,6 @@ demo.sh
 local.sh
 src
 test/.creds.sh
-test/*
 updater
 updater.bin
 updater.dSYM/
