@@ -2,7 +2,19 @@
     updater.h - Check for software upgrades
  */
 
+#ifndef _h_UPDATER
+#define _h_UPDATER 1
+
 #include "osdep.h"
+
+#include <openssl/ssl.h>
+#include <openssl/x509v3.h>
+#include <openssl/err.h>
+
+/********************************** Defines ***********************************/
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
     Issue an update request to the Builder to determine if there is a software update
@@ -20,3 +32,9 @@
  */
 int update(cchar *host, cchar *product, cchar *token, cchar *device, cchar *version, cchar *properties,
            cchar *path, cchar *script, int verbose);
+
+
+#ifdef __cplusplus
+}
+#endif
+#endif /* _h_UPDATER */

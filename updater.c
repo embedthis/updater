@@ -5,19 +5,6 @@
  */
 
 /********************************** Includes **********************************/
-#include <ctype.h>
-#include <fcntl.h>
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <sys/wait.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#include <openssl/ssl.h>
-#include <openssl/x509v3.h>
-#include <openssl/err.h>
 
 #include "updater.h"
 
@@ -699,7 +686,7 @@ static int getFileSum(cchar *path, char sum[EVP_MAX_MD_SIZE * 2 + 1])
     fclose(file);
 
     for (int i = 0; i < len; i++) {
-        sprintf(&sum[i * 2], "%02x", hash[i]);
+        snprintf(&sum[i * 2], 3, "%02x", hash[i]);
     }
     sum[len * 2] = '\0';
     return 0;
