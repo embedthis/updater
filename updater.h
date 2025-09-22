@@ -2,9 +2,7 @@
     updater.h - Check for software upgrades
  */
 
-#ifndef HAS_CCHAR
-typedef const char cchar;
-#endif
+#include "osdep.h"
 
 /**
     Issue an update request to the Builder to determine if there is a software update

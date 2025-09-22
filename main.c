@@ -48,6 +48,7 @@ static int usage(void)
 int main(int argc, char **argv)
 {
     int rc;
+
     if (parseArgs(argc, argv) < 0) {
         return -1;
     }

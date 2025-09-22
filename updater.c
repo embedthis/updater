@@ -16,16 +16,30 @@
 #include <netinet/in.h>
 #include <netdb.h>
 #include <openssl/ssl.h>
+#include <openssl/x509v3.h>
 #include <openssl/err.h>
 
 #include "updater.h"
 
 /********************************** Locals ************************************/
 
-#define DEFAULT_IMAGE_PATH "/tmp/update.bin"
+/*
+    Adjust for path to your certificate bundle
+ */
+#ifndef UPDATER_CERTS
+    #if defined(__APPLE__)
+        #define UPDATER_CERTS "/opt/homebrew/etc/openssl@3/cert.pem"
+    #elif defined(__linux__)
+        #define UPDATER_CERTS "/etc/pki/tls/certs/ca-bundle.crt"
+    #elif defined(__MINGW32__)
+        #define UPDATER_CERTS "/etc/ssl/certs/ca-certificates.crt"
+    #else
+        #define UPDATER_CERTS "roots.crt"
+    #endif
+#endif
 
-#define SERVER_PORT        443
-#define UBSIZE             4096
+#define SERVER_PORT           443
+#define UBSIZE                4096
 
 typedef struct Fetch {
     SSL_CTX *ctx;          //  TLS context
@@ -43,7 +57,7 @@ static int verbose;        //  Trace execution
 
 static int applyUpdate(cchar *path, cchar *script);
 static Fetch *fetch(char *method, char *url, char *headers, char *body);
-static Fetch *fetchAlloc(int fd);
+static Fetch *fetchAlloc(int fd, cchar *host);
 static void fetchFree(Fetch *fp);
 static char *fetchString(Fetch *fp);
 static int fetchFile(Fetch *fp, cchar *path);
@@ -74,7 +88,7 @@ int update(cchar *host, cchar *product, cchar *token, cchar *device, cchar *vers
     Fetch *fp;
     char  body[UBSIZE], request[UBSIZE], url[UBSIZE], headers[256], fileSum[EVP_MAX_MD_SIZE];
     char  *checksum, *downloadUrl, *response, *update, *updateVersion;
-    int   status;
+    int   count, status;
 
     if (!host || !product || !token || !device || !version || !path) {
         fprintf(stderr, "Bad update args");
@@ -86,9 +100,18 @@ int update(cchar *host, cchar *product, cchar *token, cchar *device, cchar *vers
         Issue update request to determine if there is an update.
         Authentication is using the CloudAPI builder token.
      */
-    snprintf(url, sizeof(url), "%s/tok/provision/update", host);
-    snprintf(body, sizeof(body), "{\"id\":\"%s\",\"product\":\"%s\",\"version\":\"%s\",%s}",
-             device, product, version, properties);
+    count = snprintf(url, sizeof(url), "%s/tok/provision/update", host);
+    if (count >= sizeof(url)) {
+        fprintf(stderr, "Host URL is too long\n");
+        return -1;
+    }
+    count = snprintf(body, sizeof(body),
+                     "{\"id\":\"%s\",\"product\":\"%s\",\"version\":\"%s\",%s}",
+                     device, product, version, properties ? properties : "");
+    if (count >= sizeof(body)) {
+        fprintf(stderr, "Request body is too long\n");
+        return -1;
+    }
     snprintf(headers, sizeof(headers), "Content-Type: application/json\r\nAuthorization: %s\r\n", token);
 
     printf("\nCheck for update at: %s\n", url);
@@ -151,7 +174,7 @@ int update(cchar *host, cchar *product, cchar *token, cchar *device, cchar *vers
  */
 static int applyUpdate(cchar *path, cchar *script)
 {
-    int  status;
+    int status;
 
     printf("Applying update: %s %s\n", script, path);
     status = run(script, path);
@@ -167,9 +190,9 @@ static int applyUpdate(cchar *path, cchar *script)
 static int run(cchar *script, cchar *path)
 {
 #if ME_UNIX_LIKE
-    char    *args[] = { (char*) script, (char*) path, NULL };
-    int     status;
-    pid_t   pid;
+    char  *args[] = { (char*) script, (char*) path, NULL };
+    int   status;
+    pid_t pid;
 
     if ((pid = fork()) < 0) {
         fprintf(stderr, "Cannot fork to run command");
@@ -192,8 +215,8 @@ static int run(cchar *script, cchar *path)
         Replace this with a platform-specific implementation that does not use a shell,
         such as CreateProcess() on Windows.
      */
-    fprintf(stderr, "ERROR: Secure process creation not implemented for this platform.\n");
-    fprintf(stderr, "The use of system() is insecure. Please implement a safe alternative.\n");
+    # error "ERROR: Secure process creation not implemented for this platform"
+    #error
     return -1;
 #endif
 }
@@ -204,10 +227,15 @@ static int run(cchar *script, cchar *path)
 static int postReport(int status, cchar *host, cchar *device, cchar *update, cchar *token)
 {
     Fetch *fp;
-    char  body[UBSIZE], url[256], headers[256];
+    char   body[UBSIZE], url[256], headers[256];
+    size_t count;
 
-    snprintf(body, sizeof(body), "{\"success\":%s,\"id\":\"%s\",\"update\":\"%s\"}",
-             status == 0 ? "true" : "false", device, update);
+    count = snprintf(body, sizeof(body), "{\"success\":%s,\"id\":\"%s\",\"update\":\"%s\"}",
+                     status == 0 ? "true" : "false", device, update);
+    if (count >= sizeof(body)) {
+        fprintf(stderr, "Report body is too long\n");
+        return -1;
+    }
     snprintf(url, sizeof(url), "%s/tok/provision/updateReport", host);
     snprintf(headers, sizeof(headers), "Content-Type: application/json\r\nAuthorization: %s\r\n", token);
 
@@ -226,10 +254,11 @@ static Fetch *fetch(char *method, char *url, char *headers, char *body)
 {
     struct sockaddr_in server_addr;
     struct hostent     *server;
-    Fetch              *fp;
-    char               request[UBSIZE], response[UBSIZE], uri[UBSIZE];
-    char               *data, *header, *host, *path, *status;
-    int                fd;
+
+    Fetch *fp;
+    char request[UBSIZE], response[UBSIZE], uri[UBSIZE];
+    char *data, *header, *host, *path, *status;
+    int  fd;
 
     snprintf(uri, sizeof(uri), "%s", url);
     if ((host = strstr(uri, "https://")) != NULL) {
@@ -263,7 +292,7 @@ static Fetch *fetch(char *method, char *url, char *headers, char *body)
         close(fd);
         return NULL;
     }
-    if ((fp = fetchAlloc(fd)) == NULL) {
+    if ((fp = fetchAlloc(fd, host)) == NULL) {
         close(fd);
         return NULL;
     }
@@ -376,8 +405,8 @@ static int fetchFile(Fetch *fp, cchar *path)
         fprintf(stderr, "WARNING: Saving update to /tmp is insecure due to potential symlink attacks.\n");
     }
     printf("Downloading update to %s\n", path);
-    if ((fd = open(path, O_WRONLY | O_CREAT | O_TRUNC, 0600)) < 0) {
-        fprintf(stderr, "Cannot open image temp file");
+    if ((fd = open(path, O_WRONLY | O_CREAT | O_EXCL, 0600)) < 0) {
+        fprintf(stderr, "Cannot open image temp file securely. It may already exist or path is invalid.\n");
         return -1;
     }
     if (fp->firstBody) {
@@ -453,9 +482,9 @@ static size_t fetchWrite(Fetch *fp, char *buf, size_t buflen)
 /*
     Allocate a Fetch control structure. This primarily sets up an OpenSSL context.
  */
-static Fetch *fetchAlloc(int fd)
+static Fetch *fetchAlloc(int fd, cchar *host)
 {
-    Fetch            *fp;
+    Fetch *fp;
     const SSL_METHOD *method;
 
     fp = malloc(sizeof(Fetch));
@@ -466,13 +495,47 @@ static Fetch *fetchAlloc(int fd)
     if (!fp->ctx) {
         perror("Unable to create SSL context");
         ERR_print_errors_fp(stderr);
+        free(fp);
         return NULL;
     }
+
+    /*
+        Verify server certificate
+     */
+    SSL_CTX_set_verify(fp->ctx, SSL_VERIFY_PEER, NULL);
+    if (!SSL_CTX_load_verify_locations(fp->ctx, UPDATER_CERTS, NULL)) {
+        fprintf(stderr, "Failed to load CA bundle.\n");
+        ERR_print_errors_fp(stderr);
+        SSL_CTX_free(fp->ctx);
+        free(fp);
+        return NULL;
+    }
+
     fp->ssl = SSL_new(fp->ctx);
     fp->fd = fd;
     SSL_set_fd(fp->ssl, fd);
+
+    /*
+        Verify hostname
+     */
+    X509_VERIFY_PARAM *param = SSL_get0_param(fp->ssl);
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+    X509_VERIFY_PARAM_set_hostflags(param, X509_CHECK_FLAG_NO_PARTIAL_WILDCARDS);
+#endif
+    if (!X509_VERIFY_PARAM_set1_host(param, host, 0)) {
+        fprintf(stderr, "Failed to set hostname for verification\n");
+        ERR_print_errors_fp(stderr);
+        SSL_free(fp->ssl);
+        SSL_CTX_free(fp->ctx);
+        free(fp);
+        return NULL;
+    }
+
     if (SSL_connect(fp->ssl) != 1) {
         ERR_print_errors_fp(stderr);
+        SSL_free(fp->ssl);
+        SSL_CTX_free(fp->ctx);
+        free(fp);
         return NULL;
     }
     return fp;
@@ -517,9 +580,13 @@ static void fetchFree(Fetch *fp)
 static char *json(cchar *jsonText, cchar *key)
 {
     char *end, keybuf[80], *keyPos, *start;
-    int  quoted;
+    int  quoted, count;
 
-    snprintf(keybuf, sizeof(keybuf), "\"%s\":", key);
+    count = snprintf(keybuf, sizeof(keybuf), "\"%s\":", key);
+    if (count >= sizeof(keybuf)) {
+        fprintf(stderr, "Key is too long\n");
+        return NULL;
+    }
     keyPos = strstr(jsonText, keybuf);
     if (keyPos) {
         keyPos += strlen(key) + 2;  // assuming format is "key":<space>
@@ -545,8 +612,8 @@ static char *json(cchar *jsonText, cchar *key)
  */
 static int getFileSum(cchar *path, char sum[EVP_MAX_MD_SIZE])
 {
-    FILE          *file;
-    EVP_MD_CTX    *mdctx;
+    FILE *file;
+    EVP_MD_CTX *mdctx;
     unsigned char buf[UBSIZE], hash[EVP_MAX_MD_SIZE];
     unsigned int  len;
     size_t        bytes;

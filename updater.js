@@ -2,10 +2,11 @@
 /*
    updater.js - NodeJS version of the updater
 */
-import {exec} from 'child_process'
+import {execFile} from 'child_process'
 import fs from 'fs'
 import crypto from 'crypto'
 import {Readable} from 'stream'
+import path from 'path'
 
 function usage() {
     console.log(
@@ -104,7 +105,7 @@ async function applyUpdate(cmd, path) {
         console.log(`Apply update ${path} using ${cmd}`)
     }
     let status = await new Promise((resolve, reject) => {
-        exec(cmd, [path], (error) => {
+        execFile(cmd, [path], (error) => {
             if (error) {
                 resolve(false)
             } else {
