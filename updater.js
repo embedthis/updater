@@ -130,6 +130,10 @@ function parseArgs() {
 
         } else if (arg == "--file") {
             file = args[++i]
+            if (path.isAbsolute(file) || file.includes('..')) {
+                console.error('Invalid file path. Only relative paths in current directory are allowed.')
+                usage()
+            }
 
         } else if (arg == "--host") {
             host = args[++i]
