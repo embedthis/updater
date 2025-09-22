@@ -39,7 +39,7 @@ async function main() {
         version: version,
     }, properties)
     if (verbose) {
-        console.log('Check for updates\n', body, '\n')
+        console.log('Check for updates\n', JSON.stringify(body, null, 2), '\n')
     }
     let response = await fetch(`${host}/tok/provision/update`, {
         method: 'POST',
@@ -50,6 +50,7 @@ async function main() {
         body: JSON.stringify(body), 
     })
     if (!response.ok) {
+        console.error(response)
         throw new Error('Cannot fetch update')
     }
     let data = await response.text()
@@ -59,7 +60,12 @@ async function main() {
     if (!data) {
         console.log('No update required')
     } else {
-        data = JSON.parse(data)
+        try {
+            data = JSON.parse(data)
+        } catch (error) {
+            console.error('Invalid JSON response', data)
+            throw new Error('Invalid JSON response')
+        }
         /*
             Update available if "url" defined
         */
@@ -73,8 +79,8 @@ async function main() {
                 throw new Error('Update checksum does not match')
             }
             if (cmd) {
+                console.log(`Checksum matches, apply update`)
                 let success = await applyUpdate(cmd, file)
-
                 //  Post update report
                 let body = {
                     success,
@@ -107,8 +113,10 @@ async function applyUpdate(cmd, path) {
     let status = await new Promise((resolve, reject) => {
         execFile(cmd, [path], (error) => {
             if (error) {
+                console.error(`Update failed`, error.message)
                 resolve(false)
             } else {
+                console.log(`Update applied successfully`)
                 resolve(true)
             }
         })

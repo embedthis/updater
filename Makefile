@@ -25,6 +25,14 @@ cache: clean
 	cp README* apply.sh main.c updater.h updater.c Makefile dist
 	cache
 
+format:
+	uncrustify -q -c .uncrustify --replace --no-backup  *.{c,h}
+
+package:
+	rm -f update.tgz
+	tar cvfz update.tgz src
+	cat src/package.json
+
 LOCAL_MAKEFILE := $(strip $(wildcard ./.local.mk))
 
 ifneq ($(LOCAL_MAKEFILE),)

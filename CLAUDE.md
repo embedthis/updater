@@ -105,4 +105,6 @@ All implementations require these parameters:
 - The .local.mk file is used locally and is never distributed with the source. 
 
 ## Important Notes
+- It is assumed that the program is run in a secure environment with a secure file system.
+- The user is a developer with control of the system. 
 
