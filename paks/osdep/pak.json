@@ -1,0 +1,18 @@
+{
+    "name": "osdep",
+    "description": "O/S Dependent Layer",
+    "version": "1.1.0",
+    "keywords": [
+        "osdep",
+        "me"
+    ],
+    "licenses": "Commercial",
+    "files": [
+        "dist/",
+        "doc/api/osdep.*"
+    ],
+    "devDependencies": {
+        "pak": ">=0.11.3"
+    },
+    "origin": "embedthis/osdep"
+}

@@ -9,8 +9,9 @@
 debug/*
 demo.sh
 local.sh
-src
 test/.creds.sh
 updater
 updater.bin
 updater.dSYM/
+start.me
+build/

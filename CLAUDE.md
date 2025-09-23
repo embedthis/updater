@@ -114,4 +114,4 @@ All implementations require these parameters:
 ## Important Notes
 - It is assumed that the program is run in a secure environment with a secure file system.
 - The user is a developer with control of the system. 
-- Code comments prefixed with "Review Acceptable" indicate intentional security tradeoffs
+- Code comments prefixed with "SECURITY Acceptable:" indicate intentional security tradeoffs

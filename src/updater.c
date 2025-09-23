@@ -70,7 +70,7 @@ static int run(cchar *script, cchar *path);
     script - Script path to invoke to apply the update
     verbose - Trace execution
 
-    Review Acceptable - The developer is responsible for validating the inputs to this function.
+    SECURITY Acceptable: - The developer is responsible for validating the inputs to this function.
  */
 int update(cchar *host, cchar *product, cchar *token, cchar *device, cchar *version,
            cchar *properties, cchar *path, cchar *script, int verboseArg)
@@ -98,7 +98,7 @@ int update(cchar *host, cchar *product, cchar *token, cchar *device, cchar *vers
         return -1;
     }
     /*
-        Review Acceptable - The developer is responsible for validating the inputs to this function.
+        SECURITY Acceptable: - The developer is responsible for validating the inputs to this function.
      */
     count = snprintf(body, sizeof(body),
                      "{\"id\":\"%s\",\"product\":\"%s\",\"version\":\"%s\",%s}",
@@ -188,7 +188,7 @@ static int applyUpdate(cchar *path, cchar *script)
 }
 
 /*
-    Review Acceptable - The unix code above is preferred, but on systems without
+    SECURITY Acceptable: - The unix code above is preferred, but on systems without
     fork() and execvp() we use the system() function. The inputs are all from
     developer controlled input and not user controlled.
  */

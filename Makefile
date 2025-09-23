@@ -1,40 +1,17 @@
 #
 #	Updater Makefile
 #
-OS := $(shell uname | sed 's/CYGWIN.*/windows/;s/Darwin/macosx/' | tr '[A-Z]' '[a-z]')
-
-ifeq ($(OS),macosx)
-	IFLAGS	:= -I /opt/homebrew/include
-	LFLAGS	:= -L /opt/homebrew/lib
-endif
 
 all: compile
 
-compile build: updater
-
-updater.o: updater.c
-	clang -g $(IFLAGS) -c updater.c
-
-updater: updater.o 
-	clang $(IFLAGS) $(LFLAGS) -o updater main.c updater.o -lssl -lcrypto
+compile build:
+	@make -C src
 
 clean:
-	rm -f updater.o main.o updater updater.bin
+	@make -C src clean
 
 cache: clean
-	cp README* apply.sh main.c updater.h updater.c Makefile dist
-	cache
+	@me cache
 
 format:
-	uncrustify -q -c .uncrustify --replace --no-backup  *.{c,h}
-
-package:
-	rm -f update.tgz
-	tar cvfz update.tgz src
-	cat src/package.json
-
-LOCAL_MAKEFILE := $(strip $(wildcard ./.local.mk))
-
-ifneq ($(LOCAL_MAKEFILE),)
-include $(LOCAL_MAKEFILE)
-endif
+	uncrustify -q -c .uncrustify --replace --no-backup src/*.{c,h}

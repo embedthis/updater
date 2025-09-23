@@ -1,0 +1,53 @@
+/*
+    main.me -- Main MakeMe File for the Updater
+ */
+
+Me.load({
+    plugins: [ 'installs' ],
+
+    settings: {
+        prefixes: 'install-prefixes',
+    },
+
+    targets: {
+        package: {
+            depends: ['packagePak'],
+        },
+
+        packageSource: { },
+
+        sync: {
+            action: `sh('pak -f upgrade')`,
+        },
+    },
+
+    manifest: {
+        packages: {
+            pak: {
+                inherit:    'package-manifest',
+                prefixes:   [ 'src' ],
+                formats:    [ 'tar' ],
+                sets:       [ 'pak' ],
+            },
+        },
+        sets: { 
+            pak: [
+                {   
+                    from:       [ 
+                        'src/updater.h', 
+                        'src/updater.c',  
+                        'src/updater.js',  
+                        'src/updater.sh',  
+                        'src/apply.sh',  
+                        'src/main.c',  
+                        'src/me.h',  
+                        'README.md',
+                        'src/osdep/osdep.h',
+                        'src/Makefile',
+                    ],
+                    to:  '${src}/dist/',
+                }
+            ]
+        }
+    }
+})
