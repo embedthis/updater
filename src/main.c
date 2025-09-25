@@ -126,6 +126,10 @@ static int parseArgs(int argc, char **argv)
                 usage();
             }
             count = snprintf(&pbuf[mark], sizeof(pbuf) - mark - 1, "\"%s\":\"%s\",", key, value);
+            if (count < 0 || mark + count >= BUFFER_SIZE) {
+                fprintf(stderr, "Parameter buffer overflow - arguments too long");
+                usage();
+            }
             mark += count;
             if (mark >= BUFFER_SIZE) {
                 fprintf(stderr, "Too many parameters");
