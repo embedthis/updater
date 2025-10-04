@@ -11,15 +11,19 @@
                 '-Wno-strict-prototypes',
                 '-I/usr/local/include', 
                 '-I.', 
+                '-I../src/osdep', 
+                '-I/opt/homebrew/include', 
                 '-I${../build/*/inc}', 
                 '-L${../build/*/bin}',
                 '-L/opt/homebrew/lib',
                 '-Wl,-rpath,@executable_path/../../${../build/*/bin}',
                 '-std=c99', 
                 '-O0', 
-                '-g'
+                '-g',
+                // MOB - fix once testme merged and ${} fix made
+                '${../../../src/updater.o}',
             ],
-            libraries: ['mqtt', 'crypt', 'r', 'uctx', 'ssl', 'crypto'],
+            libraries: ['ssl', 'crypto'],
         },
     },
 
