@@ -121,7 +121,7 @@ int update(cchar *host, cchar *product, cchar *token, cchar *device, cchar *vers
            cchar *properties, cchar *path, cchar *script, int verboseArg)
 {
     Fetch *fp;
-    char  body[UBSIZE], request[UBSIZE], url[UBSIZE], headers[256], fileSum[EVP_MAX_MD_SIZE * 2 + 1];
+    char  body[UBSIZE], url[UBSIZE], headers[256], fileSum[EVP_MAX_MD_SIZE * 2 + 1];
     char  *checksum, *downloadUrl, *response, *update, *updateVersion;
     int   count, rc, status;
 
@@ -813,8 +813,9 @@ static void fetchFree(Fetch *fp)
  */
 static char *json(cchar *jsonText, cchar *key)
 {
-    char *end, keybuf[80], *keyPos, *start, *value, *vbuf;
-    int  quoted, count, size;
+    char  *end, keybuf[80], *keyPos, *start, *value, *vbuf;
+    ssize size;
+    int   quoted, count;
 
     count = snprintf(keybuf, sizeof(keybuf), "\"%s\":", key);
     if (count >= sizeof(keybuf)) {
