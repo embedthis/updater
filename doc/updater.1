@@ -1,0 +1,238 @@
+.TH UPDATER 1 "2025" "EmbedThis Updater" "User Commands"
+.SH NAME
+updater \- Over-The-Air (OTA) software update utility for IoT devices
+.SH SYNOPSIS
+.B updater
+[\fB\-\-verbose\fR|\fB\-v\fR]
+\fB\-\-host\fR \fIurl\fR
+\fB\-\-product\fR \fIproductID\fR
+\fB\-\-token\fR \fItokenID\fR
+\fB\-\-device\fR \fIdeviceID\fR
+\fB\-\-version\fR \fIsemver\fR
+[\fB\-\-file\fR \fIpath\fR]
+[\fB\-\-cmd\fR \fIscript\fR]
+[\fIkey\fR=\fIvalue\fR ...]
+.SH DESCRIPTION
+.B updater
+is a secure, lightweight command-line utility for downloading and applying device software updates from the EmbedThis Builder cloud service. It provides complete Over-The-Air (OTA) update functionality with security features including HTTPS enforcement, certificate validation, and SHA-256 checksum verification.
+
+The updater performs the following workflow:
+.TP
+1.
+Queries the Builder service to check for available updates
+.TP
+2.
+Downloads the update package if one is available
+.TP
+3.
+Verifies the download using SHA-256 checksum
+.TP
+4.
+Optionally applies the update by executing a custom script
+.TP
+5.
+Reports the update status back to the Builder service
+
+All network communication uses HTTPS with certificate and hostname verification.
+.SH OPTIONS
+.SS Required Options
+.TP
+.BR \-\-host " " \fIurl\fR
+Builder cloud endpoint URL (e.g., https://api.embedthis.com). This URL is provided in the Builder cloud edit panel. The URL must use HTTPS.
+.TP
+.BR \-\-product " " \fIproductID\fR
+Product ID from the Builder token list. This identifies which product line the device belongs to.
+.TP
+.BR \-\-token " " \fItokenID\fR
+CloudAPI access token from the Builder token list. This token authenticates the device with the Builder service.
+.TP
+.BR \-\-device " " \fIdeviceID\fR
+Unique device identifier. This should be a unique ID for each device (e.g., serial number, MAC address, or UUID).
+.TP
+.BR \-\-version " " \fIsemver\fR
+Current device firmware version in semantic versioning format (e.g., "1.2.3"). The Builder service uses this to determine if updates are available.
+.SS Optional Options
+.TP
+.BR \-\-file " " \fIpath\fR
+Path where the downloaded update will be saved. The file will be created with 0600 permissions (owner read/write only). Defaults to \fBupdate.bin\fR in the current directory.
+.TP
+.BR \-\-cmd " " \fIscript\fR
+Path to executable script that applies the update. The script receives the update file path as its only argument. If not specified, the update is downloaded and verified but not applied. The script should remove the update file after successful application.
+.TP
+.BR \-\-verbose ", " \-v
+Enable verbose tracing of execution to stdout. This displays detailed information about the update process including HTTP requests, download progress, and verification steps.
+.SS Device Properties
+.P
+Additional device-specific properties can be specified as \fIkey\fR=\fIvalue\fR pairs. These properties are sent to the Builder service and can be used in distribution policy expressions to selectively target updates. For example:
+.PP
+.RS
+model=pro region=us-west env=production
+.RE
+.SH EXIT STATUS
+.TP
+.B 0
+Success. Update was checked, and if available, successfully downloaded, verified, and optionally applied.
+.TP
+.B 1
+Error. This may indicate network failure, authentication failure, checksum mismatch, script execution failure, or invalid parameters.
+.TP
+.B 2
+Usage error. Required parameters were missing or invalid options were provided.
+.SH EXAMPLES
+.SS Basic update check
+Check for updates with verbose output:
+.PP
+.RS
+.nf
+updater \-v \\
+    \-\-device "A123456789" \\
+    \-\-host "https://api.example.com" \\
+    \-\-product "XABCDACC2T1234567890123455" \\
+    \-\-token "TT488ETG5H1234567890123456" \\
+    \-\-version "2.1.2"
+.fi
+.RE
+.SS Update with custom script
+Download and apply update using a custom script:
+.PP
+.RS
+.nf
+updater \-\-device "A123456789" \\
+    \-\-host "https://api.example.com" \\
+    \-\-product "XABCDACC2T1234567890123455" \\
+    \-\-token "TT488ETG5H1234567890123456" \\
+    \-\-version "2.1.2" \\
+    \-\-cmd ./apply.sh \\
+    \-\-file /var/updates/firmware.bin
+.fi
+.RE
+.SS Update with device properties
+Check for update with device-specific properties for policy matching:
+.PP
+.RS
+.nf
+updater \-v \-\-device "A123456789" \\
+    \-\-host "https://api.example.com" \\
+    \-\-product "XABCDACC2T1234567890123455" \\
+    \-\-token "TT488ETG5H1234567890123456" \\
+    \-\-version "2.1.2" \\
+    \-\-cmd ./apply.sh \\
+    pro=true region=us-west
+.fi
+.RE
+.SH SECURITY
+The updater implements multiple security measures:
+.TP
+.B HTTPS Enforcement
+All network communication uses HTTPS. HTTP URLs are rejected. The updater will refuse to download updates from non-HTTPS URLs.
+.TP
+.B Certificate Validation
+Server certificates are validated against the system CA bundle. The updater verifies both the certificate chain and hostname using SNI and X509 verification.
+.TP
+.B SHA-256 Checksums
+All downloaded updates are verified using SHA-256 checksums provided by the Builder service. The update will be rejected if the checksum does not match.
+.TP
+.B Secure File Handling
+Downloaded files are created with restrictive 0600 permissions (owner read/write only). The updater uses O_EXCL and O_NOFOLLOW flags to prevent race conditions and symlink attacks.
+.TP
+.B Content-Length Validation
+The updater validates Content-Length headers and enforces a maximum download size of 100MB to prevent excessive memory usage.
+.TP
+.B Input Validation
+All inputs and API responses are validated. The updater checks for buffer overflows and malformed responses.
+.SH FILES
+.TP
+.B update.bin
+Default download location for update packages (can be changed with \fB\-\-file\fR).
+.TP
+.B /opt/homebrew/etc/openssl@3/cert.pem
+Default CA certificate bundle on macOS (compile-time configurable).
+.TP
+.B /etc/pki/tls/certs/ca-bundle.crt
+Default CA certificate bundle on Linux (compile-time configurable).
+.SH ENVIRONMENT
+The updater does not use environment variables. All configuration is passed via command-line options.
+.SH DIAGNOSTICS
+The updater writes error messages to stderr. With \fB\-\-verbose\fR enabled, detailed progress information is written to stdout.
+.PP
+Common error messages:
+.TP
+.B "Bad update args"
+One or more required parameters (host, product, token, device, version, or path) were NULL or invalid.
+.TP
+.B "Cannot find host"
+DNS lookup failed for the specified host.
+.TP
+.B "Bad response status NNN"
+The Builder service returned a non-200 HTTP status code.
+.TP
+.B "Checksum does not match"
+The downloaded update failed SHA-256 verification. The update was not applied.
+.TP
+.B "Insecure download URL (HTTPS required)"
+The Builder service returned a non-HTTPS download URL. The update was rejected.
+.TP
+.B "No update available"
+The Builder service reported no updates are available for this device at this time.
+.SH NOTES
+.SS Target Audience
+This utility is designed for experienced embedded developers who:
+.RS
+.IP \(bu 2
+Embed this software in device firmware or other projects
+.IP \(bu 2
+Are responsible for securing the broader system and validating all inputs
+.IP \(bu 2
+Are responsible for secure configuration of the system and software
+.RE
+.SS Periodic Execution
+The updater should typically be run periodically via cron or a similar scheduler to check for updates at regular intervals.
+.SS Update Scripts
+The update application script (specified with \fB\-\-cmd\fR) receives the update file path as its only argument. The script is responsible for:
+.RS
+.IP \(bu 2
+Installing or applying the update
+.IP \(bu 2
+Removing the update file after successful installation
+.IP \(bu 2
+Rebooting or restarting services as needed
+.IP \(bu 2
+Returning 0 on success, non-zero on failure
+.RE
+.SS TLS Requirements
+The updater enforces TLS 1.2 or higher for all connections. It will not connect to servers using older TLS versions.
+.SH LIBRARY API
+The updater functionality can be integrated into C/C++ programs as a library:
+.PP
+.RS
+.nf
+#include "updater.h"
+
+int update(cchar *host, cchar *product, cchar *token,
+           cchar *device, cchar *version, cchar *properties,
+           cchar *path, cchar *script, int verbose);
+.fi
+.RE
+.PP
+The \fBupdate()\fR function performs the complete OTA update workflow and returns 0 on success, \-1 on error. The \fIproperties\fR and \fIscript\fR parameters may be NULL. See \fBupdater.h\fR for detailed API documentation.
+.SH SEE ALSO
+.BR openssl (1),
+.BR curl (1)
+.PP
+.B Builder Documentation:
+.br
+https://www.embedthis.com/doc/builder/
+.PP
+.B Software Update Guide:
+.br
+https://www.embedthis.com/blog/builder/software-update.html
+.PP
+.B Source Repository:
+.br
+https://github.com/embedthis/updater
+.SH BUGS
+Report bugs at https://github.com/embedthis/updater/issues
+.SH AUTHORS
+Copyright (c) EmbedThis Software. All Rights Reserved.
+.SH LICENSE
+See the LICENSE.md file included with the distribution.
