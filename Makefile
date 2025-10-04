@@ -16,6 +16,8 @@ cache: clean
 format:
 	uncrustify -q -c .uncrustify --replace --no-backup src/*.{c,h}
 
+test:
+	@tm test
 
 LOCAL_MAKEFILE := $(strip $(wildcard ./.local.mk))
 

@@ -1,6 +1,28 @@
 #!/usr/env node
 /*
-   updater.js - NodeJS version of the updater
+   updater.js - Node.js Over-The-Air (OTA) software update client
+
+   This is a Node.js implementation of the EmbedThis Updater for IoT devices. It provides
+   the same functionality as the C version but using Node.js built-in modules.
+
+   Features:
+   - Secure HTTPS communication with the Builder cloud service
+   - SHA-256 checksum verification of downloaded updates
+   - Timing-safe checksum comparison to prevent timing attacks
+   - Configurable timeouts for downloads and script execution
+   - Secure file handling with exclusive creation and restricted permissions
+   - Support for custom device properties for update policy matching
+
+   Security:
+   - Uses native fetch API with HTTPS
+   - Validates Content-Length to prevent excessive downloads
+   - Creates files with 0600 permissions (owner read/write only)
+   - Uses timing-safe comparison for checksums
+   - Verifies script executability before running
+   - Implements download and script execution timeouts
+   - Restricts file paths to prevent directory traversal
+
+   Copyright (c) EmbedThis Software. All Rights Reserved.
 */
 import {execFile} from 'child_process'
 import {Readable} from 'stream'
@@ -9,12 +31,15 @@ import crypto from 'crypto'
 import {timingSafeEqual} from 'crypto'
 import path from 'path'
 
-const MAX_CONTENT_LENGTH = 100 * 1024 * 1024 // 100 MB
-const DOWNLOAD_TIMEOUT = 10 * 60 * 1000 // 10 minutes
-const SCRIPT_TIMEOUT = 5 * 60 * 1000 // 5 minutes
-const MAX_PROPERTIES = 50
-const FILE_MODE = 0o600
+const MAX_CONTENT_LENGTH = 100 * 1024 * 1024 // Maximum download size: 100 MB
+const DOWNLOAD_TIMEOUT = 10 * 60 * 1000 // Download timeout: 10 minutes
+const SCRIPT_TIMEOUT = 5 * 60 * 1000 // Script execution timeout: 5 minutes
+const MAX_PROPERTIES = 50 // Maximum number of device properties
+const FILE_MODE = 0o600 // File permissions: owner read/write only
 
+/**
+    Display usage information and exit
+ */
 function usage() {
     console.log(
         `usage: update [options] [key=value,...]
@@ -31,11 +56,21 @@ function usage() {
     process.exit(2)
 }
 
-let file = 'update.bin'
-const properties = {}
+let file = 'update.bin' // Default update file path
+const properties = {} // Device-specific properties for distribution policy
 let cmd, device, host, product, token, version
-let verbose = false
+let verbose = false // Verbose output flag
 
+/**
+    Main entry point for the updater
+
+    Performs the complete OTA update workflow:
+    1. Parses command-line arguments
+    2. Checks for available updates from the Builder service
+    3. Downloads and verifies the update if available
+    4. Applies the update using the configured script
+    5. Reports the update status back to Builder
+ */
 async function main() {
     parseArgs()
 
@@ -148,8 +183,15 @@ async function main() {
     }
 }
 
-/*
-    Apply the update by running the external "cmd" script
+/**
+    Apply the update by executing the configured script
+
+    Verifies the script is executable and runs it with the update file path as an argument.
+    The script execution is subject to a timeout to prevent hanging.
+
+    @param cmd - Path to the executable update script
+    @param path - Path to the downloaded update file
+    @return Promise resolving to true on success, false on failure
  */
 async function applyUpdate(cmd, path) {
     //  Verify script exists and is executable
@@ -177,6 +219,12 @@ async function applyUpdate(cmd, path) {
     return status
 }
 
+/**
+    Parse command-line arguments
+
+    Extracts configuration parameters and device properties from process.argv.
+    Validates required arguments and property format. Exits with usage on error.
+ */
 function parseArgs() {
     let args = process.argv.slice(2)
     let i = 0
@@ -225,8 +273,16 @@ function parseArgs() {
     }
 }
 
-/*
-    Stream download the file from the given url to the path
+/**
+    Download a file from the specified URL to a local path
+
+    Uses streaming download with timeout and size validation. Creates the file
+    with exclusive access and restricted permissions. Verifies the downloaded
+    file is a regular file (not a symlink or device).
+
+    @param url - HTTPS URL to download from
+    @param path - Local file path to save to
+    @return Promise resolving on success, rejecting on error
  */
 async function download(url, path) {
     let res = await fetch(url)
@@ -299,8 +355,13 @@ async function download(url, path) {
     })
 }
 
-/*
-    Get the checksum of the given file
+/**
+    Calculate the SHA-256 checksum of a file
+
+    Streams the file and computes its hash to avoid loading the entire file into memory.
+
+    @param path - File path to checksum
+    @return Promise resolving to the hexadecimal checksum string
  */
 async function getChecksum(path) {
     return new Promise((resolve, reject) => {

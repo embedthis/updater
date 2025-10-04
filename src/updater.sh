@@ -1,31 +1,61 @@
 #
-#   updater.sh - Sample updates using shell
+#   updater.sh - Shell-based Over-The-Air (OTA) software update client
 #
-#   This script is not for production use. It demonstrates the steps to uses to access the update service.
+#   This is a sample shell script implementation of the EmbedThis Updater demonstrating the
+#   complete OTA update workflow. It is provided as a reference implementation and starting point.
 #
-#   Get values for PRODUCT, TOKEN and ENDPOINT from your Builder Token list and 
-#   Cloud Edit panel. Set your VERSION and DEVICE here.
+#   Features:
+#   - Uses standard Unix tools (curl, jq, openssl)
+#   - Secure HTTPS communication with the Builder service
+#   - SHA-256 checksum verification
+#   - Secure temporary file handling
+#   - Comprehensive error checking
+#   - Safety limits on download size and timeout
+#
+#   Security:
+#   - Creates secure temporary directory with mktemp
+#   - Automatic cleanup on exit via trap
+#   - HTTPS-only downloads with fail-fast on errors
+#   - Validates JSON responses
+#   - Enforces maximum file size and timeout limits
+#   - Checksum verification before applying updates
+#
+#   Configuration:
+#   Set these variables with values from your Builder account:
+#   - PRODUCT: Product ID from the Builder token list
+#   - TOKEN: CloudAPI access token from the Builder token list
+#   - ENDPOINT: Cloud API endpoint URL from the Builder Cloud Edit panel
+#   - VERSION: Current device firmware version
+#   - DEVICE: Unique device identifier
+#
+#   Dependencies: curl, jq, openssl
+#
+#   Copyright (c) EmbedThis Software. All Rights Reserved.
 #
 
-: ${VERSION="1.2.3"}
-: ${DEVICE="YOUR_DEVID"}
-: ${PRODUCT="ProductID from the Builder service token list"}
-: ${TOKEN="CloudAPI from the Builder cloud token list"}
-: ${ENDPOINT="Cloud API endpoint from Builder Cloud Panel"}
+: ${VERSION="1.2.3"} # Current device firmware version
+: ${DEVICE="YOUR_DEVID"} # Unique device identifier
+: ${PRODUCT="ProductID from the Builder service token list"} # Product ID from Builder
+: ${TOKEN="CloudAPI from the Builder cloud token list"} # CloudAPI access token
+: ${ENDPOINT="Cloud API endpoint from Builder Cloud Panel"} # Builder API endpoint URL
 
 
-# Securely create a temporary directory for our files
+#
+#   Create a secure temporary directory and configure automatic cleanup
+#
 TMPDIR=$(mktemp -d)
 if [[ ! "$TMPDIR" || ! -d "$TMPDIR" ]]; then
   echo "Could not create temp dir"
   exit 1
 fi
-# Make sure it's cleaned up on exit
+
+# Ensure temporary directory is cleaned up on exit (success or failure)
 trap "rm -rf '$TMPDIR'" EXIT
 
-DATA="$TMPDIR/data.tmp"
-OUTPUT="$TMPDIR/output.tmp"
-UPDATE="$TMPDIR/update.bin"
+# Define paths for temporary files
+DATA="$TMPDIR/data.tmp" # Request/response data
+OUTPUT="$TMPDIR/output.tmp" # API responses
+UPDATE="$TMPDIR/update.bin" # Downloaded update image
 
 #
 #   Update request. Can add custom device properties to use in the distribution policy

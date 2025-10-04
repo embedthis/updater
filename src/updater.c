@@ -1,7 +1,32 @@
 /*
-    updater.c - Download and apply software updates published via EmbedThis Builder
+    updater.c - Over-The-Air (OTA) software update library implementation
 
-    This uses a minimal fetch() client suitable for the needs of the update REST API only.
+    This module provides a complete OTA update client for IoT devices. It communicates with the
+    EmbedThis Builder cloud service to check for, download, verify, and apply firmware updates.
+
+    Key Features:
+    - Secure HTTPS communication with certificate and hostname verification
+    - SHA-256 checksum verification of downloaded updates
+    - Minimal dependencies - uses a custom minimal HTTP client for Builder API needs only
+    - Supports custom device properties for update policy matching
+    - Automatic update status reporting back to Builder service
+    - Secure file handling with symlink attack prevention
+
+    Architecture:
+    - The update() function is the main public API entry point
+    - Internal fetch*() functions provide a minimal HTTPS client (not a general-purpose HTTP library)
+    - Uses OpenSSL for TLS 1.2+ and cryptographic operations
+    - Designed for embedded systems with constrained resources
+
+    Security Considerations:
+    - All network communication uses HTTPS with certificate verification
+    - Hostname verification via SNI and X509 verification
+    - Downloaded files created with restrictive 0600 permissions
+    - O_EXCL and O_NOFOLLOW flags prevent race conditions and symlink attacks
+    - SHA-256 checksum verification before applying updates
+    - Content-Length validation to prevent excessive memory usage
+
+    Copyright (c) EmbedThis Software. All Rights Reserved.
  */
 
 /********************************** Includes **********************************/
@@ -28,17 +53,26 @@
 #define SERVER_PORT 443
 #define UBSIZE      4096
 
+/**
+    Fetch - Internal HTTP/HTTPS client state
+
+    This structure maintains the state for a single HTTP request/response cycle.
+    It is used exclusively by the internal fetch*() functions and is not part of the public API.
+
+    @stability Internal
+    @see fetch, fetchAlloc, fetchFree
+ */
 typedef struct Fetch {
-    SSL_CTX *ctx;          //  TLS context
-    SSL *ssl;              //  TLS config
-    int fd;                //  Connection socket fd
-    ssize contentLength;   //  Response content length
-    ssize bodyLength;      //  Length of body segment
-    char *body;            //  First block of body data
-    int status;            //  Response HTTP status
+    SSL_CTX *ctx;          // OpenSSL TLS context
+    SSL *ssl;              // OpenSSL TLS connection handle
+    int fd;                // TCP socket file descriptor
+    ssize contentLength;   // Total response body length from Content-Length header
+    ssize bodyLength;      // Length of initial body data received with headers
+    char *body;            // Buffer containing initial body data (if any received with headers)
+    int status;            // HTTP response status code
 } Fetch;
 
-static int verbose;        //  Trace execution
+static int verbose;        // Global flag to enable verbose tracing output
 
 /********************************** Forwards **********************************/
 
@@ -58,19 +92,30 @@ static int postReport(int success, cchar *host, cchar *device, cchar *update, cc
 static int run(cchar *script, cchar *path);
 
 /************************************ Code ************************************/
-/*
-    Update parameters:
-    host - Device Cloud endpoint from the Builder Cloud Edit panel
-    product - ProductID token from the Builder token list
-    token - CloudAPI token from the Builder token list
-    device - Unique device ID
-    version - device firmware version
-    properties - Additional device properties [key=value, ...]
-    path - Path name to save the downloaded update image
-    script - Script path to invoke to apply the update
-    verbose - Trace execution
+/**
+    Check for and apply software updates from the EmbedThis Builder service
 
-    SECURITY Acceptable: - The developer is responsible for validating the inputs to this function.
+    This is the main entry point for the OTA update functionality. It performs the complete update workflow:
+    1. Sends an update check request to the Builder service with device information
+    2. If an update is available, downloads it to the specified path
+    3. Verifies the download integrity using SHA-256 checksum
+    4. Optionally applies the update using the provided script
+    5. Reports the update result back to the Builder service
+
+    @param host Builder cloud endpoint URL (e.g., "https://api.embedthis.com")
+    @param product Product ID from the Builder token list
+    @param token CloudAPI access token for authentication
+    @param device Unique device identifier
+    @param version Current device firmware version
+    @param properties Optional JSON properties for distribution policy (may be NULL)
+    @param path File path to save the downloaded update
+    @param script Optional script path to apply the update (may be NULL)
+    @param verboseArg Non-zero to enable verbose output
+    @return 0 on success, -1 on error
+
+    SECURITY Acceptable: The developer is responsible for validating the inputs to this function.
+
+    @ingroup Updater
  */
 int update(cchar *host, cchar *product, cchar *token, cchar *device, cchar *version,
            cchar *properties, cchar *path, cchar *script, int verboseArg)
@@ -195,9 +240,16 @@ int update(cchar *host, cchar *product, cchar *token, cchar *device, cchar *vers
     return rc;
 }
 
-/*
-    Apply the update by invoking the "scripts.update" script
-    This may exit or reboot if instructed by the update script
+/**
+    Apply the update by invoking the configured update script
+
+    Executes the update script with the update file path as an argument. The script is responsible
+    for installing the update and may exit or reboot the device as needed.
+
+    @param path File path to the downloaded update
+    @param script Path to the executable update script
+    @return 0 on success, -1 on error
+    @stability Internal
  */
 static int applyUpdate(cchar *path, cchar *script)
 {
@@ -209,10 +261,20 @@ static int applyUpdate(cchar *path, cchar *script)
     return status;
 }
 
-/*
-    SECURITY Acceptable: - The unix code above is preferred, but on systems without
-    fork() and execvp() we use the system() function. The inputs are all from
-    developer controlled input and not user controlled.
+/**
+    Execute the update script in a child process
+
+    Uses fork()/execvp() on Unix-like systems to safely execute the update script without shell
+    interpretation. The script receives the update file path as its only argument.
+
+    @param script Path to the executable script
+    @param path Update file path to pass as argument
+    @return Exit status of the script (0 on success), -1 on error
+
+    SECURITY Acceptable: The unix code is preferred, but on systems without fork() and execvp()
+    we use the system() function. The inputs are all from developer controlled input and not user controlled.
+
+    @stability Internal
  */
 static int run(cchar *script, cchar *path)
 {
@@ -248,8 +310,19 @@ static int run(cchar *script, cchar *path)
 #endif
 }
 
-/*
-    Post update status back to the builder for metrics and version tracking
+/**
+    Post update status report to the Builder service
+
+    Sends the update result (success or failure) back to the Builder service for metrics
+    and device version tracking.
+
+    @param status Update status (0 for success, non-zero for failure)
+    @param host Builder cloud endpoint URL
+    @param device Unique device identifier
+    @param update Update ID from the Builder response
+    @param token CloudAPI access token
+    @return 0 on success, -1 on error
+    @stability Internal
  */
 static int postReport(int status, cchar *host, cchar *device, cchar *update, cchar *token)
 {
@@ -282,8 +355,22 @@ static int postReport(int status, cchar *host, cchar *device, cchar *update, cch
     return 0;
 }
 
-/*
-    Mini-fetch API. Start an HTTP action. This is NOT a generic fetch API implementation.
+/**
+    Perform an HTTPS request to the specified URL
+
+    This is a minimal HTTPS client designed specifically for the Builder API needs.
+    It is NOT a general-purpose HTTP library. The function:
+    - Establishes a TLS connection with certificate verification
+    - Sends the HTTP request with the specified method, headers, and body
+    - Reads the response headers and initial body data
+    - Returns a Fetch structure for further processing
+
+    @param method HTTP method (e.g., "GET", "POST")
+    @param url Full URL including https:// scheme
+    @param headers Additional HTTP headers (must end with \r\n)
+    @param body Request body (may be NULL for GET requests)
+    @return Fetch structure on success, NULL on error
+    @stability Internal
  */
 static Fetch *fetch(char *method, char *url, char *headers, char *body)
 {
@@ -406,8 +493,15 @@ static Fetch *fetch(char *method, char *url, char *headers, char *body)
     return fp;
 }
 
-/*
-    Return a small response body as a string. Caller must free.
+/**
+    Read the complete response body as a string
+
+    Reads all remaining response data and returns it as a null-terminated string.
+    Caller is responsible for freeing the returned string.
+
+    @param fp Fetch structure from a successful fetch() call
+    @return Dynamically allocated string containing the response body, or NULL on error
+    @stability Internal
  */
 static char *fetchString(Fetch *fp)
 {
@@ -446,8 +540,17 @@ static char *fetchString(Fetch *fp)
     return body;
 }
 
-/*
-    Return a response body to a file.
+/**
+    Save the response body to a file
+
+    Downloads the response body to the specified file path with secure file creation.
+    Uses O_EXCL and O_NOFOLLOW to prevent race conditions and symlink attacks.
+    Files are created with 0600 permissions (owner read/write only).
+
+    @param fp Fetch structure from a successful fetch() call
+    @param path Destination file path
+    @return 0 on success, -1 on error
+    @stability Internal
  */
 static int fetchFile(Fetch *fp, cchar *path)
 {
@@ -498,8 +601,16 @@ static int fetchFile(Fetch *fp, cchar *path)
     return 0;
 }
 
-/*
-    Return a response HTTP header. Caller must free.
+/**
+    Extract an HTTP header value from the response
+
+    Parses the response headers and returns the value for the specified header name.
+    Caller is responsible for freeing the returned string.
+
+    @param response Response headers as a string
+    @param key Header name (e.g., "Content-Length")
+    @return Dynamically allocated header value, or NULL if not found
+    @stability Internal
  */
 static char *fetchHeader(cchar *response, char *key)
 {
@@ -525,8 +636,16 @@ static char *fetchHeader(cchar *response, char *key)
     return value;
 }
 
-/*
-    Read response data
+/**
+    Read data from the TLS connection
+
+    Wrapper around SSL_read() for reading response data.
+
+    @param fp Fetch structure
+    @param buf Buffer to receive data
+    @param buflen Maximum bytes to read
+    @return Number of bytes read, or -1 on error
+    @stability Internal
  */
 static ssize fetchRead(Fetch *fp, char *buf, ssize buflen)
 {
@@ -540,8 +659,16 @@ static ssize fetchRead(Fetch *fp, char *buf, ssize buflen)
     return rc;
 }
 
-/*
-    Write request data
+/**
+    Write data to the TLS connection
+
+    Wrapper around SSL_write() for sending request data.
+
+    @param fp Fetch structure
+    @param buf Buffer containing data to write
+    @param buflen Number of bytes to write
+    @return Number of bytes written, or -1 on error
+    @stability Internal
  */
 static ssize fetchWrite(Fetch *fp, char *buf, ssize buflen)
 {
@@ -555,8 +682,19 @@ static ssize fetchWrite(Fetch *fp, char *buf, ssize buflen)
     return rc;
 }
 
-/*
-    Allocate a Fetch control structure. This primarily sets up an OpenSSL context.
+/**
+    Allocate and initialize a Fetch structure with TLS context
+
+    Creates a new Fetch structure and configures OpenSSL for secure communication:
+    - Enforces TLS 1.2 or higher
+    - Enables certificate verification
+    - Configures hostname verification via SNI
+    - Establishes the TLS connection
+
+    @param fd Connected TCP socket file descriptor
+    @param host Hostname for SNI and certificate verification
+    @return Initialized Fetch structure on success, NULL on error
+    @stability Internal
  */
 static Fetch *fetchAlloc(int fd, cchar *host)
 {
@@ -628,8 +766,14 @@ static Fetch *fetchAlloc(int fd, cchar *host)
     return fp;
 }
 
-/*
-    Deallocate a Fetch control structure.
+/**
+    Free a Fetch structure and release all resources
+
+    Closes the TLS connection, frees the SSL context, closes the socket,
+    and releases all allocated memory.
+
+    @param fp Fetch structure to free (may be NULL)
+    @stability Internal
  */
 static void fetchFree(Fetch *fp)
 {
@@ -655,10 +799,17 @@ static void fetchFree(Fetch *fp)
     free(fp);
 }
 
-/*
-    Trivial routine to lookup a key value in a json formatted string.
-    This is NOT a generic JSON parser and does NOT handle use other than required by the Updater API.
-    Caller must free result.
+/**
+    Extract a value from a JSON string
+
+    This is a minimal JSON parser designed specifically for the Builder API responses.
+    It is NOT a general-purpose JSON parser and only handles simple key-value extraction.
+    Caller is responsible for freeing the returned string.
+
+    @param jsonText JSON formatted string
+    @param key Key name to extract
+    @return Dynamically allocated value string, or NULL if key not found
+    @stability Internal
  */
 static char *json(cchar *jsonText, cchar *key)
 {
@@ -690,8 +841,16 @@ static char *json(cchar *jsonText, cchar *key)
     return NULL;
 }
 
-/*
-    Calculate a SHA-256 checksum for a file
+/**
+    Calculate the SHA-256 checksum of a file
+
+    Reads the file and computes its SHA-256 hash using OpenSSL EVP functions.
+    The result is returned as a hexadecimal string.
+
+    @param path File path to checksum
+    @param sum Buffer to receive the hexadecimal checksum string (must be at least EVP_MAX_MD_SIZE * 2 + 1 bytes)
+    @return 0 on success, -1 on error
+    @stability Internal
  */
 static int getFileSum(cchar *path, char sum[EVP_MAX_MD_SIZE * 2 + 1])
 {
@@ -742,6 +901,17 @@ static int getFileSum(cchar *path, char sum[EVP_MAX_MD_SIZE * 2 + 1])
     return 0;
 }
 
+/**
+    Duplicate a memory block
+
+    Allocates a new buffer and copies the specified memory region. Adds a null terminator
+    for string safety (size + 1 bytes allocated).
+
+    @param ptr Pointer to memory to duplicate
+    @param size Number of bytes to copy
+    @return Pointer to duplicated memory, or NULL on error
+    @stability Internal
+ */
 static void *memdup(cvoid *ptr, ssize size)
 {
     char *newp;
