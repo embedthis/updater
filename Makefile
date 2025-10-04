@@ -15,3 +15,10 @@ cache: clean
 
 format:
 	uncrustify -q -c .uncrustify --replace --no-backup src/*.{c,h}
+
+
+LOCAL_MAKEFILE := $(strip $(wildcard ./.local.mk))
+
+ifneq ($(LOCAL_MAKEFILE),)
+include	$(LOCAL_MAKEFILE)
+endif

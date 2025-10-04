@@ -1,5 +1,6 @@
+#!/bin/bash
 #
-#   binary.sh.tst -- Test the updater binary
+#   javascript.sh.tst -- Test the updater.js script
 #   
 
 if [ -f .creds.sh ] ; then
@@ -12,7 +13,7 @@ else
     . creds.sh
 fi
 
-../updater --device ${DEVICE} --file updater.bin --host ${ENDPOINT} --product ${PRODUCT} --token ${TOKEN} --version ${VERSION} --cmd ../apply.sh model=pro
+node ../updater.js --device ${DEVICE} --file updater.bin --host ${ENDPOINT} --product ${PRODUCT} --token ${TOKEN} --version ${VERSION} --cmd ../apply.sh model=pro
 
 if [ $? = 0 ] ; then
     echo "pass"

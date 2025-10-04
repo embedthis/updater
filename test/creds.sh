@@ -1,3 +1,4 @@
+#!/bin/bash
 #
 #	creds.sh - Credentials for the updater
 #

@@ -1,3 +1,4 @@
+#!/bin/bash
 #
 #   shell.sh.tst -- Test the updater.sh script
 #   

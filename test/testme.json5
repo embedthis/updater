@@ -1,0 +1,54 @@
+{
+    // Compiler configuration for different languages
+    compiler: {
+        c: {
+            compiler: 'gcc',
+            flags: [
+                '-Wall', 
+                '-Wextra', 
+                '-Wno-unused-function', 
+                '-Wno-unused-parameter', 
+                '-Wno-strict-prototypes',
+                '-I/usr/local/include', 
+                '-I.', 
+                '-I${../build/*/inc}', 
+                '-L${../build/*/bin}',
+                '-L/opt/homebrew/lib',
+                '-Wl,-rpath,@executable_path/../../${../build/*/bin}',
+                '-std=c99', 
+                '-O0', 
+                '-g'
+            ],
+            libraries: ['mqtt', 'crypt', 'r', 'uctx', 'ssl', 'crypto'],
+        },
+    },
+
+    // Test execution settings
+    execution: {
+        timeout: 30000,        // Timeout per test in milliseconds
+        parallel: true,        // Run tests in parallel
+        worker: 1,             // Test workers 
+    },
+
+    // Output formatting options
+    output: {
+        verbose: false,        // Show detailed output
+        format: 'simple',      // Output format: simple, detailed, json
+        colors: true,          // Enable colored output
+    },
+
+    // File discovery patterns
+    patterns: {
+        include: ['**/*.tst.sh', '**/*.tst.c', '**/*.tst.js', '**/*.tst.ts'],
+        exclude: ['**/node_modules/**', '**/.testme/**', '**/.*/**'],
+    },
+
+    // Service management for test setup/teardown
+    services: {
+        prep: './cleanup.sh',
+        setup: './setup.sh',
+        cleanup: './cleanup.sh',
+        setupTimeout: 30000,   // Setup timeout in milliseconds
+        cleanupTimeout: 10000, // Cleanup timeout in milliseconds
+    },
+}
