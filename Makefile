@@ -2,6 +2,8 @@
 #	Updater Makefile
 #
 
+.PHONY: all compile build clean cache format install test
+
 all: compile
 
 compile build:
@@ -14,7 +16,7 @@ cache: clean
 	@me cache
 
 format:
-	uncrustify -q -c .uncrustify --replace --no-backup src/*.{c,h}
+	uncrustify -q -c .uncrustify --replace --no-backup src/*.{c,h} test/*.c
 
 install:
 	sudo cp build/*/bin/updater /usr/local/bin
