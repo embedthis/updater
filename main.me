@@ -10,6 +10,15 @@ Me.load({
     },
 
     targets: {
+        updater: {
+            type: 'exe',
+            includes: [ 'src', 'src/osdep', '/opt/homebrew/include' ],
+            sources: [ 'src/updater.c', 'src/main.c' ],
+            libpaths: [ '/opt/homebrew/lib' ],
+            libraries: [ 'ssl', 'crypto' ],
+            depends: [ ],
+        },
+
         package: {
             depends: ['packagePak'],
         },

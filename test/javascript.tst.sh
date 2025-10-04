@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-#   binary.sh.tst -- Test the updater.c version
+#   javascript.sh.tst -- Test the updater.js script
 #   
 
 if [ -f .creds.sh ] ; then
@@ -13,7 +13,7 @@ else
     . creds.sh
 fi
 
-../src/updater --device ${DEVICE} --file updater.bin --host ${ENDPOINT} --product ${PRODUCT} \
+node ../src/updater.js --device ${DEVICE} --file updater.bin --host ${ENDPOINT} --product ${PRODUCT} \
     --token ${TOKEN} --version ${VERSION} --cmd ../src/apply.sh model=pro
 
 if [ $? = 0 ] ; then

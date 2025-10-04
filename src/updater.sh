@@ -116,7 +116,7 @@ echo "Checksum matches, apply update"
 #
 #   Customize to apply update here and set success to true/false
 #
-../apply.sh "$UPDATE"
+./apply.sh "$UPDATE"
 if [ $? -ne 0 ] ; then
     echo "Apply update failed"
     exit 2

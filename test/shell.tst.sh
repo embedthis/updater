@@ -15,10 +15,14 @@ fi
 
 export VERSION DEVICE PRODUCT TOKEN ENDPOINT
 
-bash ../updater.sh
+cd ../src/
+bash ./updater.sh
 
 if [ $? = 0 ] ; then
-    echo "pass"
+    echo "✓ Update passed"
+    rm -f updater.bin
 else
-    echo "fail"
+    echo "✗ Update failed"
+    rm -f updater.bin
+    exit 1
 fi

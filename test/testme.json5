@@ -46,7 +46,7 @@
     // Service management for test setup/teardown
     services: {
         prep: './cleanup.sh',
-        setup: './setup.sh',
+        setup: '',
         cleanup: './cleanup.sh',
         setupTimeout: 30000,   // Setup timeout in milliseconds
         cleanupTimeout: 10000, // Cleanup timeout in milliseconds
