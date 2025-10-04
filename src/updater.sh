@@ -1,6 +1,7 @@
 #
 #   updater.sh - Sample updates using shell
 #
+#   This script is not for production use. It demonstrates the steps to uses to access the update service.
 #
 #   Get values for PRODUCT, TOKEN and ENDPOINT from your Builder Token list and 
 #   Cloud Edit panel. Set your VERSION and DEVICE here.
@@ -8,7 +9,7 @@
 
 : ${VERSION="1.2.3"}
 : ${DEVICE="YOUR_DEVID"}
-: ${PRODUCT="ProductID from the Buidler sevice token list"}
+: ${PRODUCT="ProductID from the Builder service token list"}
 : ${TOKEN="CloudAPI from the Builder cloud token list"}
 : ${ENDPOINT="Cloud API endpoint from Builder Cloud Panel"}
 
@@ -40,12 +41,12 @@ cat >"$DATA" <<!EOF
 #
 #   Check for an update. Silent and fail on non-200 status.
 #
-curl -s -X POST \
+curl -f -s --max-time 30 -X POST \
     -H "Authorization:${TOKEN}" \
     -H "Content-Type:application/json" \
     -d "@${DATA}" "${ENDPOINT}/tok/provision/update" >"$OUTPUT"
 if [ $? -ne 0 ] ; then
-    echo "Failed to update: " `cat "$OUTPUT"` >&2 
+    echo "Failed to check for update" >&2
     exit 2
 fi
 
@@ -61,52 +62,81 @@ if [ `cat "$OUTPUT"` = "{}" ] ; then
 fi
 
 #
-#   Parse output and extract the URL
+#   Parse output and extract fields
 #
 URL=$(cat "$OUTPUT" | jq -r .url)
+CHECKSUM=$(cat "$OUTPUT" | jq -r .checksum)
+UPDATEID=$(cat "$OUTPUT" | jq -r .update)
+VERSION_NEW=$(cat "$OUTPUT" | jq -r .version)
 
-if [ "${URL}" != "" ] ; then
-    #
-    #   Fetch the update
-    #
-    curl -s "${URL}" >"$UPDATE"
+if [ "$URL" = "null" -o "$URL" = "" ] ; then
+    echo "No update available"
+    exit 0
+fi
 
-    #
-    #   Validate the checksum
-    #
-    SUM=$(openssl dgst -sha256 "$UPDATE" | awk '{print $2}')
-    CHECKSUM=$(cat "$OUTPUT" | jq -r .checksum)
-    if [ "${SUM}" != "${CHECKSUM}" ] ; then
-        echo "Checksum does not match"
-    else
-        echo "Checksum matches, apply update"
-    fi
-    #
-    #   Customize to apply update here and set success to true/false
-    #
-    ../apply.sh "$UPDATE"
-    if [ $? -ne 0 ] ; then
-        echo "Apply update failed"
-        exit 2
-    fi
-    success=true
+#
+#   Validate required fields
+#
+if [ "$CHECKSUM" = "null" -o "$UPDATEID" = "null" -o "$VERSION_NEW" = "null" ] ; then
+    echo "Incomplete update response"
+    exit 2
+fi
 
-    #
-    #   Post update status
-    #
-    UPDATEID=$(cat "$OUTPUT" | jq -r .update)
-    cat >"$DATA" <<!EOF2
+#
+#   Validate HTTPS
+#
+if [[ ! "$URL" =~ ^https:// ]] ; then
+    echo "Insecure download URL (HTTPS required)"
+    exit 2
+fi
+
+echo "Update $VERSION_NEW available"
+
+#
+#   Fetch the update with safety checks
+#
+curl -f -s --max-filesize 104857600 --max-time 600 "$URL" >"$UPDATE"
+if [ $? -ne 0 ] ; then
+    echo "Failed to download update"
+    exit 2
+fi
+
+#
+#   Validate the checksum
+#
+SUM=$(openssl dgst -sha256 "$UPDATE" | awk '{print $2}')
+if [ "$SUM" != "$CHECKSUM" ] ; then
+    echo "Checksum does not match"
+    echo "$SUM vs"
+    echo "$CHECKSUM"
+    exit 2
+fi
+echo "Checksum matches, apply update"
+
+#
+#   Customize to apply update here and set success to true/false
+#
+../apply.sh "$UPDATE"
+if [ $? -ne 0 ] ; then
+    echo "Apply update failed"
+    exit 2
+fi
+success=true
+
+#
+#   Post update status
+#
+cat >"$DATA" <<!EOF2
 {
     "success":"${success}",
     "id":"${DEVICE}",
     "update":"${UPDATEID}"
 }
 !EOF2
-    curl -s -X POST \
-        -H "Authorization:${TOKEN}" \
-        -H "Content-Type:application/json" \
-        -d "@${DATA}" "${ENDPOINT}/tok/provision/updateReport"
-
-else
-    echo No update required
+curl -f -s --max-time 30 -X POST \
+    -H "Authorization:${TOKEN}" \
+    -H "Content-Type:application/json" \
+    -d "@${DATA}" "${ENDPOINT}/tok/provision/updateReport"
+if [ $? -ne 0 ] ; then
+    echo "Failed to post update report" >&2
 fi
