@@ -20,18 +20,18 @@
 
 /********************************** Locals ************************************/
 
-#define IMAGE_PATH  "update.bin"    // Default path for downloaded update image
-#define SERVER_PORT 443             // HTTPS port (currently unused in main.c)
-#define BUFFER_SIZE 4096            // Maximum size for properties JSON buffer
+#define IMAGE_PATH  "update.bin" // Default path for downloaded update image
+#define SERVER_PORT 443          // HTTPS port (currently unused in main.c)
+#define BUFFER_SIZE 4096         // Maximum size for properties JSON buffer
 
 // Command-line argument values (pointers into argv)
-static cchar *cmd;      // Path to script that applies the update
-static cchar *device;   // Unique device identifier
-static cchar *file;     // Path where update image will be saved
-static cchar *host;     // Builder cloud endpoint URL
-static cchar *product;  // Product ID from Builder token list
-static cchar *token;    // CloudAPI access token for authentication
-static cchar *version;  // Current device firmware version
+static cchar *cmd;               // Path to script that applies the update
+static cchar *device;            // Unique device identifier
+static cchar *file;              // Path where update image will be saved
+static cchar *host;              // Builder cloud endpoint URL
+static cchar *product;           // Product ID from Builder token list
+static cchar *token;             // CloudAPI access token for authentication
+static cchar *version;           // Current device firmware version
 
 // Dynamically allocated JSON string of device properties
 static char *properties;
@@ -191,7 +191,8 @@ static int parseArgs(int argc, char **argv)
             dup = strdup(argv[nextArg]);
 
             // Split on '=' to extract key and value
-            if ((key = strtok_r(dup, "=", &value)) == NULL) {
+            if ((key = strtok_r(dup, "=", &value)) == NULL || value == NULL || *value == '\0') {
+                fprintf(stderr, "Invalid property format. Use: key=value\n");
                 free(dup);
                 usage();
             }
