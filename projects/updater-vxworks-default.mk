@@ -112,7 +112,7 @@ ME_VAPP_PREFIX        ?= $(ME_APP_PREFIX)
 ME_SRC_PREFIX         ?= $(ME_ROOT_PREFIX)/usr/src/$(NAME)-$(VERSION)
 
 
-TARGETS               += $(BUILD)/bin/libupdate.a
+TARGETS               += $(BUILD)/bin/libupdater.a
 TARGETS               += $(BUILD)/bin/updater.out
 
 
@@ -148,7 +148,7 @@ prep:
 clean:
 	rm -f "$(BUILD)/obj/main.o"
 	rm -f "$(BUILD)/obj/updater.o"
-	rm -f "$(BUILD)/bin/libupdate.a"
+	rm -f "$(BUILD)/bin/libupdater.a"
 	rm -f "$(BUILD)/bin/updater.out"
 
 clobber: clean
@@ -211,25 +211,25 @@ $(BUILD)/obj/updater.o: \
 	$(CC) -c -o "$(BUILD)/obj/updater.o" $(CFLAGS) "-DME_DEBUG=1" "-DVXWORKS" "-DRW_MULTI_THREAD" "-DCPU=ARMARCH7" "-DTOOL_FAMILY=gnu" "-DTOOL=gnu" "-D_GNU_TOOL" "-D_WRS_KERNEL_" "-D_VSB_CONFIG_FILE=\"/WindRiver/vxworks-7/samples/prebuilt_projects/vsb_vxsim_linux/h/config/vsbConfig.h\"" "-Isrc" "-Isrc/osdep" "-I/opt/homebrew/include" "src/updater.c"
 
 #
-#   libupdate
+#   libupdater
 #
 DEPS_7 += $(BUILD)/inc/osdep.h
 DEPS_7 += $(BUILD)/inc/me.h
 DEPS_7 += $(BUILD)/inc/updater.h
 DEPS_7 += $(BUILD)/obj/updater.o
 
-$(BUILD)/bin/libupdate.a: $(DEPS_7)
-	@echo '      [Link] $(BUILD)/bin/libupdate.a'
-	$(AR) -cr "$(BUILD)/bin/libupdate.a" "$(BUILD)/obj/updater.o"
+$(BUILD)/bin/libupdater.a: $(DEPS_7)
+	@echo '      [Link] $(BUILD)/bin/libupdater.a'
+	$(AR) -cr "$(BUILD)/bin/libupdater.a" "$(BUILD)/obj/updater.o"
 
 #
 #   updater
 #
-DEPS_8 += $(BUILD)/bin/libupdate.a
+DEPS_8 += $(BUILD)/bin/libupdater.a
 DEPS_8 += $(BUILD)/inc/osdep.h
 DEPS_8 += $(BUILD)/obj/main.o
 
-LIBS_8 += -lupdate
+LIBS_8 += -lupdater
 
 $(BUILD)/bin/updater.out: $(DEPS_8)
 	@echo '      [Link] $(BUILD)/bin/updater.out'

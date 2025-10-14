@@ -251,7 +251,7 @@ ME_CACHE_PREFIX       = $(ME_VAPP_PREFIX)\cache
 ME_SRC_PREFIX         = $(ME_VAPP_PREFIX)\src
 
 
-TARGETS               = $(TARGETS) build\$(CONFIG)\bin\libupdate.lib
+TARGETS               = $(TARGETS) build\$(CONFIG)\bin\libupdater.lib
 TARGETS               = $(TARGETS) build\$(CONFIG)\bin\updater.exe
 
 !IFNDEF SHOW
@@ -286,7 +286,7 @@ LOG = >nul
 clean:
 	if exist "build\$(CONFIG)\obj\main.obj" del /Q "build\$(CONFIG)\obj\main.obj"
 	if exist "build\$(CONFIG)\obj\updater.obj" del /Q "build\$(CONFIG)\obj\updater.obj"
-	if exist "build\$(CONFIG)\bin\libupdate.lib" del /Q "build\$(CONFIG)\bin\libupdate.lib"
+	if exist "build\$(CONFIG)\bin\libupdater.lib" del /Q "build\$(CONFIG)\bin\libupdater.lib"
 	if exist "build\$(CONFIG)\bin\updater.exe" del /Q "build\$(CONFIG)\bin\updater.exe"
 	if exist "build\$(CONFIG)\bin\updater.lib" del /Q "build\$(CONFIG)\bin\updater.lib"
 	if exist "build\$(CONFIG)\bin\updater.pdb" del /Q "build\$(CONFIG)\bin\updater.pdb"
@@ -349,25 +349,25 @@ build\$(CONFIG)\obj\updater.obj: \
 	"$(CC)" -c -Fo"build\$(CONFIG)\obj\updater.obj" -Fd"build\$(CONFIG)\obj\updater.pdb" $(CFLAGS) $(DFLAGS) "-Isrc" "-Isrc\osdep" "-I\opt\homebrew\include" "src\updater.c" $(LOG)
 
 #
-#   libupdate
+#   libupdater
 #
 DEPS_7 = $(DEPS_7) build\$(CONFIG)\inc\osdep.h
 DEPS_7 = $(DEPS_7) build\$(CONFIG)\inc\me.h
 DEPS_7 = $(DEPS_7) build\$(CONFIG)\inc\updater.h
 DEPS_7 = $(DEPS_7) build\$(CONFIG)\obj\updater.obj
 
-build\$(CONFIG)\bin\libupdate.lib: $(DEPS_7)
-	@echo ..... [Link] build\$(CONFIG)\bin\libupdate.lib
-	"$(AR)" -nologo -out:"build\$(CONFIG)\bin\libupdate.lib" "build\$(CONFIG)\obj\updater.obj" $(LOG)
+build\$(CONFIG)\bin\libupdater.lib: $(DEPS_7)
+	@echo ..... [Link] build\$(CONFIG)\bin\libupdater.lib
+	"$(AR)" -nologo -out:"build\$(CONFIG)\bin\libupdater.lib" "build\$(CONFIG)\obj\updater.obj" $(LOG)
 
 #
 #   updater
 #
-DEPS_8 = $(DEPS_8) build\$(CONFIG)\bin\libupdate.lib
+DEPS_8 = $(DEPS_8) build\$(CONFIG)\bin\libupdater.lib
 DEPS_8 = $(DEPS_8) build\$(CONFIG)\inc\osdep.h
 DEPS_8 = $(DEPS_8) build\$(CONFIG)\obj\main.obj
 
-LIBS_8 = $(LIBS_8) libupdate.lib
+LIBS_8 = $(LIBS_8) libupdater.lib
 
 build\$(CONFIG)\bin\updater.exe: $(DEPS_8)
 	@echo ..... [Link] build\$(CONFIG)\bin\updater.exe

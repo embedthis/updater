@@ -28,7 +28,7 @@ static cchar *testFile = "/tmp/update-test.bin";
 static cchar *testScript = "./test-script.sh";
 
 /********************************** Helpers ***********************************/
-
+#if UNUSED
 /*
     Create a minimal test script that always succeeds
  */
@@ -45,6 +45,7 @@ static int createTestScript(cchar *path)
     chmod(path, 0755);
     return 0;
 }
+#endif
 
 /*
     Remove test artifacts

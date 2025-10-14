@@ -31,7 +31,7 @@ Me.load({
             description: 'Safe portable runtime',
             depends: ['libr'],
         },
-        libupdate: {
+        libupdater: {
             type: 'lib',
             depends: [ 'osdep' ],
             includes: [ 'src', 'src/osdep', '/opt/homebrew/include' ],
@@ -41,7 +41,7 @@ Me.load({
         updater: {
             type: 'exe',
             sources: [ 'src/main.c' ],
-            depends: [ 'libupdate', 'osdep' ],
+            depends: [ 'libupdater', 'osdep' ],
             libpaths: [ '/opt/homebrew/lib' ],
             libraries: [ 'ssl', 'crypto' ],
         },

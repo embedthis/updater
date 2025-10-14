@@ -14,7 +14,7 @@
     				
     			);
     			dependencies = (
-				6825E2016825E20100000007 /* PBXTargetDependency libupdate */,
+				6825E2016825E20100000007 /* PBXTargetDependency libupdater */,
 				6825E2016825E20100000008 /* PBXTargetDependency updater */,
 				6825E2016825E20100000009 /* PBXTargetDependency All */,
 				6825E2016825E2010000000A /* PBXTargetDependency Prep */,
@@ -38,11 +38,11 @@
 /* Begin PBXBuildFile section */
 		6825E2016825E2010000000E /* updater.c in Sources */ = {isa = PBXBuildFile; fileRef = 6825E2016825E2010000000F /* updater.c */; };
 		6825E2016825E20100000010 /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = 6825E2016825E20100000011 /* main.c */; };
-		6825E2016825E20100000012 /* libupdate.a for updater */ = {isa = PBXBuildFile; fileRef = 6825E2016825E20100000013; };
+		6825E2016825E20100000012 /* libupdater.a for updater */ = {isa = PBXBuildFile; fileRef = 6825E2016825E20100000013; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		6825E2016825E20100000014 /* PBXContainerItemProxy Prep from libupdate */ = {
+		6825E2016825E20100000014 /* PBXContainerItemProxy Prep from libupdater */ = {
     			isa = PBXContainerItemProxy;
     			containerPortal = 6825E2016825E20100000001 /* Project object */;
     			proxyType = 1;
@@ -56,12 +56,12 @@
     			remoteGlobalIDString = 6825E2016825E2010000000C;
     			remoteInfo = Prep;
     		};
-		6825E2016825E20100000016 /* PBXContainerItemProxy libupdate from updater */ = {
+		6825E2016825E20100000016 /* PBXContainerItemProxy libupdater from updater */ = {
     			isa = PBXContainerItemProxy;
     			containerPortal = 6825E2016825E20100000001 /* Project object */;
     			proxyType = 1;
     			remoteGlobalIDString = 6825E2016825E20100000017;
-    			remoteInfo = libupdate;
+    			remoteInfo = libupdater;
     		};
 		6825E2016825E20100000018 /* PBXContainerItemProxy Prep from All */ = {
     			isa = PBXContainerItemProxy;
@@ -70,12 +70,12 @@
     			remoteGlobalIDString = 6825E2016825E2010000000C;
     			remoteInfo = Prep;
     		};
-		6825E2016825E20100000019 /* PBXContainerItemProxy libupdate from All */ = {
+		6825E2016825E20100000019 /* PBXContainerItemProxy libupdater from All */ = {
     			isa = PBXContainerItemProxy;
     			containerPortal = 6825E2016825E20100000001 /* Project object */;
     			proxyType = 1;
     			remoteGlobalIDString = 6825E2016825E20100000017;
-    			remoteInfo = libupdate;
+    			remoteInfo = libupdater;
     		};
 		6825E2016825E2010000001A /* PBXContainerItemProxy updater from All */ = {
     			isa = PBXContainerItemProxy;
@@ -89,13 +89,13 @@
 /* Begin PBXFileReference section */
 		6825E2016825E2010000000F /* updater.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = updater.c; path = src/updater.c; sourceTree = "<group>"; };
 		6825E2016825E2010000001C /* updater.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = updater.h; path = src/updater.h; sourceTree = "<group>"; };
-		6825E2016825E20100000013 /* libupdate */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libupdate.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		6825E2016825E20100000013 /* libupdater */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libupdater.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		6825E2016825E20100000011 /* main.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = main.c; path = src/main.c; sourceTree = "<group>"; };
 		6825E2016825E2010000001D /* updater */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = updater; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		6825E2016825E2010000001E /* Frameworks and Libraries for libupdate */ = {
+		6825E2016825E2010000001E /* Frameworks and Libraries for libupdater */ = {
                 isa = PBXFrameworksBuildPhase;
                 buildActionMask = 2147483647;
                 files = (
@@ -107,7 +107,7 @@
                 isa = PBXFrameworksBuildPhase;
                 buildActionMask = 2147483647;
                 files = (
-    				6825E2016825E20100000012 /* libupdate */,				
+    				6825E2016825E20100000012 /* libupdater */,				
                 );
                 runOnlyForDeploymentPostprocessing = 0;
             };
@@ -117,19 +117,19 @@
 		6825E2016825E20100000020 /* Top Group */ = {
                 isa = PBXGroup;
                 children = (
-				6825E2016825E20100000021 /* libupdate */,
+				6825E2016825E20100000021 /* libupdater */,
 				6825E2016825E20100000022 /* updater */,
 				6825E2016825E20100000023 /* Products */,
 			);
                 sourceTree = "<group>";
             };
-		6825E2016825E20100000021 /* libupdate */ = {
+		6825E2016825E20100000021 /* libupdater */ = {
                 isa = PBXGroup;
                 children = (
 				6825E2016825E2010000001C /* updater.h */,
 				6825E2016825E2010000000F /* updater.c */,
 			);
-                name = "libupdate";
+                name = "libupdater";
                 path = ..;
                 sourceTree = SOURCE_ROOT;
             };
@@ -145,7 +145,7 @@
 		6825E2016825E20100000023 /* Products */ = {
                 isa = PBXGroup;
                 children = (
-				6825E2016825E20100000013 /* libupdate */,
+				6825E2016825E20100000013 /* libupdater */,
 				6825E2016825E2010000001D /* updater */,
 			);
                 name = "Products";
@@ -155,9 +155,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		6825E2016825E20100000017 /* libupdate */ = {
+		6825E2016825E20100000017 /* libupdater */ = {
     			isa = PBXNativeTarget;
-    			buildConfigurationList = 6825E2016825E20100000025 /* Build configuration list for PBXNativeTarget "libupdate" */;
+    			buildConfigurationList = 6825E2016825E20100000025 /* Build configuration list for PBXNativeTarget "libupdater" */;
     			buildPhases = (
     				6825E2016825E20100000024 /* Sources */,
     				6825E2016825E2010000001E /* Frameworks */,
@@ -167,9 +167,9 @@
     			dependencies = (
     				6825E2016825E20100000026 /* Prep */,				
     			);
-    			name = libupdate;
+    			name = libupdater;
     			productName = updater;
-    			productReference = 6825E2016825E20100000013 /* libupdate */;
+    			productReference = 6825E2016825E20100000013 /* libupdater */;
     			productType = "com.apple.product-type.library.dynamic";
     		};
 		6825E2016825E2010000001B /* updater */ = {
@@ -183,7 +183,7 @@
     			);
     			dependencies = (
     				6825E2016825E20100000029 /* Prep */,
-				6825E2016825E2010000002A /* libupdate */,				
+				6825E2016825E2010000002A /* libupdater */,				
     			);
     			name = updater;
     			productName = updater;
@@ -254,14 +254,14 @@ fi
     			targets = (
 				6825E2016825E20100000006 /* All */,
 				6825E2016825E2010000000C /* Prep */,
-				6825E2016825E20100000017 /* libupdate */,
+				6825E2016825E20100000017 /* libupdater */,
 				6825E2016825E2010000001B /* updater */,
 			);
     		};
     /* End PBXProject section */
 
 /* Begin PBXSourcesBuildPhase section */
-		6825E2016825E20100000024 /* libupdate Sources */ = {
+		6825E2016825E20100000024 /* libupdater Sources */ = {
     			isa = PBXSourcesBuildPhase;
     			buildActionMask = 2147483647;
     			files = (
@@ -280,7 +280,7 @@ fi
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		6825E2016825E20100000026 /* PBXTargetDependency libupdate depends on Prep */ = {
+		6825E2016825E20100000026 /* PBXTargetDependency libupdater depends on Prep */ = {
     			isa = PBXTargetDependency;
     			target = 6825E2016825E2010000000C /* Prep */;
     			targetProxy = 6825E2016825E20100000014 /* PBXContainerItemProxy */;
@@ -290,9 +290,9 @@ fi
     			target = 6825E2016825E2010000000C /* Prep */;
     			targetProxy = 6825E2016825E20100000015 /* PBXContainerItemProxy */;
     		};
-		6825E2016825E2010000002A /* PBXTargetDependency updater depends on libupdate */ = {
+		6825E2016825E2010000002A /* PBXTargetDependency updater depends on libupdater */ = {
     			isa = PBXTargetDependency;
-    			target = 6825E2016825E20100000017 /* libupdate */;
+    			target = 6825E2016825E20100000017 /* libupdater */;
     			targetProxy = 6825E2016825E20100000016 /* PBXContainerItemProxy */;
     		};
 		6825E2016825E2010000000A /* PBXTargetDependency All depends on Prep */ = {
@@ -300,9 +300,9 @@ fi
     			target = 6825E2016825E2010000000C /* Prep */;
     			targetProxy = 6825E2016825E20100000018 /* PBXContainerItemProxy */;
     		};
-		6825E2016825E20100000007 /* PBXTargetDependency All depends on libupdate */ = {
+		6825E2016825E20100000007 /* PBXTargetDependency All depends on libupdater */ = {
     			isa = PBXTargetDependency;
-    			target = 6825E2016825E20100000017 /* libupdate */;
+    			target = 6825E2016825E20100000017 /* libupdater */;
     			targetProxy = 6825E2016825E20100000019 /* PBXContainerItemProxy */;
     		};
 		6825E2016825E20100000008 /* PBXTargetDependency All depends on updater */ = {
@@ -491,7 +491,7 @@ ENABLE_TESTABILITY = YES;
 		6825E2016825E2010000002B /* Debug */ = {
     			isa = XCBuildConfiguration;
     			buildSettings = {
-    				PRODUCT_NAME = libupdate;
+    				PRODUCT_NAME = libupdater;
     				EXECUTABLE_EXTENSION = a;
 
     				HEADER_SEARCH_PATHS = (
@@ -514,7 +514,7 @@ ENABLE_TESTABILITY = YES;
     		6825E2016825E2010000002C /* Release */ = {
     			isa = XCBuildConfiguration;
     			buildSettings = {
-    				PRODUCT_NAME = libupdate;
+    				PRODUCT_NAME = libupdater;
     				EXECUTABLE_EXTENSION = a;
 
     				HEADER_SEARCH_PATHS = (
@@ -668,7 +668,7 @@ ENABLE_TESTABILITY = YES;
     			defaultConfigurationIsVisible = 0;
     			defaultConfigurationName = Release;
     		};
-		6825E2016825E20100000025 /* Build configuration list for PBXNativeTarget "libupdate" */ = {
+		6825E2016825E20100000025 /* Build configuration list for PBXNativeTarget "libupdater" */ = {
     			isa = XCConfigurationList;
     			buildConfigurations = (
     				6825E2016825E2010000002B /* Debug */,

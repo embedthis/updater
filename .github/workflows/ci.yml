@@ -89,12 +89,20 @@ jobs:
 
       - name: Run test suite (Unix)
         if: runner.os != 'Windows'
+        env:
+          PRODUCT: ${{ secrets.PRODUCT }}
+          TOKEN: ${{ secrets.TOKEN }}
+          ENDPOINT: ${{ secrets.ENDPOINT }}
         run: |
           tm -v test
 
       - name: Run test suite (Windows)
         if: runner.os == 'Windows'
         shell: cmd
+        env:
+          PRODUCT: ${{ secrets.PRODUCT }}
+          TOKEN: ${{ secrets.TOKEN }}
+          ENDPOINT: ${{ secrets.ENDPOINT }}
         run: |
           call projects\win-prep.bat
           tm -v test

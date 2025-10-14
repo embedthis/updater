@@ -6,17 +6,9 @@
 #   This test focuses on negative test cases and error paths.
 #
 
-if [ -f .creds.sh ] ; then
-    # Just for private testing (gitignored)
-    . .creds.sh
-elif [ ! -f creds.sh ] ; then
-    echo 'Edit your cloud and product Builder credentials in the creds.sh'
-    exit 2
-else
-    . creds.sh
-fi
+. creds.sh
 
-UPDATER="../src/updater"
+UPDATER="updater"
 FAILED=0
 
 echo "=== Error Handling Tests for Updater ==="

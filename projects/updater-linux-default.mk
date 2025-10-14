@@ -108,7 +108,7 @@ ME_CACHE_PREFIX       ?= $(ME_ROOT_PREFIX)/var/spool/$(NAME)/cache
 ME_SRC_PREFIX         ?= $(ME_ROOT_PREFIX)$(NAME)-$(VERSION)
 
 
-TARGETS               += $(BUILD)/bin/libupdate.a
+TARGETS               += $(BUILD)/bin/libupdater.a
 TARGETS               += $(BUILD)/bin/updater
 
 
@@ -141,7 +141,7 @@ prep:
 clean:
 	rm -f "$(BUILD)/obj/main.o"
 	rm -f "$(BUILD)/obj/updater.o"
-	rm -f "$(BUILD)/bin/libupdate.a"
+	rm -f "$(BUILD)/bin/libupdater.a"
 	rm -f "$(BUILD)/bin/updater"
 
 clobber: clean
@@ -204,25 +204,25 @@ $(BUILD)/obj/updater.o: \
 	$(CC) -c -o "$(BUILD)/obj/updater.o" $(CFLAGS) $(DFLAGS) "-Isrc" "-Isrc/osdep" "-I/opt/homebrew/include" "src/updater.c"
 
 #
-#   libupdate
+#   libupdater
 #
 DEPS_7 += $(BUILD)/inc/osdep.h
 DEPS_7 += $(BUILD)/inc/me.h
 DEPS_7 += $(BUILD)/inc/updater.h
 DEPS_7 += $(BUILD)/obj/updater.o
 
-$(BUILD)/bin/libupdate.a: $(DEPS_7)
-	@echo '      [Link] $(BUILD)/bin/libupdate.a'
-	$(AR) -cr "$(BUILD)/bin/libupdate.a" "$(BUILD)/obj/updater.o"
+$(BUILD)/bin/libupdater.a: $(DEPS_7)
+	@echo '      [Link] $(BUILD)/bin/libupdater.a'
+	$(AR) -cr "$(BUILD)/bin/libupdater.a" "$(BUILD)/obj/updater.o"
 
 #
 #   updater
 #
-DEPS_8 += $(BUILD)/bin/libupdate.a
+DEPS_8 += $(BUILD)/bin/libupdater.a
 DEPS_8 += $(BUILD)/inc/osdep.h
 DEPS_8 += $(BUILD)/obj/main.o
 
-LIBS_8 += -lupdate
+LIBS_8 += -lupdater
 
 $(BUILD)/bin/updater: $(DEPS_8)
 	@echo '      [Link] $(BUILD)/bin/updater'
