@@ -72,8 +72,8 @@ typedef struct Fetch {
     int status;            // HTTP response status code
 } Fetch;
 
-static int verbose;        // Global flag to enable verbose tracing output
-static int quiet;          // Global flag to suppress all stdout output
+static int verbose;        // Global flag to enable verbose tracing output (trace and errors)
+static int quiet;          // Global flag to suppress all output (stdout and stderr)
 
 /********************************** Forwards **********************************/
 
@@ -129,7 +129,9 @@ int update(cchar *host, cchar *product, cchar *token, cchar *device, cchar *vers
     rc = 0;
 
     if (!host || !product || !token || !device || !version || !path) {
-        fprintf(stderr, "Bad update args");
+        if (!quietArg) {
+            fprintf(stderr, "Bad update args");
+        }
         return -1;
     }
     verbose = verboseArg;
@@ -141,7 +143,9 @@ int update(cchar *host, cchar *product, cchar *token, cchar *device, cchar *vers
      */
     count = snprintf(url, sizeof(url), "%s/tok/provision/update", host);
     if (count < 0 || (size_t) count >= sizeof(url)) {
-        fprintf(stderr, "Host URL is too long\n");
+        if (!quiet) {
+            fprintf(stderr, "Host URL is too long\n");
+        }
         return -1;
     }
     /*
@@ -153,16 +157,20 @@ int update(cchar *host, cchar *product, cchar *token, cchar *device, cchar *vers
                      properties ? "," : "",
                      properties ? properties : "");
     if (count < 0 || (size_t) count >= sizeof(body)) {
-        fprintf(stderr, "Request body is too long\n");
+        if (!quiet) {
+            fprintf(stderr, "Request body is too long\n");
+        }
         return -1;
     }
     count = snprintf(headers, sizeof(headers), "Content-Type: application/json\r\nAuthorization: %s\r\n", token);
     if (count < 0 || (size_t) count >= sizeof(headers)) {
-        fprintf(stderr, "Headers buffer too small\n");
+        if (!quiet) {
+            fprintf(stderr, "Headers buffer too small\n");
+        }
         return -1;
     }
 
-    if (verbose && !quiet) {
+    if (verbose) {
         printf("\nCheck for update at: %s\n", url);
     }
     if ((fp = fetch("POST", url, headers, body)) == NULL) {
@@ -188,7 +196,9 @@ int update(cchar *host, cchar *product, cchar *token, cchar *device, cchar *vers
         response = NULL;
 
         if (!checksum || !update || !updateVersion) {
-            fprintf(stderr, "Incomplete update response\n");
+            if (!quiet) {
+                fprintf(stderr, "Incomplete update response\n");
+            }
             if (downloadUrl) free(downloadUrl);
             if (checksum) free(checksum);
             if (update) free(update);
@@ -198,7 +208,9 @@ int update(cchar *host, cchar *product, cchar *token, cchar *device, cchar *vers
 
         count = snprintf(headers, sizeof(headers), "Accept: */*\r\n");
         if (count < 0 || (size_t) count >= sizeof(headers)) {
-            fprintf(stderr, "Headers buffer too small\n");
+            if (!quiet) {
+                fprintf(stderr, "Headers buffer too small\n");
+            }
             if (downloadUrl) free(downloadUrl);
             if (checksum) free(checksum);
             if (update) free(update);
@@ -206,12 +218,11 @@ int update(cchar *host, cchar *product, cchar *token, cchar *device, cchar *vers
             return -1;
         }
 
-        if (!quiet) {
-            printf("Update %s available\n", updateVersion);
-        }
         rc = 0;
         if (strncmp(downloadUrl, "https://", 8) != 0) {
-            fprintf(stderr, "Insecure download URL (HTTPS required)\n");
+            if (!quiet) {
+                fprintf(stderr, "Insecure download URL (HTTPS required)\n");
+            }
             rc = -1;
         } else if ((fp = fetch("GET", downloadUrl, headers, NULL)) == NULL) {
             rc = -1;
@@ -222,12 +233,14 @@ int update(cchar *host, cchar *product, cchar *token, cchar *device, cchar *vers
             }
             fetchFree(fp);
             if (rc == 0) {
-                if (verbose && !quiet) {
+                if (verbose) {
                     printf("Verify update checksum in %s\n", path);
                 }
                 if (getFileSum(path, fileSum)== 0) {
                     if (strcmp(fileSum, checksum) != 0) {
-                        fprintf(stderr, "Checksum does not match\n%s vs\n%s\n", fileSum, checksum);
+                        if (!quiet) {
+                            fprintf(stderr, "Checksum does not match\n%s vs\n%s\n", fileSum, checksum);
+                        }
                         rc = -1;
                     } else if (script) {
                         status = applyUpdate(path, script);
@@ -244,9 +257,6 @@ int update(cchar *host, cchar *product, cchar *token, cchar *device, cchar *vers
         if (updateVersion) free(updateVersion);
     } else {
         free(response);
-        if (!quiet) {
-            printf("No update available\n");
-        }
     }
     return rc;
 }
@@ -266,11 +276,11 @@ static int applyUpdate(cchar *path, cchar *script)
 {
     int status;
 
-    if (!quiet) {
+    if (verbose) {
         printf("Applying update: %s %s\n", script, path);
     }
     status = run(script, path);
-    if (!quiet) {
+    if (verbose) {
         printf("Update %s\n", status == 0 ? "Successful" : "Failed");
     }
     return status;
@@ -299,16 +309,22 @@ static int run(cchar *script, cchar *path)
     pid_t pid;
 
     if ((pid = fork()) < 0) {
-        fprintf(stderr, "Cannot fork to run command\n");
+        if (!quiet) {
+            fprintf(stderr, "Cannot fork to run command\n");
+        }
         return -1;
     }
     if (pid == 0) {
         execvp(script, args);
-        fprintf(stderr, "Cannot run command\n");
+        if (!quiet) {
+            fprintf(stderr, "Cannot run command\n");
+        }
         _exit(127);
     }
     if (waitpid(pid, &status, 0) == -1) {
-        fprintf(stderr, "Cannot wait for command\n");
+        if (!quiet) {
+            fprintf(stderr, "Cannot wait for command\n");
+        }
         return -1;
     }
     return WIFEXITED(status) ? WEXITSTATUS(status) : -1;
@@ -348,22 +364,30 @@ static int postReport(int status, cchar *host, cchar *device, cchar *update, cch
     count = snprintf(body, sizeof(body), "{\"success\":%s,\"id\":\"%s\",\"update\":\"%s\"}",
                      status == 0 ? "true" : "false", device, update);
     if (count < 0 || (size_t) count >= sizeof(body)) {
-        fprintf(stderr, "Report body is too long\n");
+        if (!quiet) {
+            fprintf(stderr, "Report body is too long\n");
+        }
         return -1;
     }
     count = snprintf(url, sizeof(url), "%s/tok/provision/updateReport", host);
     if (count < 0 || (size_t) count >= sizeof(url)) {
-        fprintf(stderr, "Report URL is too long\n");
+        if (!quiet) {
+            fprintf(stderr, "Report URL is too long\n");
+        }
         return -1;
     }
     count = snprintf(headers, sizeof(headers), "Content-Type: application/json\r\nAuthorization: %s\r\n", token);
     if (count < 0 || (size_t) count >= sizeof(headers)) {
-        fprintf(stderr, "Report headers buffer too small\n");
+        if (!quiet) {
+            fprintf(stderr, "Report headers buffer too small\n");
+        }
         return -1;
     }
 
     if ((fp = fetch("POST", url, headers, body)) == NULL) {
-        fprintf(stderr, "Cannot post update-report\n");
+        if (!quiet) {
+            fprintf(stderr, "Cannot post update-report\n");
+        }
         return -1;
     }
     fetchFree(fp);
@@ -401,7 +425,7 @@ static Fetch *fetch(cchar *method, char *url, char *headers, char *body)
     int                fd;
 
     snprintf(uri, sizeof(uri), "%s", url);
-    if (verbose && !quiet) {
+    if (verbose) {
         printf("Fetching %s\n", uri);
     }
     if ((host = strstr(uri, "https://")) != NULL) {

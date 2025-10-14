@@ -47,7 +47,7 @@ The updater client works by periodically checking in with the Builder cloud serv
 This repository provides multiple implementations of a standalone **updater** program:
 
 * **C implementation** - Production-ready command line utility and library with minimal dependencies
-* **Node.js/Bun implementation** - Modern JavaScript alternative with equivalent security features
+* **NodeJS/Bun implementation** - JavaScript alternative
 * **Shell script sample** - Documentation/reference implementation (not for production use)
 
 All implementations include:
@@ -179,8 +179,8 @@ File | Description
 `updater.h` | Public API header
 **JavaScript Implementation** |
 `src/updater.js` | Node.js/Bun command-line updater
-**Reference Implementation** |
-`src/updater.sh` | Shell script reference (documentation only)
+**Shell Script Implementation** |
+`src/updater.sh` | Shell script sample utility
 **Supporting Files** |
 `apply.sh` | Sample update application script
 `README.md` | This documentation

@@ -48,10 +48,10 @@ function usage() {
             "--file image/path   # Path to save the downloaded update
             "--host host.domain  # Device cloud endpoint from the Builder cloud edit panel
             "--product ProductID # ProductID from the Builder token list
-            "--quiet             # Suppress all stdout output
+            "--quiet, -q         # Suppress all output (100% silent)
             "--token TokenID     # CloudAPI access token from the Builder token list
             "--version SemVer    # Current device firmware version
-            "--verbose           # Trace execution
+            "--verbose, -v       # Trace execution and show errors
             "key=value ...       # Device-specific properties for the distribution policy`
     )
     process.exit(2)
@@ -60,8 +60,8 @@ function usage() {
 let file = 'update.bin' // Default update file path
 const properties = {} // Device-specific properties for distribution policy
 let cmd, device, host, product, token, version
-let verbose = false // Verbose output flag
-let quiet = false // Quiet output flag - suppress stdout
+let verbose = false // Verbose output flag - emit trace and errors
+let quiet = false // Quiet output flag - suppress all output (stdout and stderr)
 
 /**
     Main entry point for the updater
@@ -87,7 +87,7 @@ async function main() {
         },
         properties
     )
-    if (verbose && !quiet) {
+    if (verbose) {
         console.log('Check for updates\n', JSON.stringify(body, null, 2), '\n')
     }
     let response = await fetch(`${host}/tok/provision/update`, {
@@ -99,23 +99,24 @@ async function main() {
         body: JSON.stringify(body),
     })
     if (!response.ok) {
-        console.error(response)
+        if (!quiet) {
+            console.error(response)
+        }
         throw new Error('Cannot fetch update')
     }
     let data = await response.text()
-    if (verbose && !quiet) {
+    if (verbose) {
         console.log('Update response\n', data, '\n')
     }
     if (!data || data.trim() === '') {
-        if (!quiet) {
-            console.log('No update available')
-        }
         return
     } else {
         try {
             data = JSON.parse(data)
         } catch (error) {
-            console.error('Invalid JSON response', data)
+            if (!quiet) {
+                console.error('Invalid JSON response', data)
+            }
             throw new Error('Invalid JSON response')
         }
         /*
@@ -132,15 +133,13 @@ async function main() {
                 throw new Error('Insecure download URL (HTTPS required)')
             }
 
-            if (!quiet) {
-                console.log(`Update ${data.version} available`)
-            }
-
             //  Download update image to "path"
             try {
                 await download(data.url, file)
             } catch (error) {
-                console.error('Download failed:', error.message)
+                if (!quiet) {
+                    console.error('Download failed:', error.message)
+                }
                 throw new Error('Failed to download update')
             }
 
@@ -149,16 +148,20 @@ async function main() {
             try {
                 sum = await getChecksum(file)
             } catch (error) {
-                console.error('Checksum calculation failed:', error.message)
+                if (!quiet) {
+                    console.error('Checksum calculation failed:', error.message)
+                }
                 throw new Error('Failed to calculate checksum')
             }
             //  Use timing-safe comparison
             if (sum.length !== data.checksum.length || !timingSafeEqual(Buffer.from(sum), Buffer.from(data.checksum))) {
-                console.error(`Checksum does not match\n${sum} vs\n${data.checksum}`)
+                if (!quiet) {
+                    console.error(`Checksum does not match\n${sum} vs\n${data.checksum}`)
+                }
                 throw new Error('Update checksum does not match')
             }
             if (cmd) {
-                if (!quiet) {
+                if (verbose) {
                     console.log(`Checksum matches, apply update`)
                 }
                 let success = await applyUpdate(cmd, file)
@@ -168,7 +171,7 @@ async function main() {
                     id: device,
                     update: data.update,
                 }
-                if (verbose && !quiet) {
+                if (verbose) {
                     console.log(`Post update results ${success ? 'success' : 'failed'}`)
                 }
                 try {
@@ -181,10 +184,14 @@ async function main() {
                         body: JSON.stringify(upbody),
                     })
                     if (!reportResponse.ok) {
-                        console.error('Cannot post update-report')
+                        if (!quiet) {
+                            console.error('Cannot post update-report')
+                        }
                     }
                 } catch (error) {
-                    console.error('Failed to post update report:', error.message)
+                    if (!quiet) {
+                        console.error('Failed to post update report:', error.message)
+                    }
                 }
             }
         }
@@ -206,20 +213,24 @@ async function applyUpdate(cmd, path) {
     try {
         fs.accessSync(cmd, fs.constants.X_OK)
     } catch (error) {
-        console.error(`Script ${cmd} is not executable or does not exist`)
+        if (!quiet) {
+            console.error(`Script ${cmd} is not executable or does not exist`)
+        }
         return false
     }
 
-    if (verbose && !quiet) {
+    if (verbose) {
         console.log(`Apply update ${path} using ${cmd}`)
     }
     let status = await new Promise((resolve, reject) => {
         execFile(cmd, [path], {timeout: SCRIPT_TIMEOUT}, (error) => {
             if (error) {
-                console.error(`Update failed`, error.message)
+                if (!quiet) {
+                    console.error(`Update failed`, error.message)
+                }
                 resolve(false)
             } else {
-                if (!quiet) {
+                if (verbose) {
                     console.log(`Update applied successfully`)
                 }
                 resolve(true)
@@ -248,7 +259,9 @@ function parseArgs() {
         } else if (arg == '--file') {
             file = args[++i]
             if (path.isAbsolute(file) || file.includes('..')) {
-                console.error('Invalid file path. Only relative paths in current directory are allowed.')
+                if (!quiet) {
+                    console.error('Invalid file path. Only relative paths in current directory are allowed.')
+                }
                 usage()
             }
         } else if (arg == '--host') {
@@ -271,13 +284,17 @@ function parseArgs() {
     for (; i < args.length && propCount < MAX_PROPERTIES; i++, propCount++) {
         let [key, value] = args[i].split('=')
         if (!key || !value) {
-            console.error('Invalid property format. Expected key=value')
+            if (!quiet) {
+                console.error('Invalid property format. Expected key=value')
+            }
             usage()
         }
         properties[key.trim()] = value.trim()
     }
     if (i < args.length) {
-        console.error(`Too many properties specified (max: ${MAX_PROPERTIES})`)
+        if (!quiet) {
+            console.error(`Too many properties specified (max: ${MAX_PROPERTIES})`)
+        }
         usage()
     }
     if (!file || !host || !product || !token || !device || !version) {
@@ -312,7 +329,7 @@ async function download(url, path) {
         throw new Error('Invalid Content-Length')
     }
 
-    if (verbose && !quiet) {
+    if (verbose) {
         console.log(`Downloading update to ${path}`)
     }
 

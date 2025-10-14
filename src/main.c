@@ -5,7 +5,7 @@
     arguments and invokes the update() library function to perform OTA updates.
 
     Usage:
-        update --host Domain --token Token --product ProductID --device DeviceID --version 1.2.3 \
+        updater --host Domain --token Token --product ProductID --device DeviceID --version 1.2.3 \
             [--file path] [--cmd script] [--verbose] [key=value ...]
 
     The utility supports both required parameters (host, token, product, device, version) and
@@ -56,19 +56,25 @@ static int parseArgs(int argc, char **argv);
 
     @stability Stable
  */
-static int usage(void)
+static int usage(cchar *argp, int argc, char **argv)
 {
-    fprintf(stderr, "usage: update [options] [key=value,...]\n"
+    fprintf(stderr, "usage: updater [options] [key=value,...]\n"
             "--cmd script        # Script to invoke to apply the update\n"
             "--device ID         # Unique device ID\n"
             "--file image/path   # Path to save the downloaded update\n"
             "--host host.domain  # Device cloud endpoint from the Builder cloud edit panel\n"
             "--product ProductID # ProductID from the Builder token list\n"
-            "--quiet             # Suppress all stdout output\n"
+            "--quiet, -q         # Suppress all output (silent mode)\n"
             "--token TokenID     # CloudAPI access token from the Builder token list\n"
             "--version SemVer    # Current device firmware version\n"
-            "--verbose           # Trace execution\n"
+            "--verbose, -v       # Trace execution and show errors\n"
             "key=value,...       # Device-specific properties for the distribution policy\n");
+    fprintf(stderr, "Error with arg: %s", argp);
+    fprintf(stderr, "Invoked with: %s", argv[0]);
+    for (int i = 0; i < argc; i++) {
+        fprintf(stderr, " %s", argv[i]);
+    }
+    fprintf(stderr, "\n");
     exit(2);
 }
 
@@ -95,7 +101,7 @@ int main(int argc, char **argv)
 
     // Validate that all required parameters are present
     if (!host || !product || !token || !device || !version) {
-        usage();
+        usage(NULL, argc, argv);
     }
 
     // Perform the OTA update
@@ -141,43 +147,43 @@ static int parseArgs(int argc, char **argv)
         }
         if (strcmp(argp, "--cmd") == 0) {
             if (nextArg + 1 >= argc) {
-                usage();
+                usage(argp, argc, argv);
             }
             cmd = argv[++nextArg];
 
         } else if (strcmp(argp, "--file") == 0) {
             if (nextArg + 1 >= argc) {
-                usage();
+                usage(argp, argc, argv);
             }
             file = argv[++nextArg];
 
         } else if (strcmp(argp, "--host") == 0) {
             if (nextArg + 1 >= argc) {
-                usage();
+                usage(argp, argc, argv);
             }
             host = argv[++nextArg];
 
         } else if (strcmp(argp, "--product") == 0) {
             if (nextArg + 1 >= argc) {
-                usage();
+                usage(argp, argc, argv);
             }
             product = argv[++nextArg];
 
         } else if (strcmp(argp, "--token") == 0) {
             if (nextArg + 1 >= argc) {
-                usage();
+                usage(argp, argc, argv);
             }
             token = argv[++nextArg];
 
         } else if (strcmp(argp, "--device") == 0) {
             if (nextArg + 1 >= argc) {
-                usage();
+                usage(argp, argc, argv);
             }
             device = argv[++nextArg];
 
         } else if (strcmp(argp, "--version") == 0) {
             if (nextArg + 1 >= argc) {
-                usage();
+                usage(argp, argc, argv);
             }
             version = argv[++nextArg];
 
@@ -188,7 +194,7 @@ static int parseArgs(int argc, char **argv)
             quiet = 1;
 
         } else {
-            usage();  // Unknown option
+            usage(argp, argc, argv);  // Unknown option
         }
     }
 
@@ -202,7 +208,7 @@ static int parseArgs(int argc, char **argv)
             if ((key = strtok_r(dup, "=", &value)) == NULL || value == NULL || *value == '\0') {
                 fprintf(stderr, "Invalid property format. Use: key=value\n");
                 free(dup);
-                usage();
+                usage(argp, argc, argv);
             }
 
             // Format as JSON: "key":"value",
@@ -210,7 +216,7 @@ static int parseArgs(int argc, char **argv)
             if (count < 0 || mark + (size_t) count >= sizeof(pbuf)) {
                 fprintf(stderr, "Parameter buffer overflow - arguments too long\n");
                 free(dup);
-                usage();
+                usage(argp, argc, argv);
             }
             mark += (size_t) count;
             free(dup);

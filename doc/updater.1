@@ -60,10 +60,10 @@ Path where the downloaded update will be saved. The file will be created with 06
 Path to executable script that applies the update. The script receives the update file path as its only argument. If not specified, the update is downloaded and verified but not applied. The script should remove the update file after successful application.
 .TP
 .BR \-\-quiet ", " \-q
-Suppress all standard output. Only errors are written to stderr. Useful for cron jobs, scripts, or when only exit codes are needed. When both \fB\-\-verbose\fR and \fB\-\-quiet\fR are specified, \fB\-\-quiet\fR takes precedence.
+Suppress all output (both stdout and stderr), providing 100% silent operation. Useful for cron jobs, scripts, or when only exit codes are needed. No output will be generated in quiet mode.
 .TP
 .BR \-\-verbose ", " \-v
-Enable verbose tracing of execution to stdout. This displays detailed information about the update process including HTTP requests, download progress, and verification steps.
+Enable verbose tracing of execution. This displays detailed information about the update process including HTTP requests, download progress, verification steps, and errors. Without this flag, only errors are displayed.
 .SS Device Properties
 .P
 Additional device-specific properties can be specified as \fIkey\fR=\fIvalue\fR pairs. These properties are sent to the Builder service and can be used in distribution policy expressions to selectively target updates. For example:
@@ -124,11 +124,11 @@ updater \-v \-\-device "A123456789" \\
 .fi
 .RE
 .SS Quiet mode for cron jobs
-Run updater silently from cron, only reporting errors:
+Run updater completely silently from cron (no output):
 .PP
 .RS
 .nf
-updater \-\-quiet \-\-device "A123456789" \\
+updater \-q \-\-device "A123456789" \\
     \-\-host "https://api.example.com" \\
     \-\-product "XABCDACC2T1234567890123455" \\
     \-\-token "TT488ETG5H1234567890123456" \\
@@ -137,6 +137,8 @@ updater \-\-quiet \-\-device "A123456789" \\
     \-\-file /var/updates/firmware.bin
 .fi
 .RE
+.P
+The exit code will indicate success (0) or failure (1), but no output will be produced.
 .SH SECURITY
 The updater implements multiple security measures:
 .TP

@@ -37,13 +37,31 @@ usage: updater.sh [options] [key=value ...]
         --file image/path   # Path to save the downloaded update
         --host host.domain  # Device cloud endpoint from the Builder cloud edit panel
         --product ProductID # ProductID from the Builder token list
-        --quiet, -q         # Suppress all stdout output
+        --quiet, -q         # Suppress all output (100% silent)
         --token TokenID     # CloudAPI access token from the Builder token list
         --version SemVer    # Current device firmware version
-        --verbose, -v       # Trace execution
+        --verbose, -v       # Trace execution and show errors
         key=value ...       # Device-specific properties for the distribution policy
 EOF
     exit 2
+}
+
+#
+#   Verbose logging (trace output - only when --verbose)
+#
+log() {
+    if [[ "$VERBOSE" == "1" ]]; then
+        echo "$@"
+    fi
+}
+
+#
+#   Error output (suppressed by --quiet, always shown by default or with --verbose)
+#
+error() {
+    if [[ "$QUIET" != "1" ]]; then
+        echo "$@" >&2
+    fi
 }
 
 #
@@ -91,7 +109,7 @@ parse_args() {
                 shift
                 ;;
             -*)
-                echo "Unknown option: $1" >&2
+                error "Unknown option: $1"
                 usage
                 ;;
             *=*)
@@ -99,7 +117,7 @@ parse_args() {
                 key="${1%%=*}"
                 value="${1#*=}"
                 if [[ -z "$key" || -z "$value" ]]; then
-                    echo "Invalid property format. Expected key=value" >&2
+                    error "Invalid property format. Expected key=value"
                     usage
                 fi
                 if [[ -n "$PROPERTIES" ]]; then
@@ -110,7 +128,7 @@ parse_args() {
                 shift
                 ;;
             *)
-                echo "Invalid argument: $1" >&2
+                error "Invalid argument: $1"
                 usage
                 ;;
         esac
@@ -118,7 +136,7 @@ parse_args() {
 
     # Validate required parameters
     if [[ -z "$DEVICE" || -z "$ENDPOINT" || -z "$PRODUCT" || -z "$TOKEN" || -z "$VERSION" ]]; then
-        echo "Missing required parameters" >&2
+        error "Missing required parameters"
         usage
     fi
 
@@ -127,37 +145,6 @@ parse_args() {
         UPDATE="$TMPDIR/update.bin"
     fi
 }
-
-#
-#   Verbose logging
-#
-log() {
-    if [[ "$VERBOSE" == "1" && "$QUIET" != "1" ]]; then
-        echo "$@"
-    fi
-}
-
-#
-#   Normal output (suppressed by --quiet)
-#
-output() {
-    if [[ "$QUIET" != "1" ]]; then
-        echo "$@"
-    fi
-}
-
-#
-#   Create a secure temporary directory and configure automatic cleanup
-#
-TMPDIR=$(mktemp -d)
-
-if [[ ! "$TMPDIR" || ! -d "$TMPDIR" ]]; then
-    echo "Could not create temp dir" >&2
-    exit 1
-fi
-
-# Ensure temporary directory is cleaned up on exit (success or failure)
-trap "rm -rf '$TMPDIR'" EXIT
 
 # Initialize variables
 DEVICE=""
@@ -170,6 +157,19 @@ UPDATE=""
 PROPERTIES=""
 VERBOSE=0
 QUIET=0
+
+#
+#   Create a secure temporary directory and configure automatic cleanup
+#
+TMPDIR=$(mktemp -d)
+
+if [[ ! "$TMPDIR" || ! -d "$TMPDIR" ]]; then
+    error "Could not create temp dir"
+    exit 1
+fi
+
+# Ensure temporary directory is cleaned up on exit (success or failure)
+trap "rm -rf '$TMPDIR'" EXIT
 
 # Parse command-line arguments
 parse_args "$@"
@@ -221,23 +221,24 @@ curl -f $curl_verbose --max-time 30 -X POST \
     -H "Content-Type:application/json" \
     -d "@${DATA}" "${ENDPOINT}/tok/provision/update" >"$OUTPUT"
 if [ $? -ne 0 ] ; then
-    echo "Failed to check for update" >&2
+    error "Failed to check for update"
     exit 1
 fi
 
 cat "$OUTPUT" | jq empty >/dev/null 2>&1
 if [ $? -ne 0 ] ; then
     # Response did not parse
-    echo "Invalid JSON response" >&2
-    cat "$OUTPUT" >&2
-    echo >&2
+    error "Invalid JSON response"
+    if [[ "$QUIET" != "1" ]]; then
+        cat "$OUTPUT" >&2
+        echo >&2
+    fi
     exit 1
 fi
 
 log "Response: $(cat "$OUTPUT")"
 
 if [ "$(cat "$OUTPUT")" = "{}" ] ; then
-    output "No update required"
     exit 0
 fi
 
@@ -250,7 +251,6 @@ UPDATEID=$(cat "$OUTPUT" | jq -r .update)
 VERSION_NEW=$(cat "$OUTPUT" | jq -r .version)
 
 if [ "$URL" = "null" -o "$URL" = "" ] ; then
-    output "No update available"
     exit 0
 fi
 
@@ -258,7 +258,7 @@ fi
 #   Validate required fields
 #
 if [ "$CHECKSUM" = "null" -o "$UPDATEID" = "null" -o "$VERSION_NEW" = "null" ] ; then
-    echo "Incomplete update response" >&2
+    error "Incomplete update response"
     exit 1
 fi
 
@@ -266,11 +266,10 @@ fi
 #   Validate HTTPS
 #
 if [[ ! "$URL" =~ ^https:// ]] ; then
-    echo "Insecure download URL (HTTPS required)" >&2
+    error "Insecure download URL (HTTPS required)"
     exit 1
 fi
 
-output "Update $VERSION_NEW available"
 log "Download URL: $URL"
 
 #
@@ -279,7 +278,7 @@ log "Download URL: $URL"
 log "Downloading update..."
 curl -f $curl_verbose --max-filesize 104857600 --max-time 600 "$URL" >"$UPDATE"
 if [ $? -ne 0 ] ; then
-    echo "Failed to download update" >&2
+    error "Failed to download update"
     exit 1
 fi
 
@@ -291,12 +290,12 @@ log "Download complete"
 log "Verifying checksum..."
 SUM=$(openssl dgst -sha256 "$UPDATE" | awk '{print $2}')
 if [ "$SUM" != "$CHECKSUM" ] ; then
-    echo "Checksum does not match" >&2
+    error "Checksum does not match"
     log "Expected: $CHECKSUM"
     log "Received: $SUM"
     exit 1
 fi
-output "Checksum matches, apply update"
+log "Checksum matches, apply update"
 
 #
 #   Customize to apply update here and set success to true/false
@@ -305,10 +304,10 @@ if [ -n "$APPLY" ] ; then
     log "Applying update with: $APPLY $UPDATE"
     "$APPLY" "$UPDATE"
     if [ $? -ne 0 ] ; then
-        echo "Apply update failed" >&2
+        error "Apply update failed"
         success=false
     else
-        output "Update applied successfully"
+        log "Update applied successfully"
         success=true
     fi
 else
@@ -333,7 +332,7 @@ curl -f $curl_verbose --max-time 30 -X POST \
     -H "Content-Type:application/json" \
     -d "@${DATA}" "${ENDPOINT}/tok/provision/updateReport" >/dev/null 2>&1
 if [ $? -ne 0 ] ; then
-    echo "Failed to post update report" >&2
+    error "Failed to post update report"
     exit 1
 fi
 
