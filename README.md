@@ -1,6 +1,8 @@
 # EmbedThis Updater
 
-<img src="https://www.embedthis.com/images/pics/circuit-3.png" alt="EmbedThis Updater" width="50%">
+<p align="center">
+    <img src="https://www.embedthis.com/images/pics/circuit-3.png" alt="EmbedThis Updater" width="50%">
+</p>
 
 The EmbedThis Updater is a secure, lightweight command-line utility and library for downloading and applying device software updates published on the [EmbedThis Builder](https://admin.embedthis.com).
 
