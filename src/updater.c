@@ -34,14 +34,13 @@
 #include "updater.h"
 
 /********************************** Locals ************************************/
-
 /*
     Adjust for path to your certificate bundle
  */
 #ifndef UPDATER_CERTS
     #if defined(__APPLE__)
         #define UPDATER_CERTS "/opt/homebrew/etc/openssl@3/cert.pem"
-    #elif defined(__MINGW32__)
+    #elif defined(__MINGW32__) || defined(GITHUB_ACTIONS)
         #define UPDATER_CERTS "/etc/ssl/certs/ca-certificates.crt"
     #elif defined(__linux__)
         #define UPDATER_CERTS "/etc/pki/tls/certs/ca-bundle.crt"
@@ -127,8 +126,6 @@ int update(cchar *host, cchar *product, cchar *token, cchar *device, cchar *vers
     int   count, rc, status;
 
     rc = 0;
-
-    printf("@@ __MINGW32__: %d\n", __MINGW32__);
 
     if (!host || !product || !token || !device || !version || !path) {
         if (!quietArg) {

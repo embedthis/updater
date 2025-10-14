@@ -64,7 +64,7 @@ jobs:
       - name: Build (Unix)
         if: runner.os != 'Windows'
         run: |
-          make SHOW=1
+          make GITHUB_ACTIONS=1 SHOW=1
 
       - name: Configure OpenSSL (Windows)
         if: runner.os == 'Windows'
@@ -81,6 +81,7 @@ jobs:
         if: runner.os == 'Windows'
         shell: cmd
         run: |
+          Get-ChildItem -Recurse -Path "C:\Program Files\OpenSSL"
           SET LIBPATHS="-libpath:$(ME_COM_OPENSSL_PATH)\lib\VC\x64\MDd"
           SET IFLAGS="-I$(ME_COM_OPENSSL_PATH)\include"
           SET SHOW=1
