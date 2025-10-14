@@ -59,6 +59,9 @@ Path where the downloaded update will be saved. The file will be created with 06
 .BR \-\-cmd " " \fIscript\fR
 Path to executable script that applies the update. The script receives the update file path as its only argument. If not specified, the update is downloaded and verified but not applied. The script should remove the update file after successful application.
 .TP
+.BR \-\-quiet ", " \-q
+Suppress all standard output. Only errors are written to stderr. Useful for cron jobs, scripts, or when only exit codes are needed. When both \fB\-\-verbose\fR and \fB\-\-quiet\fR are specified, \fB\-\-quiet\fR takes precedence.
+.TP
 .BR \-\-verbose ", " \-v
 Enable verbose tracing of execution to stdout. This displays detailed information about the update process including HTTP requests, download progress, and verification steps.
 .SS Device Properties
@@ -118,6 +121,20 @@ updater \-v \-\-device "A123456789" \\
     \-\-version "2.1.2" \\
     \-\-cmd ./apply.sh \\
     pro=true region=us-west
+.fi
+.RE
+.SS Quiet mode for cron jobs
+Run updater silently from cron, only reporting errors:
+.PP
+.RS
+.nf
+updater \-\-quiet \-\-device "A123456789" \\
+    \-\-host "https://api.example.com" \\
+    \-\-product "XABCDACC2T1234567890123455" \\
+    \-\-token "TT488ETG5H1234567890123456" \\
+    \-\-version "2.1.2" \\
+    \-\-cmd ./apply.sh \\
+    \-\-file /var/updates/firmware.bin
 .fi
 .RE
 .SH SECURITY

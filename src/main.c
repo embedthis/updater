@@ -39,6 +39,9 @@ static char *properties;
 // Verbose output flag
 static int verbose = 0;
 
+// Quiet output flag
+static int quiet = 0;
+
 /********************************** Forwards **********************************/
 
 static int parseArgs(int argc, char **argv);
@@ -61,6 +64,7 @@ static int usage(void)
             "--file image/path   # Path to save the downloaded update\n"
             "--host host.domain  # Device cloud endpoint from the Builder cloud edit panel\n"
             "--product ProductID # ProductID from the Builder token list\n"
+            "--quiet             # Suppress all stdout output\n"
             "--token TokenID     # CloudAPI access token from the Builder token list\n"
             "--version SemVer    # Current device firmware version\n"
             "--verbose           # Trace execution\n"
@@ -95,7 +99,7 @@ int main(int argc, char **argv)
     }
 
     // Perform the OTA update
-    rc = update(host, product, token, device, version, properties, file, cmd, verbose);
+    rc = update(host, product, token, device, version, properties, file, cmd, verbose, quiet);
 
     // Clean up dynamically allocated properties string
     free(properties);
@@ -179,6 +183,9 @@ static int parseArgs(int argc, char **argv)
 
         } else if (strcmp(argp, "--verbose") == 0 || strcmp(argp, "-v") == 0) {
             verbose = 1;
+
+        } else if (strcmp(argp, "--quiet") == 0 || strcmp(argp, "-q") == 0) {
+            quiet = 1;
 
         } else {
             usage();  // Unknown option

@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 #
 #   updater.sh - Shell-based Over-The-Air (OTA) software update client
 #
@@ -20,74 +21,223 @@
 #   - Enforces maximum file size and timeout limits
 #   - Checksum verification before applying updates
 #
-#   Configuration:
-#   Set these variables with values from your Builder account:
-#   - PRODUCT: Product ID from the Builder token list
-#   - TOKEN: CloudAPI access token from the Builder token list
-#   - ENDPOINT: Cloud API endpoint URL from the Builder Cloud Edit panel
-#   - VERSION: Current device firmware version
-#   - DEVICE: Unique device identifier
-#
 #   Dependencies: curl, jq, openssl
 #
 #   Copyright (c) EmbedThis Software. All Rights Reserved.
 #
 
-: ${VERSION="1.2.3"} # Current device firmware version
-: ${DEVICE="YOUR_DEVID"} # Unique device identifier
-: ${PRODUCT="ProductID from the Builder service token list"} # Product ID from Builder
-: ${TOKEN="CloudAPI from the Builder cloud token list"} # CloudAPI access token
-: ${ENDPOINT="Cloud API endpoint from Builder Cloud Panel"} # Builder API endpoint URL
+#
+#   Display usage information and exit
+#
+usage() {
+    cat <<EOF
+usage: updater.sh [options] [key=value ...]
+        --cmd script        # Script to invoke to apply the update
+        --device ID         # Unique device ID
+        --file image/path   # Path to save the downloaded update
+        --host host.domain  # Device cloud endpoint from the Builder cloud edit panel
+        --product ProductID # ProductID from the Builder token list
+        --quiet, -q         # Suppress all stdout output
+        --token TokenID     # CloudAPI access token from the Builder token list
+        --version SemVer    # Current device firmware version
+        --verbose, -v       # Trace execution
+        key=value ...       # Device-specific properties for the distribution policy
+EOF
+    exit 2
+}
 
+#
+#   Parse command-line arguments
+#
+parse_args() {
+    local key value
+
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --cmd)
+                APPLY="$2"
+                shift 2
+                ;;
+            --device)
+                DEVICE="$2"
+                shift 2
+                ;;
+            --file)
+                UPDATE="$2"
+                shift 2
+                ;;
+            --host)
+                ENDPOINT="$2"
+                shift 2
+                ;;
+            --product)
+                PRODUCT="$2"
+                shift 2
+                ;;
+            --token)
+                TOKEN="$2"
+                shift 2
+                ;;
+            --version)
+                VERSION="$2"
+                shift 2
+                ;;
+            --verbose|-v)
+                VERBOSE=1
+                shift
+                ;;
+            --quiet|-q)
+                QUIET=1
+                shift
+                ;;
+            -*)
+                echo "Unknown option: $1" >&2
+                usage
+                ;;
+            *=*)
+                # Device property in key=value format
+                key="${1%%=*}"
+                value="${1#*=}"
+                if [[ -z "$key" || -z "$value" ]]; then
+                    echo "Invalid property format. Expected key=value" >&2
+                    usage
+                fi
+                if [[ -n "$PROPERTIES" ]]; then
+                    PROPERTIES="$PROPERTIES,\"$key\":\"$value\""
+                else
+                    PROPERTIES="\"$key\":\"$value\""
+                fi
+                shift
+                ;;
+            *)
+                echo "Invalid argument: $1" >&2
+                usage
+                ;;
+        esac
+    done
+
+    # Validate required parameters
+    if [[ -z "$DEVICE" || -z "$ENDPOINT" || -z "$PRODUCT" || -z "$TOKEN" || -z "$VERSION" ]]; then
+        echo "Missing required parameters" >&2
+        usage
+    fi
+
+    # Set default file path if not provided
+    if [[ -z "$UPDATE" ]]; then
+        UPDATE="$TMPDIR/update.bin"
+    fi
+}
+
+#
+#   Verbose logging
+#
+log() {
+    if [[ "$VERBOSE" == "1" && "$QUIET" != "1" ]]; then
+        echo "$@"
+    fi
+}
+
+#
+#   Normal output (suppressed by --quiet)
+#
+output() {
+    if [[ "$QUIET" != "1" ]]; then
+        echo "$@"
+    fi
+}
 
 #
 #   Create a secure temporary directory and configure automatic cleanup
 #
 TMPDIR=$(mktemp -d)
+
 if [[ ! "$TMPDIR" || ! -d "$TMPDIR" ]]; then
-  echo "Could not create temp dir"
-  exit 1
+    echo "Could not create temp dir" >&2
+    exit 1
 fi
 
 # Ensure temporary directory is cleaned up on exit (success or failure)
 trap "rm -rf '$TMPDIR'" EXIT
 
+# Initialize variables
+DEVICE=""
+ENDPOINT=""
+PRODUCT=""
+TOKEN=""
+VERSION=""
+APPLY=""
+UPDATE=""
+PROPERTIES=""
+VERBOSE=0
+QUIET=0
+
+# Parse command-line arguments
+parse_args "$@"
+
 # Define paths for temporary files
 DATA="$TMPDIR/data.tmp" # Request/response data
 OUTPUT="$TMPDIR/output.tmp" # API responses
-UPDATE="$TMPDIR/update.bin" # Downloaded update image
+
+log "Checking for updates..."
+log "Device: $DEVICE"
+log "Version: $VERSION"
+log "Endpoint: $ENDPOINT"
 
 #
 #   Update request. Can add custom device properties to use in the distribution policy
 #
-cat >"$DATA" <<!EOF
+if [[ -n "$PROPERTIES" ]]; then
+    cat >"$DATA" <<EOF
+{
+    "id":"${DEVICE}",
+    "product":"${PRODUCT}",
+    "version":"${VERSION}",
+    ${PROPERTIES}
+}
+EOF
+else
+    cat >"$DATA" <<EOF
 {
     "id":"${DEVICE}",
     "product":"${PRODUCT}",
     "version":"${VERSION}"
 }
-!EOF
+EOF
+fi
+
+log "Request: $(cat "$DATA")"
 
 #
 #   Check for an update. Silent and fail on non-200 status.
 #
-curl -f -s --max-time 30 -X POST \
+if [[ "$VERBOSE" == "1" ]]; then
+    curl_verbose="-v"
+else
+    curl_verbose="-s"
+fi
+
+curl -f $curl_verbose --max-time 30 -X POST \
     -H "Authorization:${TOKEN}" \
     -H "Content-Type:application/json" \
     -d "@${DATA}" "${ENDPOINT}/tok/provision/update" >"$OUTPUT"
 if [ $? -ne 0 ] ; then
     echo "Failed to check for update" >&2
-    exit 2
+    exit 1
 fi
 
 cat "$OUTPUT" | jq empty >/dev/null 2>&1
 if [ $? -ne 0 ] ; then
     # Response did not parse
-    cat "$OUTPUT" ; echo
-    exit 2
+    echo "Invalid JSON response" >&2
+    cat "$OUTPUT" >&2
+    echo >&2
+    exit 1
 fi
-if [ `cat "$OUTPUT"` = "{}" ] ; then
-    echo "No update required"
+
+log "Response: $(cat "$OUTPUT")"
+
+if [ "$(cat "$OUTPUT")" = "{}" ] ; then
+    output "No update required"
     exit 0
 fi
 
@@ -100,7 +250,7 @@ UPDATEID=$(cat "$OUTPUT" | jq -r .update)
 VERSION_NEW=$(cat "$OUTPUT" | jq -r .version)
 
 if [ "$URL" = "null" -o "$URL" = "" ] ; then
-    echo "No update available"
+    output "No update available"
     exit 0
 fi
 
@@ -108,65 +258,84 @@ fi
 #   Validate required fields
 #
 if [ "$CHECKSUM" = "null" -o "$UPDATEID" = "null" -o "$VERSION_NEW" = "null" ] ; then
-    echo "Incomplete update response"
-    exit 2
+    echo "Incomplete update response" >&2
+    exit 1
 fi
 
 #
 #   Validate HTTPS
 #
 if [[ ! "$URL" =~ ^https:// ]] ; then
-    echo "Insecure download URL (HTTPS required)"
-    exit 2
+    echo "Insecure download URL (HTTPS required)" >&2
+    exit 1
 fi
 
-echo "Update $VERSION_NEW available"
+output "Update $VERSION_NEW available"
+log "Download URL: $URL"
 
 #
 #   Fetch the update with safety checks
 #
-curl -f -s --max-filesize 104857600 --max-time 600 "$URL" >"$UPDATE"
+log "Downloading update..."
+curl -f $curl_verbose --max-filesize 104857600 --max-time 600 "$URL" >"$UPDATE"
 if [ $? -ne 0 ] ; then
-    echo "Failed to download update"
-    exit 2
+    echo "Failed to download update" >&2
+    exit 1
 fi
+
+log "Download complete"
 
 #
 #   Validate the checksum
 #
+log "Verifying checksum..."
 SUM=$(openssl dgst -sha256 "$UPDATE" | awk '{print $2}')
 if [ "$SUM" != "$CHECKSUM" ] ; then
-    echo "Checksum does not match"
-    echo "$SUM vs"
-    echo "$CHECKSUM"
-    exit 2
+    echo "Checksum does not match" >&2
+    log "Expected: $CHECKSUM"
+    log "Received: $SUM"
+    exit 1
 fi
-echo "Checksum matches, apply update"
+output "Checksum matches, apply update"
 
 #
 #   Customize to apply update here and set success to true/false
 #
-./apply.sh "$UPDATE"
-if [ $? -ne 0 ] ; then
-    echo "Apply update failed"
-    exit 2
+if [ -n "$APPLY" ] ; then
+    log "Applying update with: $APPLY $UPDATE"
+    "$APPLY" "$UPDATE"
+    if [ $? -ne 0 ] ; then
+        echo "Apply update failed" >&2
+        success=false
+    else
+        output "Update applied successfully"
+        success=true
+    fi
+else
+    log "No apply script specified - update downloaded and verified only"
+    success=true
 fi
-success=true
 
 #
 #   Post update status
 #
-cat >"$DATA" <<!EOF2
+log "Reporting update status..."
+cat >"$DATA" <<EOF
 {
     "success":"${success}",
     "id":"${DEVICE}",
     "update":"${UPDATEID}"
 }
-!EOF2
-curl -f -s --max-time 30 -X POST \
+EOF
+
+curl -f $curl_verbose --max-time 30 -X POST \
     -H "Authorization:${TOKEN}" \
     -H "Content-Type:application/json" \
-    -d "@${DATA}" "${ENDPOINT}/tok/provision/updateReport"
+    -d "@${DATA}" "${ENDPOINT}/tok/provision/updateReport" >/dev/null 2>&1
 if [ $? -ne 0 ] ; then
     echo "Failed to post update report" >&2
+    exit 1
 fi
+
+log "Update complete"
+exit 0

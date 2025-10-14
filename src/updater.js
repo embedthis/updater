@@ -42,16 +42,17 @@ const FILE_MODE = 0o600 // File permissions: owner read/write only
  */
 function usage() {
     console.log(
-        `usage: update [options] [key=value,...]
+        `usage: update [options] [key=value ...]
             "--cmd script        # Script to invoke to apply the update
             "--device ID         # Unique device ID
             "--file image/path   # Path to save the downloaded update
             "--host host.domain  # Device cloud endpoint from the Builder cloud edit panel
-            "--product ProductID # ProductID from the Buidler token list
+            "--product ProductID # ProductID from the Builder token list
+            "--quiet             # Suppress all stdout output
             "--token TokenID     # CloudAPI access token from the Builder token list
             "--version SemVer    # Current device firmware version
             "--verbose           # Trace execution
-            "key:value,...       # Device-specific properties for the distribution policy`
+            "key=value ...       # Device-specific properties for the distribution policy`
     )
     process.exit(2)
 }
@@ -60,6 +61,7 @@ let file = 'update.bin' // Default update file path
 const properties = {} // Device-specific properties for distribution policy
 let cmd, device, host, product, token, version
 let verbose = false // Verbose output flag
+let quiet = false // Quiet output flag - suppress stdout
 
 /**
     Main entry point for the updater
@@ -85,7 +87,7 @@ async function main() {
         },
         properties
     )
-    if (verbose) {
+    if (verbose && !quiet) {
         console.log('Check for updates\n', JSON.stringify(body, null, 2), '\n')
     }
     let response = await fetch(`${host}/tok/provision/update`, {
@@ -101,11 +103,13 @@ async function main() {
         throw new Error('Cannot fetch update')
     }
     let data = await response.text()
-    if (verbose) {
+    if (verbose && !quiet) {
         console.log('Update response\n', data, '\n')
     }
     if (!data || data.trim() === '') {
-        console.log('No update available')
+        if (!quiet) {
+            console.log('No update available')
+        }
         return
     } else {
         try {
@@ -128,7 +132,9 @@ async function main() {
                 throw new Error('Insecure download URL (HTTPS required)')
             }
 
-            console.log(`Update ${data.version} available`)
+            if (!quiet) {
+                console.log(`Update ${data.version} available`)
+            }
 
             //  Download update image to "path"
             try {
@@ -152,7 +158,9 @@ async function main() {
                 throw new Error('Update checksum does not match')
             }
             if (cmd) {
-                console.log(`Checksum matches, apply update`)
+                if (!quiet) {
+                    console.log(`Checksum matches, apply update`)
+                }
                 let success = await applyUpdate(cmd, file)
                 //  Post update report
                 let upbody = {
@@ -160,7 +168,7 @@ async function main() {
                     id: device,
                     update: data.update,
                 }
-                if (verbose) {
+                if (verbose && !quiet) {
                     console.log(`Post update results ${success ? 'success' : 'failed'}`)
                 }
                 try {
@@ -202,7 +210,7 @@ async function applyUpdate(cmd, path) {
         return false
     }
 
-    if (verbose) {
+    if (verbose && !quiet) {
         console.log(`Apply update ${path} using ${cmd}`)
     }
     let status = await new Promise((resolve, reject) => {
@@ -211,7 +219,9 @@ async function applyUpdate(cmd, path) {
                 console.error(`Update failed`, error.message)
                 resolve(false)
             } else {
-                console.log(`Update applied successfully`)
+                if (!quiet) {
+                    console.log(`Update applied successfully`)
+                }
                 resolve(true)
             }
         })
@@ -251,6 +261,8 @@ function parseArgs() {
             version = args[++i]
         } else if (arg == '--verbose' || arg == '-v') {
             verbose = true
+        } else if (arg == '--quiet' || arg == '-q') {
+            quiet = true
         } else {
             usage()
         }
@@ -300,7 +312,7 @@ async function download(url, path) {
         throw new Error('Invalid Content-Length')
     }
 
-    if (verbose) {
+    if (verbose && !quiet) {
         console.log(`Downloading update to ${path}`)
     }
 

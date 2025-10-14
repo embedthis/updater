@@ -33,6 +33,11 @@
             },
         },
     },
+    execution: {
+        timeout: 180000, // 3 minutes
+        parallel: true,
+        workers: 5,
+    },
     env: {
         default: {
             PATH: '../build/bin:${PATH}',

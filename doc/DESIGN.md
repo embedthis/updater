@@ -164,6 +164,7 @@ The updater operates under the following security assumptions:
 - Null-tolerant functions
 - Explicit error handling
 - TLS 1.2+ enforcement
+- Quiet mode for suppressing stdout while preserving stderr
 - Cross-platform (Linux, macOS, BSD, Windows/WSL)
 
 **Design Decisions**:
@@ -206,7 +207,7 @@ typedef struct Fetch {
 // Main API
 int update(cchar *host, cchar *product, cchar *token,
            cchar *device, cchar *version, cchar *properties,
-           cchar *path, cchar *script, int verbose);
+           cchar *path, cchar *script, int verbose, int quiet);
 ```
 
 **Security Features**:
@@ -235,6 +236,7 @@ int update(cchar *host, cchar *product, cchar *token,
 - Promise-based async/await flow
 - Single file implementation
 - ES6 modules
+- Quiet mode for suppressing stdout while preserving stderr
 
 **Design Decisions**:
 
@@ -309,9 +311,11 @@ async function main() {
 
 **Key Features**:
 - Plain bash/POSIX shell
+- Command-line arguments (not environment variables)
 - Uses curl for HTTP
 - Uses jq for JSON parsing
 - Uses openssl for checksums
+- Quiet mode for suppressing stdout while preserving stderr
 - Minimal error handling
 
 **Design Decisions**:

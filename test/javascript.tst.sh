@@ -7,132 +7,148 @@
 
 FAILED=0
 
+# Use process ID to create unique filenames for parallel test execution
+PID=$$
+
 # Test 1: Basic update check (may or may not have update available)
 echo "Test 1: Basic update check"
-node ../src/updater.js --device ${DEVICE} --file updater.bin --host ${ENDPOINT} --product ${PRODUCT} \
+bun ../src/updater.js --device ${DEVICE} --file js-$PID-update.bin --host ${ENDPOINT} --product ${PRODUCT} \
     --token ${TOKEN} --version ${VERSION} --cmd ./apply.sh
-if [ $? = 0 ] ; then
-    echo "✓ Basic update check passed"
-    rm -f updater.bin
+RC=$?
+if [ $RC = 0 ] || [ $RC = 1 ]; then
+    echo "✓ Basic update check passed (exit code: $RC)"
+    rm -f js-$PID-update.bin
 else
-    echo "✓ Basic update check completed (no update or expected failure)"
-    rm -f updater.bin
+    echo "✗ Basic update check failed unexpectedly (exit code: $RC)"
+    rm -f js-$PID-update.bin
+    FAILED=1
 fi
 
 # Test 2: Update check with properties
 echo "Test 2: Update check with device properties"
-node ../src/updater.js --device ${DEVICE} --file updater-props.bin --host ${ENDPOINT} --product ${PRODUCT} \
+bun ../src/updater.js --device ${DEVICE} --file js-$PID-props.bin --host ${ENDPOINT} --product ${PRODUCT} \
     --token ${TOKEN} --version ${VERSION} model=pro region=us-west
-if [ $? = 0 ] || [ $? = 1 ]; then
-    echo "✓ Update with properties passed"
-    rm -f updater-props.bin
+RC=$?
+if [ $RC = 0 ] || [ $RC = 1 ]; then
+    echo "✓ Update with properties passed (exit code: $RC)"
+    rm -f js-$PID-props.bin
 else
-    echo "✗ Update with properties failed unexpectedly"
-    rm -f updater-props.bin
+    echo "✗ Update with properties failed unexpectedly (exit code: $RC)"
+    rm -f js-$PID-props.bin
     FAILED=1
 fi
 
 # Test 3: Verbose mode
 echo "Test 3: Verbose mode"
-node ../src/updater.js --device ${DEVICE} --file updater-verbose.bin --host ${ENDPOINT} --product ${PRODUCT} \
-    --token ${TOKEN} --version ${VERSION} --verbose > /dev/null 2>&1
-if [ $? = 0 ] || [ $? = 1 ]; then
-    echo "✓ Verbose mode passed"
-    rm -f updater-verbose.bin
+bun ../src/updater.js --device ${DEVICE} --file js-$PID-verbose.bin --host ${ENDPOINT} --product ${PRODUCT} \
+    --token ${TOKEN} --version ${VERSION} --verbose --quiet
+RC=$?
+if [ $RC = 0 ] || [ $RC = 1 ]; then
+    echo "✓ Verbose mode passed (exit code: $RC)"
+    rm -f js-$PID-verbose.bin
 else
-    echo "✗ Verbose mode failed unexpectedly"
-    rm -f updater-verbose.bin
+    echo "✗ Verbose mode failed unexpectedly (exit code: $RC)"
+    rm -f js-$PID-verbose.bin
     FAILED=1
 fi
 
 # Test 4: Custom file path
 echo "Test 4: Custom file path"
-CUSTOM_FILE="/tmp/updater-js-test-$$.bin"
-node ../src/updater.js --device ${DEVICE} --file ${CUSTOM_FILE} --host ${ENDPOINT} --product ${PRODUCT} \
+CUSTOM_FILE="js-$PID-custom.bin"
+bun ../src/updater.js --device ${DEVICE} --file ${CUSTOM_FILE} --host ${ENDPOINT} --product ${PRODUCT} \
     --token ${TOKEN} --version ${VERSION}
-if [ $? = 0 ] || [ $? = 1 ]; then
-    echo "✓ Custom file path passed"
+RC=$?
+if [ $RC = 0 ] || [ $RC = 1 ]; then
+    echo "✓ Custom file path passed (exit code: $RC)"
     rm -f ${CUSTOM_FILE}
 else
-    echo "✗ Custom file path failed unexpectedly"
+    echo "✗ Custom file path failed unexpectedly (exit code: $RC)"
+    bun ../src/updater.js --device ${DEVICE} --file ${CUSTOM_FILE} --host ${ENDPOINT} \
+        --product ${PRODUCT} --token ${TOKEN} --version ${VERSION}
     rm -f ${CUSTOM_FILE}
     FAILED=1
 fi
 
 # Test 5: Missing required parameter (should fail)
 echo "Test 5: Missing required parameter (--device)"
-node ../src/updater.js --file updater-error.bin --host ${ENDPOINT} --product ${PRODUCT} \
-    --token ${TOKEN} --version ${VERSION} > /dev/null 2>&1
-if [ $? != 0 ] ; then
-    echo "✓ Missing parameter correctly rejected"
+bun ../src/updater.js --file js-$PID-error.bin --host ${ENDPOINT} --product ${PRODUCT} \
+    --token ${TOKEN} --version ${VERSION} --quiet
+RC=$?
+if [ $RC != 0 ] ; then
+    echo "✓ Missing parameter correctly rejected (exit code: $RC)"
 else
-    echo "✗ Missing parameter should have been rejected"
-    rm -f updater-error.bin
+    echo "✗ Missing parameter should have been rejected (exit code: $RC)"
+    rm -f js-$PID-error.bin
     FAILED=1
 fi
 
 # Test 6: Invalid token (should fail with auth error)
 echo "Test 6: Invalid token"
-node ../src/updater.js --device ${DEVICE} --file updater-badtoken.bin --host ${ENDPOINT} --product ${PRODUCT} \
-    --token "invalid-token-12345" --version ${VERSION} > /dev/null 2>&1
-if [ $? != 0 ] ; then
-    echo "✓ Invalid token correctly rejected"
-    rm -f updater-badtoken.bin
+bun ../src/updater.js --device ${DEVICE} --file js-$PID-badtoken.bin --host ${ENDPOINT} --product ${PRODUCT} \
+    --token "invalid-token-12345" --version ${VERSION} --quiet
+RC=$?
+if [ $RC != 0 ] ; then
+    echo "✓ Invalid token correctly rejected (exit code: $RC)"
+    rm -f js-$PID-badtoken.bin
 else
-    echo "✗ Invalid token should have been rejected"
-    rm -f updater-badtoken.bin
+    echo "✗ Invalid token should have been rejected (exit code: $RC)"
+    rm -f js-$PID-badtoken.bin
     FAILED=1
 fi
 
 # Test 7: Multiple properties
 echo "Test 7: Multiple device properties"
-node ../src/updater.js --device ${DEVICE} --file updater-multiprops.bin --host ${ENDPOINT} --product ${PRODUCT} \
+bun ../src/updater.js --device ${DEVICE} --file js-$PID-multiprops.bin --host ${ENDPOINT} --product ${PRODUCT} \
     --token ${TOKEN} --version ${VERSION} model=pro region=us-west tier=premium
-if [ $? = 0 ] || [ $? = 1 ]; then
-    echo "✓ Multiple properties passed"
-    rm -f updater-multiprops.bin
+RC=$?
+if [ $RC = 0 ] || [ $RC = 1 ]; then
+    echo "✓ Multiple properties passed (exit code: $RC)"
+    rm -f js-$PID-multiprops.bin
 else
-    echo "✗ Multiple properties failed unexpectedly"
-    rm -f updater-multiprops.bin
+    echo "✗ Multiple properties failed unexpectedly (exit code: $RC)"
+    rm -f js-$PID-multiprops.bin
     FAILED=1
 fi
 
 # Test 8: Very old version (should likely get update)
 echo "Test 8: Check with old version"
-node ../src/updater.js --device ${DEVICE} --file updater-old.bin --host ${ENDPOINT} --product ${PRODUCT} \
-    --token ${TOKEN} --version "0.0.1" > /dev/null 2>&1
-if [ $? = 0 ] || [ $? = 1 ]; then
-    echo "✓ Old version check passed"
-    rm -f updater-old.bin
+bun ../src/updater.js --device ${DEVICE} --file js-$PID-old.bin --host ${ENDPOINT} --product ${PRODUCT} \
+    --token ${TOKEN} --version "0.0.1" --quiet
+RC=$?
+if [ $RC = 0 ] || [ $RC = 1 ]; then
+    echo "✓ Old version check passed (exit code: $RC)"
+    rm -f js-$PID-old.bin
 else
-    echo "✗ Old version check failed unexpectedly"
-    rm -f updater-old.bin
+    echo "✗ Old version check failed unexpectedly (exit code: $RC)"
+    rm -f js-$PID-old.bin
     FAILED=1
 fi
 
 # Test 9: Very new version (should not get update)
 echo "Test 9: Check with future version"
-node ../src/updater.js --device ${DEVICE} --file updater-new.bin --host ${ENDPOINT} --product ${PRODUCT} \
-    --token ${TOKEN} --version "999.999.999" > /dev/null 2>&1
-if [ $? = 0 ] || [ $? = 1 ]; then
-    echo "✓ Future version check passed"
-    rm -f updater-new.bin
+bun ../src/updater.js --device ${DEVICE} --file js-$PID-new.bin --host ${ENDPOINT} --product ${PRODUCT} \
+    --token ${TOKEN} --version "999.999.999" --quiet
+RC=$?
+if [ $RC = 0 ] || [ $RC = 1 ]; then
+    echo "✓ Future version check passed (exit code: $RC)"
+    rm -f js-$PID-new.bin
 else
-    echo "✗ Future version check failed unexpectedly"
-    rm -f updater-new.bin
+    echo "✗ Future version check failed unexpectedly (exit code: $RC)"
+    rm -f js-$PID-new.bin
     FAILED=1
 fi
 
 # Test 10: JSON response parsing (implicit in other tests)
 echo "Test 10: Semantic version with pre-release"
-node ../src/updater.js --device ${DEVICE} --file updater-semver.bin --host ${ENDPOINT} --product ${PRODUCT} \
-    --token ${TOKEN} --version "1.0.0-beta.1" > /dev/null 2>&1
-if [ $? = 0 ] || [ $? = 1 ]; then
-    echo "✓ Semantic version test passed"
-    rm -f updater-semver.bin
+bun ../src/updater.js --device ${DEVICE} --file js-$PID-semver.bin --host ${ENDPOINT} --product ${PRODUCT} \
+    --token ${TOKEN} --version "1.0.0-beta.1" --quiet
+RC=$?
+if [ $RC = 0 ] || [ $RC = 1 ]; then
+    echo "✓ Semantic version test passed (exit code: $RC)"
+    rm -f js-$PID-semver.bin
 else
-    echo "✗ Semantic version test failed unexpectedly"
-    rm -f updater-semver.bin
+    echo "✗ Semantic version test failed unexpectedly (exit code: $RC)"
+    rm -f js-$PID-semver.bin
     FAILED=1
 fi
 

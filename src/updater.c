@@ -73,6 +73,7 @@ typedef struct Fetch {
 } Fetch;
 
 static int verbose;        // Global flag to enable verbose tracing output
+static int quiet;          // Global flag to suppress all stdout output
 
 /********************************** Forwards **********************************/
 
@@ -118,7 +119,7 @@ static int run(cchar *script, cchar *path);
     @ingroup Updater
  */
 int update(cchar *host, cchar *product, cchar *token, cchar *device, cchar *version,
-           cchar *properties, cchar *path, cchar *script, int verboseArg)
+           cchar *properties, cchar *path, cchar *script, int verboseArg, int quietArg)
 {
     Fetch *fp;
     char  body[UBSIZE], url[UBSIZE], headers[256], fileSum[EVP_MAX_MD_SIZE * 2 + 1];
@@ -132,6 +133,7 @@ int update(cchar *host, cchar *product, cchar *token, cchar *device, cchar *vers
         return -1;
     }
     verbose = verboseArg;
+    quiet = quietArg;
 
     /*
         Issue update request to determine if there is an update.
@@ -160,7 +162,7 @@ int update(cchar *host, cchar *product, cchar *token, cchar *device, cchar *vers
         return -1;
     }
 
-    if (verbose) {
+    if (verbose && !quiet) {
         printf("\nCheck for update at: %s\n", url);
     }
     if ((fp = fetch("POST", url, headers, body)) == NULL) {
@@ -204,7 +206,9 @@ int update(cchar *host, cchar *product, cchar *token, cchar *device, cchar *vers
             return -1;
         }
 
-        printf("Update %s available\n", updateVersion);
+        if (!quiet) {
+            printf("Update %s available\n", updateVersion);
+        }
         rc = 0;
         if (strncmp(downloadUrl, "https://", 8) != 0) {
             fprintf(stderr, "Insecure download URL (HTTPS required)\n");
@@ -218,17 +222,18 @@ int update(cchar *host, cchar *product, cchar *token, cchar *device, cchar *vers
             }
             fetchFree(fp);
             if (rc == 0) {
-                if (verbose) {
+                if (verbose && !quiet) {
                     printf("Verify update checksum in %s\n", path);
                 }
-                getFileSum(path, fileSum);
-                if (strcmp(fileSum, checksum) != 0) {
-                    fprintf(stderr, "Checksum does not match\n%s vs\n%s\n", fileSum, checksum);
-                    rc = -1;
-                } else if (script) {
-                    status = applyUpdate(path, script);
-                    if (postReport(status, host, device, update, token) < 0) {
+                if (getFileSum(path, fileSum)== 0) {
+                    if (strcmp(fileSum, checksum) != 0) {
+                        fprintf(stderr, "Checksum does not match\n%s vs\n%s\n", fileSum, checksum);
                         rc = -1;
+                    } else if (script) {
+                        status = applyUpdate(path, script);
+                        if (postReport(status, host, device, update, token) < 0) {
+                            rc = -1;
+                        }
                     }
                 }
             }
@@ -239,7 +244,9 @@ int update(cchar *host, cchar *product, cchar *token, cchar *device, cchar *vers
         if (updateVersion) free(updateVersion);
     } else {
         free(response);
-        printf("No update available\n");
+        if (!quiet) {
+            printf("No update available\n");
+        }
     }
     return rc;
 }
@@ -259,9 +266,13 @@ static int applyUpdate(cchar *path, cchar *script)
 {
     int status;
 
-    printf("Applying update: %s %s\n", script, path);
+    if (!quiet) {
+        printf("Applying update: %s %s\n", script, path);
+    }
     status = run(script, path);
-    printf("Update %s\n\n", status == 0 ? "Successful" : "Failed");
+    if (!quiet) {
+        printf("Update %s\n", status == 0 ? "Successful" : "Failed");
+    }
     return status;
 }
 
@@ -390,7 +401,7 @@ static Fetch *fetch(cchar *method, char *url, char *headers, char *body)
     int                fd;
 
     snprintf(uri, sizeof(uri), "%s", url);
-    if (verbose) {
+    if (verbose && !quiet) {
         printf("Fetching %s\n", uri);
     }
     if ((host = strstr(uri, "https://")) != NULL) {
@@ -583,7 +594,7 @@ static int fetchFile(Fetch *fp, cchar *path)
     flags |= O_NOFOLLOW;
 #endif
     if ((fd = open(path, flags, 0600)) < 0) {
-        fprintf(stderr, "Cannot open image temp file securely. It may already exist or path is invalid.\n");
+        fprintf(stderr, "Cannot open image temp file\n");
         return -1;
     }
     if (fstat(fd, &st) < 0 || !S_ISREG(st.st_mode)) {
