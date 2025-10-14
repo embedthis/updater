@@ -56,7 +56,7 @@ fi
 echo "Test 4: Custom file path"
 CUSTOM_FILE="/tmp/binary-$PID-custom.bin"
 updater --device ${DEVICE} --file ${CUSTOM_FILE} --host ${ENDPOINT} --product ${PRODUCT} \
-    --token ${TOKEN} --version ${VERSION}
+    --token ${TOKEN} --version ${VERSION} --quiet
 RC=$?
 if [ $RC = 0 ] || [ $RC = 1 ]; then
     echo "✓ Custom file path passed (exit code: $RC)"

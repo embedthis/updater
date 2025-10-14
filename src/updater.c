@@ -439,13 +439,17 @@ static Fetch *fetch(cchar *method, char *url, char *headers, char *body)
     }
     fd = socket(AF_INET, SOCK_STREAM, 0);
     if (fd < 0) {
-        perror("Cannot open socket");
+        if (!quiet) {
+            perror("Cannot open socket");
+        }
         return NULL;
     }
     server = gethostbyname(host);
     if (server == NULL) {
         close(fd);
+        if (!quiet) {
         fprintf(stderr, "Cannot find host\n");
+        }
         return NULL;
     }
     memset(&server_addr, 0, sizeof(server_addr));
@@ -454,7 +458,9 @@ static Fetch *fetch(cchar *method, char *url, char *headers, char *body)
     server_addr.sin_port = htons(SERVER_PORT);
 
     if (connect(fd, (struct sockaddr*) &server_addr, sizeof(server_addr)) < 0) {
-        perror("Error connecting to host");
+        if (!quiet) {
+            perror("Error connecting to host");
+        }
         close(fd);
         return NULL;
     }
@@ -486,23 +492,31 @@ static Fetch *fetch(cchar *method, char *url, char *headers, char *body)
         return NULL;
     }
     if (strncmp(response, "HTTP/1.1 ", 9) != 0) {
+        if (!quiet) {
         fprintf(stderr, "Bad response\n%s\n", response);
+        }
         fetchFree(fp);
         return NULL;
     }
     if ((status = strchr(response, ' ')) == NULL) {
+        if (!quiet) {
         fprintf(stderr, "Bad response\n%s\n", response);
+        }
         fetchFree(fp);
         return NULL;
     }
     fp->status = atoi(++status);
     if (fp->status != 200) {
+        if (!quiet) {
         fprintf(stderr, "Bad response status %d\n%s\n", fp->status, response);
+        }
         fetchFree(fp);
         return NULL;
     }
     if ((data = strstr(response, "\r\n\r\n")) == NULL) {
+        if (!quiet) {
         fprintf(stderr, "Bad response\n%s\n", response);
+        }
         fetchFree(fp);
         return NULL;
     }
@@ -512,7 +526,9 @@ static Fetch *fetch(cchar *method, char *url, char *headers, char *body)
         fp->contentLength = (size_t) atoi(header);
         free(header);
         if (fp->contentLength < 0 || fp->contentLength > 100 * 1024 * 1024) {
+            if (!quiet) {
             fprintf(stderr, "Invalid Content-Length\n");
+            }
             fetchFree(fp);
             return NULL;
         }
@@ -521,7 +537,9 @@ static Fetch *fetch(cchar *method, char *url, char *headers, char *body)
             fp->bodyLength = ((size_t) bytes - headerBytes);
             fp->body = memdup(data, fp->bodyLength);
             if (!fp->body) {
-                fprintf(stderr, "Cannot allocate body buffer\n");
+                if (!quiet) {
+                    fprintf(stderr, "Cannot allocate body buffer\n");
+                }
                 fetchFree(fp);
                 return NULL;
             }
@@ -530,7 +548,9 @@ static Fetch *fetch(cchar *method, char *url, char *headers, char *body)
             fp->body = NULL;
         }
     } else {
+        if (!quiet) {
         fprintf(stderr, "Missing Content-Length\n");
+        }
         fetchFree(fp);
         return NULL;
     }
@@ -557,7 +577,9 @@ static char *fetchString(Fetch *fp)
         return strdup("");
     }
     if ((body = malloc(fp->contentLength + 1)) == NULL) {
+        if (!quiet) {
         fprintf(stderr, "Cannot allocate %d bytes", (int) fp->contentLength);
+        }
         return NULL;
     }
     len = 0;
@@ -576,7 +598,9 @@ static char *fetchString(Fetch *fp)
             len += (size_t) readBytes;
             bp += readBytes;
         } else {
+            if (!quiet) {
             fprintf(stderr, "Connection closed or error while reading response body\n");
+            }
             free(body);
             return NULL;
         }
@@ -606,7 +630,9 @@ static int fetchFile(Fetch *fp, cchar *path)
     int         fd, flags;
 
     if (strncmp(path, "/tmp/", 5) == 0) {
+        if (!quiet) {
         fprintf(stderr, "WARNING: Saving update to /tmp is insecure due to potential symlink attacks.\n");
+        }
     }
     if (verbose) {
         printf("Downloading update to %s\n", path);
@@ -617,11 +643,15 @@ static int fetchFile(Fetch *fp, cchar *path)
     flags |= O_NOFOLLOW;
 #endif
     if ((fd = open(path, flags, 0600)) < 0) {
+        if (!quiet) {
         fprintf(stderr, "Cannot open image temp file\n");
+        }
         return -1;
     }
     if (fstat(fd, &st) < 0 || !S_ISREG(st.st_mode)) {
+        if (!quiet) {
         fprintf(stderr, "Refusing to write to non-regular file\n");
+        }
         close(fd);
         return -1;
     }
@@ -629,7 +659,9 @@ static int fetchFile(Fetch *fp, cchar *path)
         //  Write the body fragment already read with the headers
         writeLen = (fp->bodyLength < fp->contentLength) ? fp->bodyLength : fp->contentLength;
         if (write(fd, fp->body, writeLen) < 0) {
+            if (!quiet) {
             fprintf(stderr, "Cannot write to file");
+            }
             close(fd);
             return -1;
         }
@@ -638,7 +670,9 @@ static int fetchFile(Fetch *fp, cchar *path)
     }
     while ((bytes = fetchRead(fp, buf, sizeof(buf))) > 0) {
         if (write(fd, buf, (uint) bytes) != (uint) bytes) {
+            if (!quiet) {
             fprintf(stderr, "Cannot save response");
+            }
             close(fd);
             return -1;
         }
@@ -672,7 +706,9 @@ static char *fetchHeader(cchar *response, cchar *key)
             len = (size_t) (end - start);
             value = malloc(len + 1);
             if (!value) {
-                fprintf(stderr, "Cannot allocate header value\n");
+                if (!quiet) {
+                    fprintf(stderr, "Cannot allocate header value\n");
+                }
                 return NULL;
             }
             strncpy(value, start, len);
@@ -750,7 +786,9 @@ static Fetch *fetchAlloc(int fd, cchar *host)
 
     fp = malloc(sizeof(Fetch));
     if (!fp) {
-        fprintf(stderr, "Cannot allocate Fetch structure\n");
+        if (!quiet) {
+            fprintf(stderr, "Cannot allocate Fetch structure\n");
+        }
         return NULL;
     }
     memset(fp, 0, sizeof(Fetch));
@@ -771,8 +809,10 @@ static Fetch *fetchAlloc(int fd, cchar *host)
      */
     SSL_CTX_set_verify(fp->ctx, SSL_VERIFY_PEER, NULL);
     if (!SSL_CTX_load_verify_locations(fp->ctx, UPDATER_CERTS, NULL)) {
-        fprintf(stderr, "Failed to load CA bundle.\n");
-        ERR_print_errors_fp(stderr);
+        if (!quiet) {
+            fprintf(stderr, "Failed to load CA bundle.\n");
+            ERR_print_errors_fp(stderr);
+        }
         SSL_CTX_free(fp->ctx);
         free(fp);
         return NULL;
@@ -797,8 +837,10 @@ static Fetch *fetchAlloc(int fd, cchar *host)
     X509_VERIFY_PARAM_set_hostflags(param, X509_CHECK_FLAG_NO_PARTIAL_WILDCARDS);
 #endif
     if (!X509_VERIFY_PARAM_set1_host(param, host, 0)) {
-        fprintf(stderr, "Failed to set hostname for verification\n");
-        ERR_print_errors_fp(stderr);
+        if (!quiet) {
+            fprintf(stderr, "Failed to set hostname for verification\n");
+            ERR_print_errors_fp(stderr);
+        }
         SSL_free(fp->ssl);
         SSL_CTX_free(fp->ctx);
         free(fp);
@@ -868,7 +910,9 @@ static char *json(cchar *jsonText, cchar *key)
 
     count = snprintf(keybuf, sizeof(keybuf), "\"%s\":", key);
     if (count < 0 || (size_t) count >= sizeof(keybuf)) {
+        if (!quiet) {
         fprintf(stderr, "Key is too long\n");
+        }
         return NULL;
     }
     keyPos = strstr(jsonText, keybuf);
@@ -912,31 +956,41 @@ static int getFileSum(cchar *path, char sum[EVP_MAX_MD_SIZE * 2 + 1])
 
     file = fopen(path, "rb");
     if (!file) {
-        fprintf(stderr, "Cannot open %s\n", path);
+        if (!quiet) {
+            fprintf(stderr, "Cannot open %s\n", path);
+        }
         return -1;
     }
     mdctx = EVP_MD_CTX_new();
     if (!mdctx) {
-        fprintf(stderr, "Failed to create EVP_MD_CTX");
+        if (!quiet) {
+            fprintf(stderr, "Failed to create EVP_MD_CTX");
+        }
         fclose(file);
         return -1;
     }
     if (EVP_DigestInit_ex(mdctx, EVP_sha256(), NULL) != 1) {
+        if (!quiet) {
         fprintf(stderr, "DigestInit error\n");
+        }
         EVP_MD_CTX_free(mdctx);
         fclose(file);
         return -1;
     }
     while ((bytes = fread(buf, 1, sizeof(buf), file)) > 0) {
         if (EVP_DigestUpdate(mdctx, buf, bytes) != 1) {
+            if (!quiet) {
             fprintf(stderr, "DigestUpdate error\n");
+            }
             EVP_MD_CTX_free(mdctx);
             fclose(file);
             return -1;
         }
     }
     if (EVP_DigestFinal_ex(mdctx, hash, &len) != 1) {
+        if (!quiet) {
         fprintf(stderr, "DigestFinal error\n");
+        }
         EVP_MD_CTX_free(mdctx);
         fclose(file);
         return -1;

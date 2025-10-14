@@ -79,9 +79,13 @@ jobs:
 
       - name: Build (Windows)
         if: runner.os == 'Windows'
-        shell: cmd
         run: |
           Get-ChildItem -Recurse -Path "C:\Program Files\OpenSSL"
+
+      - name: Build (Windows)
+        if: runner.os == 'Windows'
+        shell: cmd
+        run: |
           SET LIBPATHS="-libpath:$(ME_COM_OPENSSL_PATH)\lib\VC\x64\MDd"
           SET IFLAGS="-I$(ME_COM_OPENSSL_PATH)\include"
           SET SHOW=1
