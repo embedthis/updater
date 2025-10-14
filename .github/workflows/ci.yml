@@ -88,6 +88,21 @@ jobs:
           # Get-ChildItem -Recurse -Path "."
 
       - name: Run test suite (Unix)
+        if: runner.os == 'linux'
+        env:
+          PRODUCT: ${{ secrets.PRODUCT }}
+          TOKEN: ${{ secrets.TOKEN }}
+          ENDPOINT: ${{ secrets.ENDPOINT }}
+        run: |
+          if [ -d /etc/pki ]; then
+            find /etc/pki
+          fi
+          if [ -d /etc/ssl ]; then
+            find /etc/ssl
+          fi
+          tm -v test
+
+      - name: Run test suite (Unix)
         if: runner.os != 'Windows'
         env:
           PRODUCT: ${{ secrets.PRODUCT }}

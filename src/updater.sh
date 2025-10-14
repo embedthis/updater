@@ -30,19 +30,21 @@
 #   Display usage information and exit
 #
 usage() {
-    cat <<EOF
+    if [[ "$QUIET" != "1" ]]; then
+        cat <<EOF
 usage: updater.sh [options] [key=value ...]
         --cmd script        # Script to invoke to apply the update
         --device ID         # Unique device ID
         --file image/path   # Path to save the downloaded update
         --host host.domain  # Device cloud endpoint from the Builder cloud edit panel
         --product ProductID # ProductID from the Builder token list
-        --quiet, -q         # Suppress all output (100% silent)
+        --quiet, -q         # Suppress all output (completely silent)
         --token TokenID     # CloudAPI access token from the Builder token list
         --version SemVer    # Current device firmware version
         --verbose, -v       # Trace execution and show errors
         key=value ...       # Device-specific properties for the distribution policy
 EOF
+    fi
     exit 2
 }
 

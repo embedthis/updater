@@ -41,19 +41,21 @@ const FILE_MODE = 0o600 // File permissions: owner read/write only
     Display usage information and exit
  */
 function usage() {
-    console.log(
-        `usage: update [options] [key=value ...]
+    if (!quiet) {
+        console.log(
+            `usage: update [options] [key=value ...]
             "--cmd script        # Script to invoke to apply the update
             "--device ID         # Unique device ID
             "--file image/path   # Path to save the downloaded update
             "--host host.domain  # Device cloud endpoint from the Builder cloud edit panel
             "--product ProductID # ProductID from the Builder token list
-            "--quiet, -q         # Suppress all output (100% silent)
+            "--quiet, -q         # Suppress all output (completely silent)
             "--token TokenID     # CloudAPI access token from the Builder token list
             "--version SemVer    # Current device firmware version
             "--verbose, -v       # Trace execution and show errors
             "key=value ...       # Device-specific properties for the distribution policy`
-    )
+        )
+    }
     process.exit(2)
 }
 

@@ -58,23 +58,27 @@ static int parseArgs(int argc, char **argv);
  */
 static int usage(cchar *argp, int argc, char **argv)
 {
-    fprintf(stderr, "usage: updater [options] [key=value,...]\n"
-            "--cmd script        # Script to invoke to apply the update\n"
-            "--device ID         # Unique device ID\n"
-            "--file image/path   # Path to save the downloaded update\n"
-            "--host host.domain  # Device cloud endpoint from the Builder cloud edit panel\n"
-            "--product ProductID # ProductID from the Builder token list\n"
-            "--quiet, -q         # Suppress all output (silent mode)\n"
-            "--token TokenID     # CloudAPI access token from the Builder token list\n"
-            "--version SemVer    # Current device firmware version\n"
-            "--verbose, -v       # Trace execution and show errors\n"
-            "key=value,...       # Device-specific properties for the distribution policy\n");
-    fprintf(stderr, "Error with arg: %s", argp);
-    fprintf(stderr, "Invoked with: %s", argv[0]);
-    for (int i = 0; i < argc; i++) {
-        fprintf(stderr, " %s", argv[i]);
+    if (!quiet) {
+        fprintf(stderr, "usage: updater [options] [key=value,...]\n"
+                "--cmd script        # Script to invoke to apply the update\n"
+                "--device ID         # Unique device ID\n"
+                "--file image/path   # Path to save the downloaded update\n"
+                "--host host.domain  # Device cloud endpoint from the Builder cloud edit panel\n"
+                "--product ProductID # ProductID from the Builder token list\n"
+                "--quiet, -q         # Suppress all output (completely silent)\n"
+                "--token TokenID     # CloudAPI access token from the Builder token list\n"
+                "--version SemVer    # Current device firmware version\n"
+                "--verbose, -v       # Trace execution and show errors\n"
+                "key=value,...       # Device-specific properties for the distribution policy\n");
+        if (argp) {
+            fprintf(stderr, "Error with arg: %s\n", argp);
+        }
+        fprintf(stderr, "Invoked as: %s", argv[0]);
+        for (int i = 0; i < argc; i++) {
+            fprintf(stderr, " %s", argv[i]);
+        }
+        fprintf(stderr, "\n");
     }
-    fprintf(stderr, "\n");
     exit(2);
 }
 
@@ -206,7 +210,9 @@ static int parseArgs(int argc, char **argv)
 
             // Split on '=' to extract key and value
             if ((key = strtok_r(dup, "=", &value)) == NULL || value == NULL || *value == '\0') {
-                fprintf(stderr, "Invalid property format. Use: key=value\n");
+                if (!quiet) {
+                    fprintf(stderr, "Invalid property format. Use: key=value\n");
+                }
                 free(dup);
                 usage(argp, argc, argv);
             }
@@ -214,7 +220,9 @@ static int parseArgs(int argc, char **argv)
             // Format as JSON: "key":"value",
             count = snprintf(&pbuf[mark], sizeof(pbuf) - mark, "\"%s\":\"%s\",", key, value);
             if (count < 0 || mark + (size_t) count >= sizeof(pbuf)) {
-                fprintf(stderr, "Parameter buffer overflow - arguments too long\n");
+                if (!quiet) {
+                    fprintf(stderr, "Parameter buffer overflow - arguments too long\n");
+                }
                 free(dup);
                 usage(argp, argc, argv);
             }
