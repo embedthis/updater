@@ -123,7 +123,8 @@ int main(int argc, char **argv)
 static int parseArgs(int argc, char **argv)
 {
     char *argp, *dup, *key, *value, pbuf[BUFFER_SIZE];
-    int  count, mark, nextArg;
+    size_t mark;
+    int  count, nextArg;
 
     // Set default file path for downloaded update
     file = IMAGE_PATH;
@@ -199,12 +200,12 @@ static int parseArgs(int argc, char **argv)
 
             // Format as JSON: "key":"value",
             count = snprintf(&pbuf[mark], sizeof(pbuf) - mark, "\"%s\":\"%s\",", key, value);
-            if (count < 0 || mark + count >= sizeof(pbuf)) {
+            if (count < 0 || mark + (size_t) count >= sizeof(pbuf)) {
                 fprintf(stderr, "Parameter buffer overflow - arguments too long\n");
                 free(dup);
                 usage();
             }
-            mark += count;
+            mark += (size_t) count;
             free(dup);
         }
 

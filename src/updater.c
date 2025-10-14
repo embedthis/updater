@@ -66,8 +66,8 @@ typedef struct Fetch {
     SSL_CTX *ctx;          // OpenSSL TLS context
     SSL *ssl;              // OpenSSL TLS connection handle
     int fd;                // TCP socket file descriptor
-    ssize contentLength;   // Total response body length from Content-Length header
-    ssize bodyLength;      // Length of initial body data received with headers
+    size_t contentLength;   // Total response body length from Content-Length header
+    size_t bodyLength;      // Length of initial body data received with headers
     char *body;            // Buffer containing initial body data (if any received with headers)
     int status;            // HTTP response status code
 } Fetch;
@@ -77,17 +77,17 @@ static int verbose;        // Global flag to enable verbose tracing output
 /********************************** Forwards **********************************/
 
 static int applyUpdate(cchar *path, cchar *script);
-static Fetch *fetch(char *method, char *url, char *headers, char *body);
+static Fetch *fetch(cchar *method, char *url, char *headers, char *body);
 static Fetch *fetchAlloc(int fd, cchar *host);
 static void fetchFree(Fetch *fp);
 static char *fetchString(Fetch *fp);
 static int fetchFile(Fetch *fp, cchar *path);
-static char *fetchHeader(cchar *response, char *key);
-static ssize fetchRead(Fetch *fp, char *buf, ssize buflen);
-static ssize fetchWrite(Fetch *fp, char *buf, ssize buflen);
+static char *fetchHeader(cchar *response, cchar *key);
+static ssize fetchRead(Fetch *fp, char *buf, size_t buflen);
+static ssize fetchWrite(Fetch *fp, char *buf, size_t buflen);
 static int getFileSum(cchar *path, char sum[EVP_MAX_MD_SIZE * 2 + 1]);
 static char *json(cchar *jsonText, cchar *key);
-static void *memdup(cvoid *ptr, ssize size);
+static void *memdup(cvoid *ptr, size_t size);
 static int postReport(int success, cchar *host, cchar *device, cchar *update, cchar *token);
 static int run(cchar *script, cchar *path);
 
@@ -138,7 +138,7 @@ int update(cchar *host, cchar *product, cchar *token, cchar *device, cchar *vers
         Authentication is using the CloudAPI builder token.
      */
     count = snprintf(url, sizeof(url), "%s/tok/provision/update", host);
-    if (count >= sizeof(url)) {
+    if (count < 0 || (size_t) count >= sizeof(url)) {
         fprintf(stderr, "Host URL is too long\n");
         return -1;
     }
@@ -148,12 +148,12 @@ int update(cchar *host, cchar *product, cchar *token, cchar *device, cchar *vers
     count = snprintf(body, sizeof(body),
                      "{\"id\":\"%s\",\"product\":\"%s\",\"version\":\"%s\",%s}",
                      device, product, version, properties ? properties : "");
-    if (count >= sizeof(body)) {
+    if (count < 0 || (size_t) count >= sizeof(body)) {
         fprintf(stderr, "Request body is too long\n");
         return -1;
     }
     count = snprintf(headers, sizeof(headers), "Content-Type: application/json\r\nAuthorization: %s\r\n", token);
-    if (count >= sizeof(headers)) {
+    if (count < 0 || (size_t) count >= sizeof(headers)) {
         fprintf(stderr, "Headers buffer too small\n");
         return -1;
     }
@@ -193,7 +193,7 @@ int update(cchar *host, cchar *product, cchar *token, cchar *device, cchar *vers
         }
 
         count = snprintf(headers, sizeof(headers), "Accept: */*\r\n");
-        if (count >= sizeof(headers)) {
+        if (count < 0 || (size_t) count >= sizeof(headers)) {
             fprintf(stderr, "Headers buffer too small\n");
             if (downloadUrl) free(downloadUrl);
             if (checksum) free(checksum);
@@ -332,17 +332,17 @@ static int postReport(int status, cchar *host, cchar *device, cchar *update, cch
 
     count = snprintf(body, sizeof(body), "{\"success\":%s,\"id\":\"%s\",\"update\":\"%s\"}",
                      status == 0 ? "true" : "false", device, update);
-    if (count >= sizeof(body)) {
+    if (count < 0 || (size_t) count >= sizeof(body)) {
         fprintf(stderr, "Report body is too long\n");
         return -1;
     }
     count = snprintf(url, sizeof(url), "%s/tok/provision/updateReport", host);
-    if (count >= sizeof(url)) {
+    if (count < 0 || (size_t) count >= sizeof(url)) {
         fprintf(stderr, "Report URL is too long\n");
         return -1;
     }
     count = snprintf(headers, sizeof(headers), "Content-Type: application/json\r\nAuthorization: %s\r\n", token);
-    if (count >= sizeof(headers)) {
+    if (count < 0 || (size_t) count >= sizeof(headers)) {
         fprintf(stderr, "Report headers buffer too small\n");
         return -1;
     }
@@ -372,14 +372,17 @@ static int postReport(int status, cchar *host, cchar *device, cchar *update, cch
     @return Fetch structure on success, NULL on error
     @stability Internal
  */
-static Fetch *fetch(char *method, char *url, char *headers, char *body)
+static Fetch *fetch(cchar *method, char *url, char *headers, char *body)
 {
     struct sockaddr_in server_addr;
     struct hostent     *server;
     Fetch              *fp;
     char               request[UBSIZE], response[UBSIZE], uri[UBSIZE];
-    char               *data, *header, *host, *path, *status;
-    ssize              bytes, headerBytes;
+    static char        emptyPath[] = "";
+    char               *path;
+    char               *data, *header, *host, *status;
+    ssize              bytes;
+    size_t             headerBytes;
     int                fd;
 
     snprintf(uri, sizeof(uri), "%s", url);
@@ -391,7 +394,7 @@ static Fetch *fetch(char *method, char *url, char *headers, char *body)
     if ((path = strchr(host, '/')) != NULL) {
         *path++ = '\0';
     } else {
-        path = "";
+        path = emptyPath;
     }
     fd = socket(AF_INET, SOCK_STREAM, 0);
     if (fd < 0) {
@@ -465,16 +468,16 @@ static Fetch *fetch(char *method, char *url, char *headers, char *body)
     *data = '\0';
     data += 4;
     if ((header = fetchHeader(response, "Content-Length")) != NULL) {
-        fp->contentLength = atoi(header);
+        fp->contentLength = (size_t) atoi(header);
         free(header);
         if (fp->contentLength < 0 || fp->contentLength > 100 * 1024 * 1024) {
             fprintf(stderr, "Invalid Content-Length\n");
             fetchFree(fp);
             return NULL;
         }
-        headerBytes = data - response;
-        if (bytes > headerBytes) {
-            fp->bodyLength = bytes - headerBytes;
+        headerBytes = (size_t) (data - response);
+        if ((size_t) bytes > headerBytes) {
+            fp->bodyLength = ((size_t) bytes - headerBytes);
             fp->body = memdup(data, fp->bodyLength);
             if (!fp->body) {
                 fprintf(stderr, "Cannot allocate body buffer\n");
@@ -506,7 +509,8 @@ static Fetch *fetch(char *method, char *url, char *headers, char *body)
 static char *fetchString(Fetch *fp)
 {
     char  *bp, *body;
-    ssize bytes, len;
+    size_t bytes, len;
+    ssize readBytes;
 
     if (fp->contentLength == 0) {
         return strdup("");
@@ -521,15 +525,15 @@ static char *fetchString(Fetch *fp)
         //  Use the body fragment already read with the headers
         bytes = (fp->bodyLength < fp->contentLength) ? fp->bodyLength : fp->contentLength;
         memcpy(body, fp->body, bytes);
-        len = bytes;
+        len = (size_t) bytes;
         bp += bytes;
         free(fp->body);
         fp->body = NULL;
     }
     while (len < fp->contentLength) {
-        if ((bytes = fetchRead(fp, bp, fp->contentLength - (bp - body))) > 0) {
-            len += bytes;
-            bp += bytes;
+        if ((readBytes = fetchRead(fp, bp, fp->contentLength - (size_t) (bp - body))) > 0) {
+            len += (size_t) readBytes;
+            bp += readBytes;
         } else {
             fprintf(stderr, "Connection closed or error while reading response body\n");
             free(body);
@@ -556,7 +560,8 @@ static int fetchFile(Fetch *fp, cchar *path)
 {
     struct stat st;
     char        buf[UBSIZE];
-    ssize       bytes, writeLen;
+    size_t      writeLen;
+    ssize       bytes;
     int         fd, flags;
 
     if (strncmp(path, "/tmp/", 5) == 0) {
@@ -591,7 +596,7 @@ static int fetchFile(Fetch *fp, cchar *path)
         fp->body = NULL;
     }
     while ((bytes = fetchRead(fp, buf, sizeof(buf))) > 0) {
-        if (write(fd, buf, bytes) != bytes) {
+        if (write(fd, buf, (uint) bytes) != (uint) bytes) {
             fprintf(stderr, "Cannot save response");
             close(fd);
             return -1;
@@ -612,10 +617,10 @@ static int fetchFile(Fetch *fp, cchar *path)
     @return Dynamically allocated header value, or NULL if not found
     @stability Internal
  */
-static char *fetchHeader(cchar *response, char *key)
+static char *fetchHeader(cchar *response, cchar *key)
 {
     char  *end, *start, kbuf[80], *value;
-    ssize len;
+    size_t len;
 
     snprintf(kbuf, sizeof(kbuf), "%s:", key);
     value = 0;
@@ -623,7 +628,7 @@ static char *fetchHeader(cchar *response, char *key)
         if ((end = strstr(start, "\r\n")) != NULL) {
             start += strlen(kbuf);
             while (start < end && isspace(*start)) start++;
-            len = end - start;
+            len = (size_t) (end - start);
             value = malloc(len + 1);
             if (!value) {
                 fprintf(stderr, "Cannot allocate header value\n");
@@ -647,7 +652,7 @@ static char *fetchHeader(cchar *response, char *key)
     @return Number of bytes read, or -1 on error
     @stability Internal
  */
-static ssize fetchRead(Fetch *fp, char *buf, ssize buflen)
+static ssize fetchRead(Fetch *fp, char *buf, size_t buflen)
 {
     ssize rc;
 
@@ -670,7 +675,7 @@ static ssize fetchRead(Fetch *fp, char *buf, ssize buflen)
     @return Number of bytes written, or -1 on error
     @stability Internal
  */
-static ssize fetchWrite(Fetch *fp, char *buf, ssize buflen)
+static ssize fetchWrite(Fetch *fp, char *buf, size_t buflen)
 {
     ssize rc;
 
@@ -737,7 +742,10 @@ static Fetch *fetchAlloc(int fd, cchar *host)
     fp->ssl = SSL_new(fp->ctx);
     fp->fd = fd;
     SSL_set_fd(fp->ssl, fd);
-    /* Send SNI */
+    /*
+        Send SNI - SSL_set_tlsext_host_name macro casts to void*, triggering const warning.
+        This is an OpenSSL API limitation, not a security issue.
+     */
     SSL_set_tlsext_host_name(fp->ssl, host);
 
     /*
@@ -813,12 +821,12 @@ static void fetchFree(Fetch *fp)
  */
 static char *json(cchar *jsonText, cchar *key)
 {
+    size_t size;
     char  *end, keybuf[80], *keyPos, *start, *value, *vbuf;
-    ssize size;
     int   quoted, count;
 
     count = snprintf(keybuf, sizeof(keybuf), "\"%s\":", key);
-    if (count >= sizeof(keybuf)) {
+    if (count < 0 || (size_t) count >= sizeof(keybuf)) {
         fprintf(stderr, "Key is too long\n");
         return NULL;
     }
@@ -831,7 +839,7 @@ static char *json(cchar *jsonText, cchar *key)
         while (*end && ((quoted && *end != '"') || (!quoted && *end != ',' && *end != '}'))) {
             end++;
         }
-        size = end - start;
+        size = (size_t) (end - start);
         vbuf = (char*) malloc(size + 1);
         if (vbuf) {
             strncpy(vbuf, start, size);
@@ -859,7 +867,7 @@ static int getFileSum(cchar *path, char sum[EVP_MAX_MD_SIZE * 2 + 1])
     FILE       *file;
     uchar      buf[UBSIZE], hash[EVP_MAX_MD_SIZE];
     uint       len, i;
-    ssize      bytes;
+    size_t     bytes;
 
     file = fopen(path, "rb");
     if (!file) {
@@ -913,7 +921,7 @@ static int getFileSum(cchar *path, char sum[EVP_MAX_MD_SIZE * 2 + 1])
     @return Pointer to duplicated memory, or NULL on error
     @stability Internal
  */
-static void *memdup(cvoid *ptr, ssize size)
+static void *memdup(cvoid *ptr, size_t size)
 {
     char *newp;
 
