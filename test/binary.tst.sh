@@ -10,13 +10,14 @@ FAILED=0
 # Test 1: Basic update check (may or may not have update available)
 echo "Test 1: Basic update check"
 updater --device ${DEVICE} --file updater.bin --host ${ENDPOINT} --product ${PRODUCT} \
-    --token ${TOKEN} --version ${VERSION} --cmd ../src/apply.sh
+    --token ${TOKEN} --version ${VERSION} --cmd ./apply.sh
 if [ $? = 0 ] ; then
     echo "✓ Basic update check passed"
     rm -f updater.bin
 else
-    echo "✓ Basic update check completed (no update or expected failure)"
+    echo "✗ Basic update check completed (no update or expected failure)"
     rm -f updater.bin
+    FAILED=1
 fi
 
 # Test 2: Update check with properties

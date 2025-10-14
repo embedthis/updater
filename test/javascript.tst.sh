@@ -10,7 +10,7 @@ FAILED=0
 # Test 1: Basic update check (may or may not have update available)
 echo "Test 1: Basic update check"
 node ../src/updater.js --device ${DEVICE} --file updater.bin --host ${ENDPOINT} --product ${PRODUCT} \
-    --token ${TOKEN} --version ${VERSION} --cmd ../src/apply.sh
+    --token ${TOKEN} --version ${VERSION} --cmd ./apply.sh
 if [ $? = 0 ] ; then
     echo "✓ Basic update check passed"
     rm -f updater.bin

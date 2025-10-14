@@ -122,9 +122,9 @@ int main(int argc, char **argv)
  */
 static int parseArgs(int argc, char **argv)
 {
-    char *argp, *dup, *key, *value, pbuf[BUFFER_SIZE];
+    char   *argp, *dup, *key, *value, pbuf[BUFFER_SIZE];
     size_t mark;
-    int  count, nextArg;
+    int    count, nextArg;
 
     // Set default file path for downloaded update
     file = IMAGE_PATH;

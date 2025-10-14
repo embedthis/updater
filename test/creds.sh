@@ -2,7 +2,7 @@
 #
 #	creds.sh - Credentials for the updater
 #
-if [ ${GITHUB_ACTIONS} = "true" ] ; then
+if [ "${GITHUB_ACTIONS}" = "true" ] ; then
     VERSION="1.0.0"
     DEVICE="UPDATER001"
 elif [ -f .creds.sh ] ; then

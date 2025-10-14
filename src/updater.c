@@ -66,8 +66,8 @@ typedef struct Fetch {
     SSL_CTX *ctx;          // OpenSSL TLS context
     SSL *ssl;              // OpenSSL TLS connection handle
     int fd;                // TCP socket file descriptor
-    size_t contentLength;   // Total response body length from Content-Length header
-    size_t bodyLength;      // Length of initial body data received with headers
+    size_t contentLength;  // Total response body length from Content-Length header
+    size_t bodyLength;     // Length of initial body data received with headers
     char *body;            // Buffer containing initial body data (if any received with headers)
     int status;            // HTTP response status code
 } Fetch;
@@ -146,8 +146,10 @@ int update(cchar *host, cchar *product, cchar *token, cchar *device, cchar *vers
         SECURITY Acceptable: - The developer is responsible for validating the inputs to this function.
      */
     count = snprintf(body, sizeof(body),
-                     "{\"id\":\"%s\",\"product\":\"%s\",\"version\":\"%s\",%s}",
-                     device, product, version, properties ? properties : "");
+                     "{\"id\":\"%s\",\"product\":\"%s\",\"version\":\"%s\"%s%s}",
+                     device, product, version,
+                     properties ? "," : "",
+                     properties ? properties : "");
     if (count < 0 || (size_t) count >= sizeof(body)) {
         fprintf(stderr, "Request body is too long\n");
         return -1;
@@ -216,7 +218,9 @@ int update(cchar *host, cchar *product, cchar *token, cchar *device, cchar *vers
             }
             fetchFree(fp);
             if (rc == 0) {
-                printf("Verify update checksum in %s\n", path);
+                if (verbose) {
+                    printf("Verify update checksum in %s\n", path);
+                }
                 getFileSum(path, fileSum);
                 if (strcmp(fileSum, checksum) != 0) {
                     fprintf(stderr, "Checksum does not match\n%s vs\n%s\n", fileSum, checksum);
@@ -378,14 +382,17 @@ static Fetch *fetch(cchar *method, char *url, char *headers, char *body)
     struct hostent     *server;
     Fetch              *fp;
     char               request[UBSIZE], response[UBSIZE], uri[UBSIZE];
-    static char        emptyPath[] = "";
     char               *path;
     char               *data, *header, *host, *status;
-    ssize              bytes;
+    static char        emptyPath[] = "";
     size_t             headerBytes;
+    ssize              bytes;
     int                fd;
 
     snprintf(uri, sizeof(uri), "%s", url);
+    if (verbose) {
+        printf("Fetching %s\n", uri);
+    }
     if ((host = strstr(uri, "https://")) != NULL) {
         host += 8;
     } else {
@@ -508,9 +515,9 @@ static Fetch *fetch(cchar *method, char *url, char *headers, char *body)
  */
 static char *fetchString(Fetch *fp)
 {
-    char  *bp, *body;
+    char   *bp, *body;
     size_t bytes, len;
-    ssize readBytes;
+    ssize  readBytes;
 
     if (fp->contentLength == 0) {
         return strdup("");
@@ -619,7 +626,7 @@ static int fetchFile(Fetch *fp, cchar *path)
  */
 static char *fetchHeader(cchar *response, cchar *key)
 {
-    char  *end, *start, kbuf[80], *value;
+    char   *end, *start, kbuf[80], *value;
     size_t len;
 
     snprintf(kbuf, sizeof(kbuf), "%s:", key);
@@ -822,8 +829,8 @@ static void fetchFree(Fetch *fp)
 static char *json(cchar *jsonText, cchar *key)
 {
     size_t size;
-    char  *end, keybuf[80], *keyPos, *start, *value, *vbuf;
-    int   quoted, count;
+    char   *end, keybuf[80], *keyPos, *start, *value, *vbuf;
+    int    quoted, count;
 
     count = snprintf(keybuf, sizeof(keybuf), "\"%s\":", key);
     if (count < 0 || (size_t) count >= sizeof(keybuf)) {
