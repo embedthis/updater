@@ -1,0 +1,439 @@
+#
+#   updater-windows-default.nmake -- Makefile to build EmbedThis Updater for windows
+#
+
+NAME                  = updater
+VERSION               = 1.1.2
+
+OS                    = windows
+PA                    = $(PROCESSOR_ARCHITECTURE)
+PROJECT               = updater-windows-default
+
+!IFNDEF PROFILE
+PROFILE               = dev
+!ENDIF
+
+!IF "$(PA)" == "AMD64"
+ARCH                  = x64
+CC_ARCH               = x86_64
+ENTRY                 = _DllMainCRTStartup
+!ELSEIF "$(PA)" == "ARM64"
+ARCH                  = arm64
+CC_ARCH               = aarch64
+ENTRY                 = _DllMainCRTStartup@12
+!ELSEIF "$(PA)" == "ARM"
+ARCH                  = arm
+CC_ARCH               = arm
+ENTRY                 = _DllMainCRTStartup@12
+!ELSEIF "$(PA)" == "X86"
+ARCH                  = x86
+CC_ARCH               = i686
+ENTRY                 = _DllMainCRTStartup@12
+!ELSE
+ARCH                  = x64
+CC_ARCH               = x86_64
+ENTRY                 = _DllMainCRTStartup
+!ENDIF
+
+!IFNDEF CONFIG
+CONFIG                = $(OS)-$(ARCH)-$(PROFILE)
+!ENDIF
+
+!IFNDEF BUILD
+BUILD                 = build\$(OS)-$(ARCH)-$(PROFILE)
+!ENDIF
+
+!IFNDEF LBIN
+LBIN                  = $(BUILD)\bin
+
+!ENDIF
+
+#
+# Components
+#
+!IFNDEF ME_COM_COMPILER
+ME_COM_COMPILER       = 1
+!ENDIF
+!IFNDEF ME_COM_LIB
+ME_COM_LIB            = 1
+!ENDIF
+!IFNDEF ME_COM_LINK
+ME_COM_LINK           = 1
+!ENDIF
+!IFNDEF ME_COM_OSDEP
+ME_COM_OSDEP          = 1
+!ENDIF
+!IFNDEF ME_COM_R
+ME_COM_R              = 1
+!ENDIF
+!IFNDEF ME_COM_RC
+ME_COM_RC             = 1
+!ENDIF
+!IFNDEF ME_COM_VXWORKS
+ME_COM_VXWORKS        = 0
+!ENDIF
+
+
+!IF "$(ME_COM_LIB)" == "1"
+ME_COM_COMPILER       = 1
+!ENDIF
+
+!IF "$(ME_COM_LINK)" == "1"
+ME_COM_COMPILER       = 1
+!ENDIF
+
+!IF "$(ME_COM_RC)" == "1"
+ME_COM_COMPILER       = 1
+!ENDIF
+
+
+#
+# Settings
+#
+!IFNDEF ME_AUTHOR
+ME_AUTHOR             = \"updater\"
+!ENDIF
+!IFNDEF ME_COMPANY
+ME_COMPANY            = \"updater\"
+!ENDIF
+!IFNDEF ME_COMPATIBLE
+ME_COMPATIBLE         = \"1.1\"
+!ENDIF
+!IFNDEF ME_COMPILER_FORTIFY
+ME_COMPILER_FORTIFY   = 1
+!ENDIF
+!IFNDEF ME_COMPILER_HAS_ATOMIC
+ME_COMPILER_HAS_ATOMIC = 0
+!ENDIF
+!IFNDEF ME_COMPILER_HAS_ATOMIC64
+ME_COMPILER_HAS_ATOMIC64 = 0
+!ENDIF
+!IFNDEF ME_COMPILER_HAS_DYN_LOAD
+ME_COMPILER_HAS_DYN_LOAD = 1
+!ENDIF
+!IFNDEF ME_COMPILER_HAS_LIB_EDIT
+ME_COMPILER_HAS_LIB_EDIT = 0
+!ENDIF
+!IFNDEF ME_COMPILER_HAS_LIB_RT
+ME_COMPILER_HAS_LIB_RT = 0
+!ENDIF
+!IFNDEF ME_COMPILER_HAS_MMU
+ME_COMPILER_HAS_MMU   = 1
+!ENDIF
+!IFNDEF ME_COMPILER_HAS_STACK_PROTECTOR
+ME_COMPILER_HAS_STACK_PROTECTOR = 0
+!ENDIF
+!IFNDEF ME_COMPILER_HAS_SYNC
+ME_COMPILER_HAS_SYNC  = 0
+!ENDIF
+!IFNDEF ME_COMPILER_HAS_SYNC64
+ME_COMPILER_HAS_SYNC64 = 0
+!ENDIF
+!IFNDEF ME_COMPILER_HAS_SYNC_CAS
+ME_COMPILER_HAS_SYNC_CAS = 0
+!ENDIF
+!IFNDEF ME_COMPILER_HAS_UNNAMED_UNIONS
+ME_COMPILER_HAS_UNNAMED_UNIONS = 1
+!ENDIF
+!IFNDEF ME_CONFIGURE
+ME_CONFIGURE          = \"me -d -q -platform windows-x64-default -configure . -gen nmake\"
+!ENDIF
+!IFNDEF ME_CONFIGURED
+ME_CONFIGURED         = 1
+!ENDIF
+!IFNDEF ME_DEBUG
+ME_DEBUG              = 1
+!ENDIF
+!IFNDEF ME_DEPTH
+ME_DEPTH              = 1
+!ENDIF
+!IFNDEF ME_DESCRIPTION
+ME_DESCRIPTION        = \"Device firmware updater\"
+!ENDIF
+!IFNDEF ME_INTEGRATE
+ME_INTEGRATE          = 1
+!ENDIF
+!IFNDEF ME_MBEDTLS_COMPACT
+ME_MBEDTLS_COMPACT    = 0
+!ENDIF
+!IFNDEF ME_NAME
+ME_NAME               = \"updater\"
+!ENDIF
+!IFNDEF ME_PARTS
+ME_PARTS              = \"undefined\"
+!ENDIF
+!IFNDEF ME_PREFIXES
+ME_PREFIXES           = \"install-prefixes\"
+!ENDIF
+!IFNDEF ME_STATIC
+ME_STATIC             = 1
+!ENDIF
+!IFNDEF ME_TITLE
+ME_TITLE              = \"EmbedThis Updater\"
+!ENDIF
+!IFNDEF ME_TLS
+ME_TLS                = \"openssl\"
+!ENDIF
+!IFNDEF ME_TUNE
+ME_TUNE               = \"size\"
+!ENDIF
+!IFNDEF ME_VERSION
+ME_VERSION            = \"1.1.2\"
+!ENDIF
+
+!IFNDEF CC
+CC                    = cl
+!ENDIF
+
+!IFNDEF LD
+LD                    = link
+!ENDIF
+
+!IFNDEF AR
+AR                    = lib
+!ENDIF
+
+!IFNDEF RC
+RC                    = rc
+!ENDIF
+
+!IFNDEF CFLAGS
+CFLAGS                = -nologo -GR- -W3 -Zi -Od -MDd
+!ELSE
+CFLAGS                = $(CFLAGS) -nologo -GR- -W3 -Zi -Od -MDd
+!ENDIF
+
+!IFNDEF DFLAGS
+DFLAGS                = -DME_DEBUG=1 -D_CRT_SECURE_NO_WARNINGS=1 "-DME_COM_COMPILER=$(ME_COM_COMPILER)" "-DME_COM_LIB=$(ME_COM_LIB)" "-DME_COM_LINK=$(ME_COM_LINK)" "-DME_COM_OSDEP=$(ME_COM_OSDEP)" "-DME_COM_R=$(ME_COM_R)" "-DME_COM_RC=$(ME_COM_RC)" "-DME_COM_VXWORKS=$(ME_COM_VXWORKS)" "-DME_MBEDTLS_COMPACT=$(ME_MBEDTLS_COMPACT)" 
+!ELSE
+DFLAGS                = $(DFLAGS) -DME_DEBUG=1 -D_CRT_SECURE_NO_WARNINGS=1 "-DME_COM_COMPILER=$(ME_COM_COMPILER)" "-DME_COM_LIB=$(ME_COM_LIB)" "-DME_COM_LINK=$(ME_COM_LINK)" "-DME_COM_OSDEP=$(ME_COM_OSDEP)" "-DME_COM_R=$(ME_COM_R)" "-DME_COM_RC=$(ME_COM_RC)" "-DME_COM_VXWORKS=$(ME_COM_VXWORKS)" "-DME_MBEDTLS_COMPACT=$(ME_MBEDTLS_COMPACT)" 
+!ENDIF
+
+!IFNDEF IFLAGS
+IFLAGS                = -Ibuild\$(CONFIG)\inc
+!ELSE
+IFLAGS                = $(IFLAGS) "-Ibuild/$(CONFIG)/inc"
+!ENDIF
+
+!IFNDEF LDFLAGS
+LDFLAGS               = -nologo -incremental:no -dynamicbase -nxcompat -debug -machine:x64
+!ELSE
+LDFLAGS               = $(LDFLAGS) -nologo -incremental:no -dynamicbase -nxcompat -debug -machine:x64
+!ENDIF
+
+!IFNDEF LIBPATHS
+LIBPATHS              = "-libpath:build\$(CONFIG)\bin"
+!ELSE
+LIBPATHS              = $(LIBPATHS) "-libpath:build\$(CONFIG)\bin"
+!ENDIF
+
+!IFNDEF LIBS
+LIBS                  = ws2_32.lib advapi32.lib user32.lib kernel32.lib oldnames.lib shell32.lib
+!ELSE
+LIBS                  = $(LIBS) ws2_32.lib advapi32.lib user32.lib kernel32.lib oldnames.lib shell32.lib
+!ENDIF
+
+ME_ROOT_PREFIX        = C:
+ME_BASE_PREFIX        = $(ME_ROOT_PREFIX)\Program Files
+ME_APP_PREFIX         = $(ME_BASE_PREFIX)\EmbedThis Updater
+ME_VAPP_PREFIX        = $(ME_APP_PREFIX)
+ME_DATA_PREFIX        = $(ME_VAPP_PREFIX)
+ME_STATE_PREFIX       = $(ME_VAPP_PREFIX)
+ME_BIN_PREFIX         = $(ME_VAPP_PREFIX)\bin
+ME_INC_PREFIX         = $(ME_VAPP_PREFIX)\inc
+ME_LIB_PREFIX         = $(ME_VAPP_PREFIX)\lib
+ME_MAN_PREFIX         = $(ME_VAPP_PREFIX)\man
+ME_ETC_PREFIX         = $(ME_VAPP_PREFIX)
+ME_WEB_PREFIX         = $(ME_VAPP_PREFIX)\web
+ME_LOG_PREFIX         = $(ME_VAPP_PREFIX)\log
+ME_SPOOL_PREFIX       = $(ME_VAPP_PREFIX)\tmp
+ME_CACHE_PREFIX       = $(ME_VAPP_PREFIX)\cache
+ME_SRC_PREFIX         = $(ME_VAPP_PREFIX)\src
+
+
+TARGETS               = $(TARGETS) build\$(CONFIG)\bin\libupdate.lib
+TARGETS               = $(TARGETS) build\$(CONFIG)\bin\updater.exe
+
+!IFNDEF SHOW
+.SILENT:
+!ENDIF
+
+all build compile: prep $(TARGETS)
+
+.PHONY: prep
+
+prep:
+!IFNDEF VSINSTALLDIR
+	echo "Visual Studio vars not set. Run vcvars.bat."
+	exit 255
+!ENDIF
+!IFNDEF ME_APP_PREFIX
+	echo "ME_APP_PREFIX not set."
+	exit 255
+!ENDIF
+	@echo Building for $(CC_ARCH)
+	@if not exist $(BUILD)\bin md $(BUILD)\bin
+	@if not exist $(BUILD)\inc md $(BUILD)\inc
+	@if not exist $(BUILD)\obj md $(BUILD)\obj
+	@if not exist $(BUILD)\inc\me.h copy projects\$(PROJECT)-me.h $(BUILD)\inc\me.h
+!IF "$(SHOW)" != ""
+	@echo ..... [Info] Use "make SHOW=1" to trace executed commands and errors.
+LOG =
+!ELSE
+LOG = >nul
+!ENDIF
+
+clean:
+	if exist "build\$(CONFIG)\obj\main.obj" del /Q "build\$(CONFIG)\obj\main.obj"
+	if exist "build\$(CONFIG)\obj\updater.obj" del /Q "build\$(CONFIG)\obj\updater.obj"
+	if exist "build\$(CONFIG)\bin\libupdate.lib" del /Q "build\$(CONFIG)\bin\libupdate.lib"
+	if exist "build\$(CONFIG)\bin\updater.exe" del /Q "build\$(CONFIG)\bin\updater.exe"
+	if exist "build\$(CONFIG)\bin\updater.lib" del /Q "build\$(CONFIG)\bin\updater.lib"
+	if exist "build\$(CONFIG)\bin\updater.pdb" del /Q "build\$(CONFIG)\bin\updater.pdb"
+	if exist "build\$(CONFIG)\bin\updater.exp" del /Q "build\$(CONFIG)\bin\updater.exp"
+
+#
+#   me.h
+#
+DEPS_1 = $(DEPS_1) src\me.h
+
+build\$(CONFIG)\inc\me.h: $(DEPS_1)
+	@echo ..... [Copy] build\$(CONFIG)\inc\me.h
+	if not exist "build\$(CONFIG)\inc" md "build\$(CONFIG)\inc"
+	copy /Y /B src\me.h+modified build\$(CONFIG)\inc\me.h $(LOG)
+
+#
+#   osdep.h
+#
+DEPS_2 = $(DEPS_2) src\osdep\osdep.h
+
+build\$(CONFIG)\inc\osdep.h: $(DEPS_2)
+	@echo ..... [Copy] build\$(CONFIG)\inc\osdep.h
+	if not exist "build\$(CONFIG)\inc" md "build\$(CONFIG)\inc"
+	copy /Y /B src\osdep\osdep.h+modified build\$(CONFIG)\inc\osdep.h $(LOG)
+
+#
+#   updater.h
+#
+DEPS_3 = $(DEPS_3) src\updater.h
+
+build\$(CONFIG)\inc\updater.h: $(DEPS_3)
+	@echo ..... [Copy] build\$(CONFIG)\inc\updater.h
+	if not exist "build\$(CONFIG)\inc" md "build\$(CONFIG)\inc"
+	copy /Y /B src\updater.h+modified build\$(CONFIG)\inc\updater.h $(LOG)
+
+#
+#   updater.h
+#
+
+src\updater.h: $(DEPS_4)
+
+#
+#   main.obj
+#
+DEPS_5 = $(DEPS_5) src\updater.h
+
+build\$(CONFIG)\obj\main.obj: \
+    src\main.c $(DEPS_5)
+	@echo .. [Compile] build\$(CONFIG)\obj\main.obj
+	"$(CC)" -c -Fo"build\$(CONFIG)\obj\main.obj" -Fd"build\$(CONFIG)\obj\main.pdb" $(CFLAGS) $(DFLAGS) $(IFLAGS) "-Isrc" "-Isrc\osdep" "-I\opt\homebrew\include" "src\main.c" $(LOG)
+
+#
+#   updater.obj
+#
+DEPS_6 = $(DEPS_6) src\updater.h
+
+build\$(CONFIG)\obj\updater.obj: \
+    src\updater.c $(DEPS_6)
+	@echo .. [Compile] build\$(CONFIG)\obj\updater.obj
+	"$(CC)" -c -Fo"build\$(CONFIG)\obj\updater.obj" -Fd"build\$(CONFIG)\obj\updater.pdb" $(CFLAGS) $(DFLAGS) "-Isrc" "-Isrc\osdep" "-I\opt\homebrew\include" "src\updater.c" $(LOG)
+
+#
+#   libupdate
+#
+DEPS_7 = $(DEPS_7) build\$(CONFIG)\inc\osdep.h
+DEPS_7 = $(DEPS_7) build\$(CONFIG)\inc\me.h
+DEPS_7 = $(DEPS_7) build\$(CONFIG)\inc\updater.h
+DEPS_7 = $(DEPS_7) build\$(CONFIG)\obj\updater.obj
+
+build\$(CONFIG)\bin\libupdate.lib: $(DEPS_7)
+	@echo ..... [Link] build\$(CONFIG)\bin\libupdate.lib
+	"$(AR)" -nologo -out:"build\$(CONFIG)\bin\libupdate.lib" "build\$(CONFIG)\obj\updater.obj" $(LOG)
+
+#
+#   updater
+#
+DEPS_8 = $(DEPS_8) build\$(CONFIG)\bin\libupdate.lib
+DEPS_8 = $(DEPS_8) build\$(CONFIG)\inc\osdep.h
+DEPS_8 = $(DEPS_8) build\$(CONFIG)\obj\main.obj
+
+LIBS_8 = $(LIBS_8) libupdate.lib
+
+build\$(CONFIG)\bin\updater.exe: $(DEPS_8)
+	@echo ..... [Link] build\$(CONFIG)\bin\updater.exe
+	"$(LD)" -nologo -out:"build\$(CONFIG)\bin\updater.exe" -entry:mainCRTStartup -subsystem:console $(LDFLAGS) $(LIBPATHS) "-libpath:\opt\homebrew\lib" "build\$(CONFIG)\obj\main.obj" $(LIBPATHS_8) $(LIBS_8) $(LIBS) "ssl" "crypto"  $(LOG)
+
+#
+#   installPrep
+#
+
+installPrep: $(DEPS_9)
+	if [ "`id -u`" != 0 ]
+	then echo "Must run as root. Rerun with sudo."
+	exit 255
+	fi
+
+#
+#   stop
+#
+
+stop: $(DEPS_10)
+#  Omit build script stop
+
+#
+#   installBinary
+#
+
+installBinary: $(DEPS_11)
+#  Omit build script installBinary
+
+#
+#   start
+#
+
+start: $(DEPS_12)
+#  Omit build script start
+
+#
+#   install
+#
+DEPS_13 = $(DEPS_13) installPrep
+DEPS_13 = $(DEPS_13) stop
+DEPS_13 = $(DEPS_13) installBinary
+DEPS_13 = $(DEPS_13) start
+
+install: $(DEPS_13)
+#  Omit build script install
+
+#
+#   uninstall
+#
+DEPS_14 = $(DEPS_14) stop
+
+uninstall: $(DEPS_14)
+#  Omit build script uninstall
+
+#
+#   uninstallBinary
+#
+
+uninstallBinary: $(DEPS_15)
+#  Omit build script uninstallBinary
+
+#
+#   version
+#
+
+version: $(DEPS_16)
+	echo $(VERSION)
+

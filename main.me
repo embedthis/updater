@@ -1,22 +1,49 @@
 /*
-    main.me -- Main MakeMe File for the Updater
+    main.me -- MakeMe for the EmbedThis Updater
  */
 
 Me.load({
     plugins: [ 'installs' ],
 
+    blend: [
+        'src/**.me'
+    ],
+
+    configure: {
+        requires:  [ 'osdep' ],
+    },
+
     settings: {
+        static: true,
+        compiler: {fortify: true},
+        integrate: true,
         prefixes: 'install-prefixes',
+        mbedtls: {
+            compact: false,
+        },
+        tls: 'openssl',
+        tune: 'size',
     },
 
     targets: {
+        r: {
+            configurable: true,
+            description: 'Safe portable runtime',
+            depends: ['libr'],
+        },
+        libupdate: {
+            type: 'lib',
+            depends: [ 'osdep' ],
+            includes: [ 'src', 'src/osdep', '/opt/homebrew/include' ],
+            headers: [ 'src/*.h' ],
+            sources: [ 'src/updater.c' ],
+        },
         updater: {
             type: 'exe',
-            includes: [ 'src', 'src/osdep', '/opt/homebrew/include' ],
-            sources: [ 'src/updater.c', 'src/main.c' ],
+            sources: [ 'src/main.c' ],
+            depends: [ 'libupdate', 'osdep' ],
             libpaths: [ '/opt/homebrew/lib' ],
             libraries: [ 'ssl', 'crypto' ],
-            depends: [ ],
         },
 
         package: {
@@ -25,8 +52,19 @@ Me.load({
 
         packageSource: { },
 
-        sync: {
-            action: `sh('pak -f upgrade')`,
+        projects: {
+            action: `
+                genProjects('', ['default'], ['freertos-arm', 'freebsd-arm', 'linux-x64', 'macosx-arm64', 'vxworks-arm', 'windows-x64'] )
+                run('bash bin/fixProjects')
+            `
+        },
+
+        mine: {
+            action: `genProjects('', 'mine', Config.OS + '-' + Config.CPU)`,
+        },
+
+        format: {
+            shell: `uncrustify -q -c .uncrustify --replace --no-backup  src/*.{c,h} test/*.tst.c`
         },
     },
 
@@ -34,29 +72,43 @@ Me.load({
         packages: {
             pak: {
                 inherit:    'package-manifest',
-                prefixes:   [ 'src' ],
+                prefixes:   [ 'src'],
                 formats:    [ 'tar' ],
                 sets:       [ 'pak' ],
             },
         },
-        sets: { 
+        sets: {
             pak: [
-                {   
-                    from:       [ 
-                        'src/updater.h', 
-                        'src/updater.c',  
-                        'src/updater.js',  
-                        'src/updater.sh',  
-                        'src/apply.sh',  
-                        'src/main.c',  
-                        'src/me.h',  
-                        'README.md',
-                        'src/osdep/osdep.h',
-                        'src/Makefile',
+                {
+                    from:       'dist.me',
+                    to:         '${src}/dist/r.me',
+
+                },{
+                    from:       'CLAUDE.md',
+                    to:         '${src}/dist',
+
+                },{
+                    from:       'src/r.h',
+                    to:         '${src}/dist/r.h',
+                    
+                },{
+                    from: [
+                                'src/*.h',
+                                'src/*.c',
                     ],
-                    to:  '${src}/dist/',
-                }
-            ]
-        }
-    }
+                    to:        '${src}/dist/updater.c',
+                    append:    true,
+                    header:    '/*\n * ${settings.title} Library Source\n */\n\n#include "r.h"\n\n#if ME_COM_UPDATER\n',
+                    footer:    '#else\nvoid dummyUpdater(){}\n#endif /* ME_COM_UPDATER */',
+                    divider:   true,
+                    filter:    /^#inc.*updater.*$/mg,
+
+                },{
+                    from:       ['doc/api/updater.html', 'doc/api/updater.tags', 'doc/api/updater.dtags'],
+                    to:         '${src}/doc/api/',
+                    relative:   'doc/api',
+                },
+            ],
+        },
+	},
 })

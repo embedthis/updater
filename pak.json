@@ -1,9 +1,26 @@
 {
     "name": "updater",
+    "description": "Device firmware updater",
+    "title": "EmbedThis Updater",
     "version": "1.1.2",
-    "repository": "https://github.com/embedthis/updater",
+    "keywords": [
+        "updater",
+        "OTA"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "git://github.com/embedthis/updater.git"
+    },
+    "bugs": {
+        "url": "http://github.com/embedthis/updater/issues"
+    },
+    "license": "MIT",
     "dependencies": {
         "osdep": "~1"
     },
+    "files": [
+        "dist/",
+        "doc/api/r.*"
+    ],
     "import": true
 }
