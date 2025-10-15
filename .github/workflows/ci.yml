@@ -79,11 +79,6 @@ jobs:
 
       - name: Build (Windows)
         if: runner.os == 'Windows'
-        run: |
-          Get-ChildItem -Recurse -Path "C:\Program Files\OpenSSL"
-
-      - name: Build (Windows)
-        if: runner.os == 'Windows'
         shell: cmd
         run: |
           SET LIBPATHS="-libpath:$(ME_COM_OPENSSL_PATH)\lib\VC\x64\MDd"
@@ -99,12 +94,6 @@ jobs:
           TOKEN: ${{ secrets.TOKEN }}
           ENDPOINT: ${{ secrets.ENDPOINT }}
         run: |
-          if [ -d /etc/pki ]; then
-            find /etc/pki
-          fi
-          if [ -d /etc/ssl ]; then
-            find /etc/ssl
-          fi
           tm -v test
 
       - name: Run test suite (Unix)
