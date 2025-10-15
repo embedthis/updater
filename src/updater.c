@@ -561,7 +561,13 @@ static char *fetchString(Fetch *fp)
     ssize  readBytes;
 
     if (fp->contentLength == 0) {
-        return strdup("");
+        char *empty = strdup("");
+        if (!empty) {
+            if (!quiet) {
+                fprintf(stderr, "Cannot allocate memory for empty string\n");
+            }
+        }
+        return empty;
     }
     if ((body = malloc(fp->contentLength + 1)) == NULL) {
         if (!quiet) {
@@ -919,11 +925,15 @@ static char *json(cchar *jsonText, cchar *key)
         }
         size = (size_t) (end - start);
         vbuf = (char*) malloc(size + 1);
-        if (vbuf) {
-            strncpy(vbuf, start, size);
-            vbuf[size] = '\0';
-            return vbuf;
+        if (!vbuf) {
+            if (!quiet) {
+                fprintf(stderr, "Cannot allocate memory for JSON value\n");
+            }
+            return NULL;
         }
+        strncpy(vbuf, start, size);
+        vbuf[size] = '\0';
+        return vbuf;
     }
     return NULL;
 }
@@ -1016,9 +1026,14 @@ static void *memdup(cvoid *ptr, size_t size)
     if (ptr == NULL) {
         return NULL;
     }
-    if ((newp = malloc(size + 1)) != 0) {
-        memcpy(newp, ptr, size);
-        newp[size] = '\0';
+    newp = malloc(size + 1);
+    if (!newp) {
+        if (!quiet) {
+            fprintf(stderr, "Cannot allocate memory for memdup\n");
+        }
+        return NULL;
     }
+    memcpy(newp, ptr, size);
+    newp[size] = '\0';
     return newp;
 }

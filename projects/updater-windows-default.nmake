@@ -210,9 +210,9 @@ DFLAGS                = $(DFLAGS) -DME_DEBUG=1 -D_CRT_SECURE_NO_WARNINGS=1 "-DME
 !ENDIF
 
 !IFNDEF IFLAGS
-IFLAGS                = -Ibuild\$(CONFIG)\inc
+IFLAGS                = -DMOBDEFAULT_IFLAGS -Ibuild\$(CONFIG)\inc
 !ELSE
-IFLAGS                = $(IFLAGS) "-Ibuild/$(CONFIG)/inc"
+IFLAGS                = -DMOB_ENV_IFLAGS $(IFLAGS) -DMOB_AFTER "-Ibuild/$(CONFIG)/inc"
 !ENDIF
 
 !IFNDEF LDFLAGS
