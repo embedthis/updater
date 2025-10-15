@@ -46,7 +46,8 @@ extern "C" {
     @param script Optional path to executable script that applies the update. The script receives the update file
         path as its only argument. If NULL, the update is downloaded and verified but not applied. May be NULL.
     @param verbose Set to non-zero to enable verbose tracing of execution to stdout, zero for normal operation.
-    @param quiet Set to non-zero to suppress all stdout output, zero for normal output. Errors are still written to stderr.
+    @param quiet Set to non-zero to suppress all stdout output, zero for normal output. Errors are still written to
+       stderr.
         When both verbose and quiet are set, quiet takes precedence.
 
     @return Returns 0 on success. Returns -1 on error (invalid parameters, network failure, checksum mismatch,

@@ -220,7 +220,7 @@ int update(cchar *host, cchar *product, cchar *token, cchar *device, cchar *vers
                 if (verbose) {
                     printf("Verify update checksum in %s\n", path);
                 }
-                if (getFileSum(path, fileSum)== 0) {
+                if (getFileSum(path, fileSum) == 0) {
                     if (strcmp(fileSum, checksum) != 0) {
                         if (!quiet) {
                             fprintf(stderr, "Checksum does not match\n%s vs\n%s\n", fileSum, checksum);
@@ -406,7 +406,7 @@ static Fetch *fetch(cchar *method, char *url, char *headers, char *body)
     static char        emptyPath[] = "";
     size_t             headerBytes;
     ssize              bytes;
-    int                fd;
+    int                fd, contentLength;
 
     snprintf(uri, sizeof(uri), "%s", url);
     if (verbose) {
@@ -433,7 +433,7 @@ static Fetch *fetch(cchar *method, char *url, char *headers, char *body)
     if (server == NULL) {
         close(fd);
         if (!quiet) {
-        fprintf(stderr, "Cannot find host\n");
+            fprintf(stderr, "Cannot find host\n");
         }
         return NULL;
     }
@@ -478,14 +478,14 @@ static Fetch *fetch(cchar *method, char *url, char *headers, char *body)
     }
     if (strncmp(response, "HTTP/1.1 ", 9) != 0) {
         if (!quiet) {
-        fprintf(stderr, "Bad response\n%s\n", response);
+            fprintf(stderr, "Bad response\n%s\n", response);
         }
         fetchFree(fp);
         return NULL;
     }
     if ((status = strchr(response, ' ')) == NULL) {
         if (!quiet) {
-        fprintf(stderr, "Bad response\n%s\n", response);
+            fprintf(stderr, "Bad response\n%s\n", response);
         }
         fetchFree(fp);
         return NULL;
@@ -493,14 +493,14 @@ static Fetch *fetch(cchar *method, char *url, char *headers, char *body)
     fp->status = atoi(++status);
     if (fp->status != 200) {
         if (!quiet) {
-        fprintf(stderr, "Bad response status %d\n%s\n", fp->status, response);
+            fprintf(stderr, "Bad response status %d\n%s\n", fp->status, response);
         }
         fetchFree(fp);
         return NULL;
     }
     if ((data = strstr(response, "\r\n\r\n")) == NULL) {
         if (!quiet) {
-        fprintf(stderr, "Bad response\n%s\n", response);
+            fprintf(stderr, "Bad response\n%s\n", response);
         }
         fetchFree(fp);
         return NULL;
@@ -508,15 +508,17 @@ static Fetch *fetch(cchar *method, char *url, char *headers, char *body)
     *data = '\0';
     data += 4;
     if ((header = fetchHeader(response, "Content-Length")) != NULL) {
-        fp->contentLength = (size_t) atoi(header);
+        contentLength = atoi(header);
         free(header);
-        if (fp->contentLength < 0 || fp->contentLength > 100 * 1024 * 1024) {
+        if (contentLength < 0 || contentLength > 100 * 1024 * 1024) {
             if (!quiet) {
-            fprintf(stderr, "Invalid Content-Length\n");
+                fprintf(stderr, "Invalid Content-Length\n");
             }
             fetchFree(fp);
             return NULL;
         }
+        fp->contentLength = (size_t) contentLength;
+
         headerBytes = (size_t) (data - response);
         if ((size_t) bytes > headerBytes) {
             fp->bodyLength = ((size_t) bytes - headerBytes);
@@ -534,7 +536,7 @@ static Fetch *fetch(cchar *method, char *url, char *headers, char *body)
         }
     } else {
         if (!quiet) {
-        fprintf(stderr, "Missing Content-Length\n");
+            fprintf(stderr, "Missing Content-Length\n");
         }
         fetchFree(fp);
         return NULL;
@@ -563,7 +565,7 @@ static char *fetchString(Fetch *fp)
     }
     if ((body = malloc(fp->contentLength + 1)) == NULL) {
         if (!quiet) {
-        fprintf(stderr, "Cannot allocate %d bytes", (int) fp->contentLength);
+            fprintf(stderr, "Cannot allocate %d bytes", (int) fp->contentLength);
         }
         return NULL;
     }
@@ -584,7 +586,7 @@ static char *fetchString(Fetch *fp)
             bp += readBytes;
         } else {
             if (!quiet) {
-            fprintf(stderr, "Connection closed or error while reading response body\n");
+                fprintf(stderr, "Connection closed or error while reading response body\n");
             }
             free(body);
             return NULL;
@@ -616,7 +618,7 @@ static int fetchFile(Fetch *fp, cchar *path)
 
     if (strncmp(path, "/tmp/", 5) == 0) {
         if (!quiet) {
-        fprintf(stderr, "WARNING: Saving update to /tmp is insecure due to potential symlink attacks.\n");
+            fprintf(stderr, "WARNING: Saving update to /tmp is insecure due to potential symlink attacks.\n");
         }
     }
     if (verbose) {
@@ -629,13 +631,13 @@ static int fetchFile(Fetch *fp, cchar *path)
 #endif
     if ((fd = open(path, flags, 0600)) < 0) {
         if (!quiet) {
-        fprintf(stderr, "Cannot open image temp file\n");
+            fprintf(stderr, "Cannot open image temp file\n");
         }
         return -1;
     }
     if (fstat(fd, &st) < 0 || !S_ISREG(st.st_mode)) {
         if (!quiet) {
-        fprintf(stderr, "Refusing to write to non-regular file\n");
+            fprintf(stderr, "Refusing to write to non-regular file\n");
         }
         close(fd);
         return -1;
@@ -645,7 +647,7 @@ static int fetchFile(Fetch *fp, cchar *path)
         writeLen = (fp->bodyLength < fp->contentLength) ? fp->bodyLength : fp->contentLength;
         if (write(fd, fp->body, writeLen) < 0) {
             if (!quiet) {
-            fprintf(stderr, "Cannot write to file");
+                fprintf(stderr, "Cannot write to file");
             }
             close(fd);
             return -1;
@@ -656,7 +658,7 @@ static int fetchFile(Fetch *fp, cchar *path)
     while ((bytes = fetchRead(fp, buf, sizeof(buf))) > 0) {
         if (write(fd, buf, (uint) bytes) != (uint) bytes) {
             if (!quiet) {
-            fprintf(stderr, "Cannot save response");
+                fprintf(stderr, "Cannot save response");
             }
             close(fd);
             return -1;
@@ -902,7 +904,7 @@ static char *json(cchar *jsonText, cchar *key)
     count = snprintf(keybuf, sizeof(keybuf), "\"%s\":", key);
     if (count < 0 || (size_t) count >= sizeof(keybuf)) {
         if (!quiet) {
-        fprintf(stderr, "Key is too long\n");
+            fprintf(stderr, "Key is too long\n");
         }
         return NULL;
     }
@@ -962,7 +964,7 @@ static int getFileSum(cchar *path, char sum[EVP_MAX_MD_SIZE * 2 + 1])
     }
     if (EVP_DigestInit_ex(mdctx, EVP_sha256(), NULL) != 1) {
         if (!quiet) {
-        fprintf(stderr, "DigestInit error\n");
+            fprintf(stderr, "DigestInit error\n");
         }
         EVP_MD_CTX_free(mdctx);
         fclose(file);
@@ -971,7 +973,7 @@ static int getFileSum(cchar *path, char sum[EVP_MAX_MD_SIZE * 2 + 1])
     while ((bytes = fread(buf, 1, sizeof(buf), file)) > 0) {
         if (EVP_DigestUpdate(mdctx, buf, bytes) != 1) {
             if (!quiet) {
-            fprintf(stderr, "DigestUpdate error\n");
+                fprintf(stderr, "DigestUpdate error\n");
             }
             EVP_MD_CTX_free(mdctx);
             fclose(file);
@@ -980,7 +982,7 @@ static int getFileSum(cchar *path, char sum[EVP_MAX_MD_SIZE * 2 + 1])
     }
     if (EVP_DigestFinal_ex(mdctx, hash, &len) != 1) {
         if (!quiet) {
-        fprintf(stderr, "DigestFinal error\n");
+            fprintf(stderr, "DigestFinal error\n");
         }
         EVP_MD_CTX_free(mdctx);
         fclose(file);
