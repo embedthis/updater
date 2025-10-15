@@ -192,7 +192,8 @@ static void test_http_host(void)
         Using http instead of https for the host
         This should fail eventually, though may not fail immediately
      */
-    rc = update("http://api.embedthis.com", testProduct, testToken, testDevice, testVersion, NULL, testFile, NULL, 0, 0);
+    rc =
+        update("http://api.embedthis.com", testProduct, testToken, testDevice, testVersion, NULL, testFile, NULL, 0, 0);
     teqi(rc, -1, "HTTP host should fail");
 }
 
@@ -251,7 +252,8 @@ static void test_invalid_file_path(void)
 {
     int rc;
 
-    rc = update(testHost, testProduct, testToken, testDevice, testVersion, NULL, "/nonexistent/path/to/file.bin", NULL, 0, 0);
+    rc = update(testHost, testProduct, testToken, testDevice, testVersion, NULL, "/nonexistent/path/to/file.bin", NULL,
+                0, 0);
     teqi(rc, -1, "Invalid file path should be rejected");
 }
 
@@ -345,7 +347,8 @@ static void test_nonexistent_script(void)
 {
     int rc;
 
-    rc = update(testHost, testProduct, testToken, testDevice, testVersion, NULL, testFile, "/nonexistent/script.sh", 0, 0);
+    rc = update(testHost, testProduct, testToken, testDevice, testVersion, NULL, testFile, "/nonexistent/script.sh", 0,
+                0);
     /*
         Should fail on network/auth before trying to run script
      */
