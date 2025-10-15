@@ -34,21 +34,6 @@
 #include "updater.h"
 
 /********************************** Locals ************************************/
-/*
-    Adjust for path to your certificate bundle
- */
-#ifndef UPDATER_CERTS
-    #if defined(__APPLE__)
-        #define UPDATER_CERTS "/opt/homebrew/etc/openssl@3/cert.pem"
-    #elif defined(__MINGW32__) || defined(GITHUB_ACTIONS)
-        #define UPDATER_CERTS "/etc/ssl/certs/ca-certificates.crt"
-    #elif defined(__linux__)
-        #define UPDATER_CERTS "/etc/pki/tls/certs/ca-bundle.crt"
-    #else
-        #error "ERROR: Need to define UPDATER_CERTS to the path to your certificate bundle"
-    #endif
-#endif
-
 #define SERVER_PORT 443
 #define UBSIZE      4096
 
@@ -735,7 +720,9 @@ static ssize fetchRead(Fetch *fp, char *buf, size_t buflen)
 
     rc = SSL_read(fp->ssl, buf, (int) buflen);
     if (rc <= 0) {
-        ERR_print_errors_fp(stderr);
+        if (!quiet) {
+            ERR_print_errors_fp(stderr);
+        }
         return -1;
     }
     return rc;
@@ -758,7 +745,9 @@ static ssize fetchWrite(Fetch *fp, char *buf, size_t buflen)
 
     rc = SSL_write(fp->ssl, buf, (int) buflen);
     if (rc <= 0) {
-        ERR_print_errors_fp(stderr);
+        if (!quiet) {
+            ERR_print_errors_fp(stderr);
+        }
         return -1;
     }
     return rc;
@@ -796,8 +785,10 @@ static Fetch *fetchAlloc(int fd, cchar *host)
     method = TLS_client_method();
     fp->ctx = SSL_CTX_new(method);
     if (!fp->ctx) {
-        perror("Unable to create SSL context");
-        ERR_print_errors_fp(stderr);
+        if (!quiet) {
+            perror("Unable to create SSL context");
+            ERR_print_errors_fp(stderr);
+        }
         free(fp);
         return NULL;
     }
@@ -805,20 +796,18 @@ static Fetch *fetchAlloc(int fd, cchar *host)
     SSL_CTX_set_min_proto_version(fp->ctx, TLS1_2_VERSION);
 
     /*
-        Verify server certificate
+        Verify server certificate using system default CA certificates
      */
     SSL_CTX_set_verify(fp->ctx, SSL_VERIFY_PEER, NULL);
-    if (!SSL_CTX_load_verify_locations(fp->ctx, UPDATER_CERTS, NULL)) {
+    if (!SSL_CTX_set_default_verify_paths(fp->ctx)) {
         if (!quiet) {
-            fprintf(stderr, "Failed to load CA bundle.\n");
+            fprintf(stderr, "Cannot load system CA certificates.\n");
             ERR_print_errors_fp(stderr);
         }
         SSL_CTX_free(fp->ctx);
         free(fp);
         return NULL;
     }
-    /* Also use system default CA paths where available */
-    SSL_CTX_set_default_verify_paths(fp->ctx);
 
     fp->ssl = SSL_new(fp->ctx);
     fp->fd = fd;
@@ -848,7 +837,9 @@ static Fetch *fetchAlloc(int fd, cchar *host)
     }
 
     if (SSL_connect(fp->ssl) != 1) {
-        ERR_print_errors_fp(stderr);
+        if (!quiet) {
+            ERR_print_errors_fp(stderr);
+        }
         SSL_free(fp->ssl);
         SSL_CTX_free(fp->ctx);
         free(fp);
