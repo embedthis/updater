@@ -284,7 +284,7 @@ LOG = >nul
 !ENDIF
 
 test::
-    .\projects\win-prep.bat
+    .\projects\bin-prep.bat
     tm 
 
 clean:

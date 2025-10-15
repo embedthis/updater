@@ -104,7 +104,7 @@ jobs:
           TOKEN: ${{ secrets.TOKEN }}
           ENDPOINT: ${{ secrets.ENDPOINT }}
         run: |
-          call projects\win-prep.bat
+          call bin\test-prep.bat
           tm test
 
       - name: Upload test results

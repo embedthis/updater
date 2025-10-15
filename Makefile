@@ -26,7 +26,7 @@ CDPATH		:=
 
 .EXPORT_ALL_VARIABLES:
 
-.PHONY:		app build clean compile config info show
+.PHONY:		app build clean compile config info show test
 
 ifndef SHOW
 .SILENT:
@@ -60,6 +60,10 @@ info:
 
 run:
 	$(BUILD)/bin/updater -v
+
+test:
+	@bin/test-prep.sh
+	tm test
 
 path:
 	echo $(PATH)
