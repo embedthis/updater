@@ -34,9 +34,18 @@
         },
     },
     execution: {
-        timeout: 180000, // 3 minutes
+        timeout: 180, // 3 minutes in seconds
         parallel: true,
         workers: false,
+    },
+    patterns: {
+        include: ['**/*.tst.sh', '**/*.tst.c'],  // Standard tests for all platforms
+        macosx: {
+            include: ['**/*.tst.macosx.c'],  // macOS-specific tests
+        },
+        windows: {
+            include: ['**/*.tst.win.c'],  // Windows-specific tests
+        },
     },
     env: {
         default: {

@@ -16,18 +16,121 @@
 /********************************** Test Data *********************************/
 
 /*
-    Test configuration - These values need to be valid for integration tests
+    Test configuration - These values are loaded from creds.sh
     For pure unit tests, we test parameter validation without making network calls
+
+    Credentials are loaded by executing: bash ./creds.sh --print
+    This outputs KEY=VALUE pairs that are parsed to set:
+    - ENDPOINT -> testHost
+    - PRODUCT -> testProduct
+    - TOKEN -> testToken
+    - DEVICE -> testDevice
+    - VERSION -> testVersion
+
+    If creds.sh is not available or doesn't provide values, defaults are used.
  */
-static cchar *testHost = "https://api.embedthis.com";
-static cchar *testProduct = "test-product";
-static cchar *testToken = "test-token";
-static cchar *testDevice = "test-device-001";
-static cchar *testVersion = "1.0.0";
+static cchar *testHost;
+static cchar *testProduct;
+static cchar *testToken;
+static cchar *testDevice;
+static cchar *testVersion;
 static cchar *testFile = "/tmp/update-test.bin";
 static cchar *testScript = "./test-script.sh";
 
+/************************************* Code ***********************************/
+/*
+    Parse a line from creds.sh output in format "KEY=VALUE"
+ */
+static void parseCredLine(char *line)
+{
+    char *key, *value;
+
+    if ((value = strchr(line, '=')) == NULL) {
+        return;
+    }
+    *value++ = '\0';
+    key = line;
+
+    if (strcmp(key, "ENDPOINT") == 0) {
+        testHost = strdup(value);
+    } else if (strcmp(key, "PRODUCT") == 0) {
+        testProduct = strdup(value);
+    } else if (strcmp(key, "TOKEN") == 0) {
+        testToken = strdup(value);
+    } else if (strcmp(key, "DEVICE") == 0) {
+        testDevice = strdup(value);
+    } else if (strcmp(key, "VERSION") == 0) {
+        testVersion = strdup(value);
+    }
+}
+
+/*
+    Initialize test credentials by executing creds.sh --print and parsing output
+ */
+static void initTestConfig(void)
+{
+    FILE *fp;
+    char line[512];
+
+    /*
+        Execute creds.sh --print to get credentials
+        The script will output KEY=VALUE pairs
+     */
+    fp = popen("bash ./creds.sh --print 2>/dev/null", "r");
+    if (fp) {
+        while (fgets(line, sizeof(line), fp) != NULL) {
+            /*
+                Remove trailing newline
+             */
+            line[strcspn(line, "\r\n")] = '\0';
+            parseCredLine(line);
+        }
+        pclose(fp);
+    }
+
+    /*
+        Use defaults if creds.sh didn't provide values
+     */
+    if (!testHost) {
+        testHost = strdup("https://api.embedthis.com");
+    }
+    if (!testProduct) {
+        testProduct = strdup("test-product");
+    }
+    if (!testToken) {
+        testToken = strdup("test-token");
+    }
+    if (!testDevice) {
+        testDevice = strdup("test-device-001");
+    }
+    if (!testVersion) {
+        testVersion = strdup("1.0.0");
+    }
+}
+
 /********************************** Helpers ***********************************/
+/*
+    Free test configuration memory
+ */
+static void freeTestConfig(void)
+{
+    if (testHost) {
+        free((void*) testHost);
+    }
+    if (testProduct) {
+        free((void*) testProduct);
+    }
+    if (testToken) {
+        free((void*) testToken);
+    }
+    if (testDevice) {
+        free((void*) testDevice);
+    }
+    if (testVersion) {
+        free((void*) testVersion);
+    }
+}
+
 /*
     Remove test artifacts
  */
@@ -35,6 +138,7 @@ static void cleanup(void)
 {
     unlink(testFile);
     unlink(testScript);
+    freeTestConfig();
 }
 
 /********************************** Tests *************************************/
@@ -368,12 +472,20 @@ static void test_cleanup(void)
 
 int main(int argc, char **argv)
 {
+    (void) argc;
+    (void) argv;
+
     /*
         NOTE: These are primarily parameter validation tests.
         They test the update() API's input validation and error handling.
         Most tests will fail with -1 due to invalid credentials/network,
         which is expected. We're testing that the API handles edge cases correctly.
      */
+
+    /*
+        Initialize test configuration from creds.sh or use defaults
+     */
+    initTestConfig();
 
     test_null_host();
     test_null_product();

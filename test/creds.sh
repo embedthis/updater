@@ -16,9 +16,21 @@ else
     DEVICE="YOUR-DEVICE-ID-HERE"
 
     #
-    # 	Get these values from your Builder Product and Cloud 
+    # 	Get these values from your Builder Product and Cloud
     #
     PRODUCT="PRODUCT-ID-HERE"
     TOKEN="CLOUDAPI-TOKEN-HERE"
     ENDPOINT="CLOUD-ENDPOINT-HERE"
+fi
+
+#
+#   If --print argument is provided, output credentials in parseable format
+#   This is used by C tests to read credentials
+#
+if [ "$1" = "--print" ] ; then
+    echo "ENDPOINT=${ENDPOINT}"
+    echo "PRODUCT=${PRODUCT}"
+    echo "TOKEN=${TOKEN}"
+    echo "DEVICE=${DEVICE}"
+    echo "VERSION=${VERSION}"
 fi

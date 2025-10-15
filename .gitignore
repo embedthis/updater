@@ -17,3 +17,4 @@ start.me
 build/
 .agent/**
 projects/updater-macosx-mine*
+.testme

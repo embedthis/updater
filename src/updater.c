@@ -114,7 +114,7 @@ int update(cchar *host, cchar *product, cchar *token, cchar *device, cchar *vers
 
     if (!host || !product || !token || !device || !version || !path) {
         if (!quietArg) {
-            fprintf(stderr, "Bad update args");
+            fprintf(stderr, "Bad update args\n");
         }
         return -1;
     }
@@ -273,15 +273,17 @@ static int applyUpdate(cchar *path, cchar *script)
 /**
     Execute the update script in a child process
 
-    Uses fork()/execvp() on Unix-like systems to safely execute the update script without shell
-    interpretation. The script receives the update file path as its only argument.
+    Uses fork()/execvp() on Unix-like systems and CreateProcess() on Windows to safely execute
+    the update script without shell interpretation. The script receives the update file path as
+    its only argument.
 
     @param script Path to the executable script
     @param path Update file path to pass as argument
     @return Exit status of the script (0 on success), -1 on error
 
-    SECURITY Acceptable: The unix code is preferred, but on systems without fork() and execvp()
-    we use the system() function. The inputs are all from developer controlled input and not user controlled.
+    SECURITY Acceptable: On Unix systems, uses fork()/execvp() to avoid shell. On Windows, uses
+    CreateProcess() with quoted arguments to prevent command injection. The inputs are all from
+    developer controlled input and not user controlled.
 
     @stability Internal
  */
@@ -313,14 +315,82 @@ static int run(cchar *script, cchar *path)
     }
     return WIFEXITED(status) ? WEXITSTATUS(status) : -1;
 
-#else
+#elif ME_WIN_LIKE
+    STARTUPINFO         si;
+    PROCESS_INFORMATION pi;
+    char                cmdLine[1024];
+    DWORD               exitCode;
+    int                 result;
+    cchar               *scriptExt;
+
     /*
-        SECURITY: The system() call is dangerous and should be avoided.
-        Replace this with a platform-specific implementation that does not use a shell,
-        such as CreateProcess() on Windows.
+        Build command line: "script" "path"
+        Quote both arguments to handle spaces in paths
+        For .sh files, prepend bash to handle shell scripts in MinGW environment
      */
-    # error "ERROR: Secure process creation not implemented for this platform"
-    #error
+    scriptExt = strrchr(script, '.');
+    if (scriptExt && strcmp(scriptExt, ".sh") == 0) {
+        result = snprintf(cmdLine, sizeof(cmdLine), "bash \"%s\" \"%s\"", script, path);
+    } else {
+        result = snprintf(cmdLine, sizeof(cmdLine), "\"%s\" \"%s\"", script, path);
+    }
+    if (result < 0 || (size_t) result >= sizeof(cmdLine)) {
+        if (!quiet) {
+            fprintf(stderr, "Command line too long\n");
+        }
+        return -1;
+    }
+
+    memset(&si, 0, sizeof(si));
+    si.cb = sizeof(si);
+    memset(&pi, 0, sizeof(pi));
+
+    /*
+        CreateProcess with NULL for lpApplicationName uses the first token from lpCommandLine
+        This avoids shell interpretation while allowing proper argument parsing
+     */
+    if (!CreateProcess(
+            NULL,           // lpApplicationName - use command line
+            cmdLine,        // lpCommandLine - contains executable and arguments
+            NULL,           // lpProcessAttributes
+            NULL,           // lpThreadAttributes
+            FALSE,          // bInheritHandles
+            0,              // dwCreationFlags - no special flags
+            NULL,           // lpEnvironment - inherit parent environment
+            NULL,           // lpCurrentDirectory - inherit parent directory
+            &si,            // lpStartupInfo
+            &pi             // lpProcessInformation
+        )) {
+        if (!quiet) {
+            fprintf(stderr, "Cannot create process: error %lu\n", GetLastError());
+        }
+        return -1;
+    }
+
+    /*
+        Wait for the process to complete
+     */
+    WaitForSingleObject(pi.hProcess, INFINITE);
+
+    /*
+        Get the exit code
+     */
+    if (!GetExitCodeProcess(pi.hProcess, &exitCode)) {
+        if (!quiet) {
+            fprintf(stderr, "Cannot get exit code: error %lu\n", GetLastError());
+        }
+        CloseHandle(pi.hProcess);
+        CloseHandle(pi.hThread);
+        return -1;
+    }
+
+    CloseHandle(pi.hProcess);
+    CloseHandle(pi.hThread);
+
+    return (int) exitCode;
+
+#else
+    #error "ERROR: Secure process creation not implemented for this platform"
     return -1;
 #endif
 }

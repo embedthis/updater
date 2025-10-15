@@ -59,7 +59,7 @@ jobs:
         if: runner.os == 'Windows'
         run: |
           tm.exe --version
-          Get-ChildItem -Recurse -Path "C:\Program Files\OpenSSL"
+          # Get-ChildItem -Recurse -Path "C:\Program Files\OpenSSL"
 
       - name: Build (Unix)
         if: runner.os != 'Windows'

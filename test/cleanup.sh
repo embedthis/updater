@@ -1,4 +1,4 @@
 #!/bin/bash
 
-rm -f updater.bin
+rm -f *.bin
 exit 0

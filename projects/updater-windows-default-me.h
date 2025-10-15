@@ -163,7 +163,7 @@
 
 /* Profile */
 #ifndef ME_CONFIG_CMD
-    #define ME_CONFIG_CMD "me -d -q -platform windows-x64-default -configure . -gen vs"
+    #define ME_CONFIG_CMD "me -d -q -platform windows-x64-default -configure . -gen nmake"
 #endif
 #ifndef ME_UPDATER_PRODUCT
     #define ME_UPDATER_PRODUCT 1
