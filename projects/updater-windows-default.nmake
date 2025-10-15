@@ -283,6 +283,10 @@ LOG =
 LOG = >nul
 !ENDIF
 
+test::
+    .\projects\win-prep.bat
+    tm 
+
 clean:
 	if exist "build\$(CONFIG)\obj\main.obj" del /Q "build\$(CONFIG)\obj\main.obj"
 	if exist "build\$(CONFIG)\obj\updater.obj" del /Q "build\$(CONFIG)\obj\updater.obj"
