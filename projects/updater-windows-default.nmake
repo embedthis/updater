@@ -353,7 +353,7 @@ DEPS_6 = $(DEPS_6) src\updater.h
 build\$(CONFIG)\obj\updater.obj: \
     src\updater.c $(DEPS_6)
 	@echo .. [Compile] build\$(CONFIG)\obj\updater.obj
-	"$(CC)" -c -Fo"build\$(CONFIG)\obj\updater.obj" -Fd"build\$(CONFIG)\obj\updater.pdb" $(CFLAGS) $(DFLAGS) "-Isrc" "-Isrc\osdep" "-I\opt\homebrew\include" "src\updater.c" $(LOG)
+	"$(CC)" -c -Fo"build\$(CONFIG)\obj\updater.obj" -Fd"build\$(CONFIG)\obj\updater.pdb" $(CFLAGS) $(DFLAGS) $(IFLAGS) "-Isrc" "-Isrc\osdep" "-I\opt\homebrew\include" "src\updater.c" $(LOG)
 
 #
 #   libupdater
