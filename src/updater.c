@@ -49,7 +49,7 @@
 typedef struct Fetch {
     SSL_CTX *ctx;          // OpenSSL TLS context
     SSL *ssl;              // OpenSSL TLS connection handle
-    int fd;                // TCP socket file descriptor
+    Socket fd;             // TCP socket file descriptor
     size_t contentLength;  // Total response body length from Content-Length header
     size_t bodyLength;     // Length of initial body data received with headers
     char *body;            // Buffer containing initial body data (if any received with headers)
@@ -63,7 +63,7 @@ static int quiet;          // Global flag to suppress all output (stdout and std
 
 static int applyUpdate(cchar *path, cchar *script);
 static Fetch *fetch(cchar *method, char *url, char *headers, char *body);
-static Fetch *fetchAlloc(int fd, cchar *host);
+static Fetch *fetchAlloc(Socket fd, cchar *host);
 static void fetchFree(Fetch *fp);
 static char *fetchString(Fetch *fp);
 static int fetchFile(Fetch *fp, cchar *path);
@@ -476,7 +476,8 @@ static Fetch *fetch(cchar *method, char *url, char *headers, char *body)
     static char        emptyPath[] = "";
     size_t             headerBytes;
     ssize              bytes;
-    int                fd, contentLength;
+    Socket             fd;
+    int                contentLength;
 
     snprintf(uri, sizeof(uri), "%s", url);
     if (verbose) {
@@ -721,7 +722,7 @@ static int fetchFile(Fetch *fp, cchar *path)
     if (fp->body) {
         //  Write the body fragment already read with the headers
         writeLen = (fp->bodyLength < fp->contentLength) ? fp->bodyLength : fp->contentLength;
-        if (write(fd, fp->body, writeLen) < 0) {
+        if (write(fd, fp->body, (uint) writeLen) < 0) {
             if (!quiet) {
                 fprintf(stderr, "Cannot write to file");
             }
@@ -845,7 +846,7 @@ static ssize fetchWrite(Fetch *fp, char *buf, size_t buflen)
     @return Initialized Fetch structure on success, NULL on error
     @stability Internal
  */
-static Fetch *fetchAlloc(int fd, cchar *host)
+static Fetch *fetchAlloc(Socket fd, cchar *host)
 {
     Fetch             *fp;
     X509_VERIFY_PARAM *param;

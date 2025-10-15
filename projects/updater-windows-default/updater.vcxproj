@@ -112,7 +112,7 @@
         
 
       <Link>
-        <AdditionalDependencies>libupdater.lib;ssl;crypto;%(AdditionalDependencies)</AdditionalDependencies>
+        <AdditionalDependencies>libupdater.lib;%(AdditionalDependencies)</AdditionalDependencies>
         <AdditionalLibraryDirectories>$(OutDir);..\..\..\..\opt\homebrew\lib;build\$(Cfg)\bin;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       </Link>
   </ItemDefinitionGroup>

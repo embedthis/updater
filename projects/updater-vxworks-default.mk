@@ -198,7 +198,7 @@ DEPS_5 += src/updater.h
 $(BUILD)/obj/main.o: \
     src/main.c $(DEPS_5)
 	@echo '   [Compile] $(BUILD)/obj/main.o'
-	$(CC) -c -o "$(BUILD)/obj/main.o" $(CFLAGS) "-DME_DEBUG=1" "-DVXWORKS" "-DRW_MULTI_THREAD" "-DCPU=ARMARCH7" "-DTOOL_FAMILY=gnu" "-DTOOL=gnu" "-D_GNU_TOOL" "-D_WRS_KERNEL_" "-D_VSB_CONFIG_FILE=\"/WindRiver/vxworks-7/samples/prebuilt_projects/vsb_vxsim_linux/h/config/vsbConfig.h\"" $(IFLAGS) "-Isrc" "-Isrc/osdep" "-I/opt/homebrew/include" "src/main.c"
+	$(CC) -c -o "$(BUILD)/obj/main.o" $(CFLAGS) $(DFLAGS) "-DME_DEBUG=1" "-DVXWORKS" "-DRW_MULTI_THREAD" "-DCPU=ARMARCH7" "-DTOOL_FAMILY=gnu" "-DTOOL=gnu" "-D_GNU_TOOL" "-D_WRS_KERNEL_" "-D_VSB_CONFIG_FILE=\"/WindRiver/vxworks-7/samples/prebuilt_projects/vsb_vxsim_linux/h/config/vsbConfig.h\"" $(IFLAGS) "-Isrc" "-Isrc/osdep" "-I/opt/homebrew/include" $(INPUT) "src/main.c"
 
 #
 #   updater.o
@@ -208,7 +208,7 @@ DEPS_6 += src/updater.h
 $(BUILD)/obj/updater.o: \
     src/updater.c $(DEPS_6)
 	@echo '   [Compile] $(BUILD)/obj/updater.o'
-	$(CC) -c -o "$(BUILD)/obj/updater.o" $(CFLAGS) "-DME_DEBUG=1" "-DVXWORKS" "-DRW_MULTI_THREAD" "-DCPU=ARMARCH7" "-DTOOL_FAMILY=gnu" "-DTOOL=gnu" "-D_GNU_TOOL" "-D_WRS_KERNEL_" "-D_VSB_CONFIG_FILE=\"/WindRiver/vxworks-7/samples/prebuilt_projects/vsb_vxsim_linux/h/config/vsbConfig.h\"" "-Isrc" "-Isrc/osdep" "-I/opt/homebrew/include" "src/updater.c"
+	$(CC) -c -o "$(BUILD)/obj/updater.o" $(CFLAGS) $(DFLAGS) "-DME_DEBUG=1" "-DVXWORKS" "-DRW_MULTI_THREAD" "-DCPU=ARMARCH7" "-DTOOL_FAMILY=gnu" "-DTOOL=gnu" "-D_GNU_TOOL" "-D_WRS_KERNEL_" "-D_VSB_CONFIG_FILE=\"/WindRiver/vxworks-7/samples/prebuilt_projects/vsb_vxsim_linux/h/config/vsbConfig.h\"" $(IFLAGS) "-Isrc" "-Isrc/osdep" "-I/opt/homebrew/include" $(INPUT) "src/updater.c"
 
 #
 #   libupdater
@@ -220,7 +220,7 @@ DEPS_7 += $(BUILD)/obj/updater.o
 
 $(BUILD)/bin/libupdater.a: $(DEPS_7)
 	@echo '      [Link] $(BUILD)/bin/libupdater.a'
-	$(AR) -cr "$(BUILD)/bin/libupdater.a" "$(BUILD)/obj/updater.o"
+	$(AR) -cr "$(BUILD)/bin/libupdater.a" $(INPUT) "$(BUILD)/obj/updater.o"
 
 #
 #   updater
@@ -233,7 +233,7 @@ LIBS_8 += -lupdater
 
 $(BUILD)/bin/updater.out: $(DEPS_8)
 	@echo '      [Link] $(BUILD)/bin/updater.out'
-	$(CC) -o "$(BUILD)/bin/updater.out" $(LDFLAGS) $(LIBPATHS) "-L/opt/homebrew/lib" "$(BUILD)/obj/main.o" $(LIBPATHS_8) $(LIBS_8) $(LIBS_8) $(LIBS) "-lssl" "-lcrypto" $(LDFLAGS) 
+	$(CC) -o "$(BUILD)/bin/updater.out" $(LDFLAGS) $(LIBPATHS) "-L/opt/homebrew/lib" $(INPUT) "$(BUILD)/obj/main.o" $(LIBPATHS_8) $(LIBS_8) $(LIBS_8) $(LIBS) "-lcrypto" "-lssl" $(LDFLAGS) 
 
 #
 #   installPrep

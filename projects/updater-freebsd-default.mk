@@ -191,7 +191,7 @@ DEPS_5 += src/updater.h
 $(BUILD)/obj/main.o: \
     src/main.c $(DEPS_5)
 	@echo '   [Compile] $(BUILD)/obj/main.o'
-	$(CC) -c -o "$(BUILD)/obj/main.o" $(CFLAGS) $(DFLAGS) $(IFLAGS) "-Isrc" "-Isrc/osdep" "-I/opt/homebrew/include" "src/main.c"
+	$(CC) -c -o "$(BUILD)/obj/main.o" $(CFLAGS) $(DFLAGS) $(IFLAGS) "-Isrc" "-Isrc/osdep" "-I/opt/homebrew/include" $(INPUT) "src/main.c"
 
 #
 #   updater.o
@@ -201,7 +201,7 @@ DEPS_6 += src/updater.h
 $(BUILD)/obj/updater.o: \
     src/updater.c $(DEPS_6)
 	@echo '   [Compile] $(BUILD)/obj/updater.o'
-	$(CC) -c -o "$(BUILD)/obj/updater.o" $(CFLAGS) $(DFLAGS) "-Isrc" "-Isrc/osdep" "-I/opt/homebrew/include" "src/updater.c"
+	$(CC) -c -o "$(BUILD)/obj/updater.o" $(CFLAGS) $(DFLAGS) $(IFLAGS) "-Isrc" "-Isrc/osdep" "-I/opt/homebrew/include" $(INPUT) "src/updater.c"
 
 #
 #   libupdater
@@ -213,7 +213,7 @@ DEPS_7 += $(BUILD)/obj/updater.o
 
 $(BUILD)/bin/libupdater.a: $(DEPS_7)
 	@echo '      [Link] $(BUILD)/bin/libupdater.a'
-	$(AR) -cr "$(BUILD)/bin/libupdater.a" "$(BUILD)/obj/updater.o"
+	$(AR) -cr "$(BUILD)/bin/libupdater.a" $(INPUT) "$(BUILD)/obj/updater.o"
 
 #
 #   updater
@@ -226,7 +226,7 @@ LIBS_8 += -lupdater
 
 $(BUILD)/bin/updater: $(DEPS_8)
 	@echo '      [Link] $(BUILD)/bin/updater'
-	$(CC) -o "$(BUILD)/bin/updater" $(LDFLAGS) $(LIBPATHS) "-L/opt/homebrew/lib" "$(BUILD)/obj/main.o" $(LIBPATHS_8) $(LIBS_8) $(LIBS_8) $(LIBS) "-lssl" "-lcrypto" $(LIBS) "-lssl" "-lcrypto" 
+	$(CC) -o "$(BUILD)/bin/updater" $(LDFLAGS) $(LIBPATHS) "-L/opt/homebrew/lib" $(INPUT) "$(BUILD)/obj/main.o" $(LIBPATHS_8) $(LIBS_8) $(LIBS_8) $(LIBS) "-lcrypto" "-lssl" $(LIBS) "-lcrypto" "-lssl" 
 
 #
 #   installPrep

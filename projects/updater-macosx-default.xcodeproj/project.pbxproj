@@ -554,8 +554,8 @@ ENABLE_TESTABILITY = YES;
 					"$(inherited)"
 				);
 				OTHER_LDFLAGS = (
-					"-lssl",
 					"-lcrypto",
+					"-lssl",
 					);
 
 				MACH_O_TYPE = mh_execute;
@@ -583,8 +583,8 @@ ENABLE_TESTABILITY = YES;
 					"$(inherited)"
 				);
 				OTHER_LDFLAGS = (
-					"-lssl",
 					"-lcrypto",
+					"-lssl",
 					);
 
 				MACH_O_TYPE = mh_execute;

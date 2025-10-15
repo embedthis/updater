@@ -284,7 +284,7 @@ LOG = >nul
 !ENDIF
 
 test::
-    .\projects\bin-prep.bat
+    .\bin\test-prep.bat
     tm 
 
 clean:
@@ -375,7 +375,7 @@ LIBS_8 = $(LIBS_8) libupdater.lib
 
 build\$(CONFIG)\bin\updater.exe: $(DEPS_8)
 	@echo ..... [Link] build\$(CONFIG)\bin\updater.exe
-	"$(LD)" -nologo -out:"build\$(CONFIG)\bin\updater.exe" -entry:mainCRTStartup -subsystem:console $(LDFLAGS) $(LIBPATHS) "-libpath:\opt\homebrew\lib" $(INPUT) "build\$(CONFIG)\obj\main.obj" $(LIBPATHS_8) $(LIBS_8) $(LIBS) "ssl" "crypto"  $(LOG)
+	"$(LD)" -nologo -out:"build\$(CONFIG)\bin\updater.exe" -entry:mainCRTStartup -subsystem:console $(LDFLAGS) $(LIBPATHS) "-libpath:\opt\homebrew\lib" $(INPUT) "build\$(CONFIG)\obj\main.obj" $(LIBPATHS_8) $(LIBS_8) $(LIBS) "libcrypto.lib" "libssl.lib"  $(LOG)
 
 #
 #   installPrep

@@ -43,7 +43,13 @@ Me.load({
             sources: [ 'src/main.c' ],
             depends: [ 'libupdater', 'osdep' ],
             libpaths: [ '/opt/homebrew/lib' ],
-            libraries: [ 'ssl', 'crypto' ],
+            prebuild: `
+                if (me.platform.os == 'windows') {
+                    me.target.libraries.push('libcrypto.lib', 'libssl.lib')
+                } else {
+                    me.target.libraries.push('crypto', 'ssl')
+                }
+            `
         },
 
         package: {
