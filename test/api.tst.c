@@ -216,15 +216,14 @@ static void test_null_properties(void)
     int rc;
 
     /*
-        This will fail to connect since we're using test credentials,
-        but it should not fail due to NULL properties
+        Use bogus token to ensure failure, but NULL properties should still be accepted
      */
-    rc = update(testHost, testProduct, testToken, testDevice, testVersion, NULL, testFile, NULL, 0, 0);
+    rc = update(testHost, testProduct, "bogus-invalid-token-12345", testDevice, testVersion, NULL, testFile, NULL, 0, 0);
     /*
-        We expect failure due to authentication/network, but not due to NULL properties
+        We expect failure due to authentication, but not due to NULL properties
         The function should at least attempt to make the request
      */
-    teqi(rc, -1, "NULL properties should be allowed, expected auth/network failure");
+    teqi(rc, -1, "NULL properties should be allowed, expected auth failure");
 }
 
 /*
@@ -234,11 +233,14 @@ static void test_null_script(void)
 {
     int rc;
 
-    rc = update(testHost, testProduct, testToken, testDevice, testVersion, NULL, testFile, NULL, 0, 0);
     /*
-        Should fail on network/auth, not on NULL script
+        Use bogus token to ensure failure, but NULL script should still be accepted
      */
-    teqi(rc, -1, "NULL script should be allowed, expected auth/network failure");
+    rc = update(testHost, testProduct, "bogus-invalid-token-67890", testDevice, testVersion, NULL, testFile, NULL, 0, 0);
+    /*
+        Should fail on auth, not on NULL script
+     */
+    teqi(rc, -1, "NULL script should be allowed, expected auth failure");
 }
 
 /*
@@ -343,10 +345,10 @@ static void test_tmp_path_warning(void)
 
     /*
         Using /tmp/ path - should warn but attempt to proceed
-        Will fail on auth/network but not on the path itself
+        Use bogus token to ensure failure on auth
      */
-    rc = update(testHost, testProduct, testToken, testDevice, testVersion, NULL, "/tmp/test.bin", NULL, 0, 0);
-    teqi(rc, -1, "/tmp path should warn but fail on auth/network");
+    rc = update(testHost, testProduct, "bogus-token-tmp-test", testDevice, testVersion, NULL, "/tmp/test.bin", NULL, 0, 0);
+    teqi(rc, -1, "/tmp path should warn but fail on auth");
 }
 
 /*
@@ -356,7 +358,10 @@ static void test_invalid_file_path(void)
 {
     int rc;
 
-    rc = update(testHost, testProduct, testToken, testDevice, testVersion, NULL, "/nonexistent/path/to/file.bin", NULL,
+    /*
+        Use bogus token to ensure failure on auth, not just file path
+     */
+    rc = update(testHost, testProduct, "bogus-token-path-test", testDevice, testVersion, NULL, "/nonexistent/path/to/file.bin", NULL,
                 0, 0);
     teqi(rc, -1, "Invalid file path should be rejected");
 }
@@ -370,8 +375,9 @@ static void test_valid_properties(void)
 
     /*
         Properties should be in format: "key":"value","key2":"value2"
+        Use bogus token to ensure failure
      */
-    rc = update(testHost, testProduct, testToken, testDevice, testVersion,
+    rc = update(testHost, testProduct, "bogus-token-props-test", testDevice, testVersion,
                 "\"model\":\"pro\",\"region\":\"us-west\"", testFile, NULL, 0, 0);
     /*
         Will fail on auth but should accept the properties format
@@ -386,7 +392,10 @@ static void test_verbose_mode(void)
 {
     int rc;
 
-    rc = update(testHost, testProduct, testToken, testDevice, testVersion, NULL, testFile, NULL, 1, 0);
+    /*
+        Use bogus token to ensure failure
+     */
+    rc = update(testHost, testProduct, "bogus-token-verbose-test", testDevice, testVersion, NULL, testFile, NULL, 1, 0);
     /*
         Verbose flag should only affect output, not return value
      */
@@ -400,7 +409,10 @@ static void test_special_chars_device(void)
 {
     int rc;
 
-    rc = update(testHost, testProduct, testToken, "device-001_test.v2", testVersion, NULL, testFile, NULL, 0, 0);
+    /*
+        Use bogus token to ensure failure
+     */
+    rc = update(testHost, testProduct, "bogus-token-special-chars", "device-001_test.v2", testVersion, NULL, testFile, NULL, 0, 0);
     teqi(rc, -1, "Special chars in device ID should be accepted, expected auth failure");
 }
 
@@ -413,14 +425,15 @@ static void test_semver_formats(void)
 
     /*
         Test various semantic version formats
+        Use bogus token to ensure failure
      */
-    rc = update(testHost, testProduct, testToken, testDevice, "1.2.3", NULL, testFile, NULL, 0, 0);
+    rc = update(testHost, testProduct, "bogus-token-semver-1", testDevice, "1.2.3", NULL, testFile, NULL, 0, 0);
     teqi(rc, -1, "Semantic version 1.2.3 should be accepted");
 
-    rc = update(testHost, testProduct, testToken, testDevice, "1.2.3-beta", NULL, testFile, NULL, 0, 0);
+    rc = update(testHost, testProduct, "bogus-token-semver-2", testDevice, "1.2.3-beta", NULL, testFile, NULL, 0, 0);
     teqi(rc, -1, "Semantic version with pre-release should be accepted");
 
-    rc = update(testHost, testProduct, testToken, testDevice, "1.2.3-beta.1+build.123", NULL, testFile, NULL, 0, 0);
+    rc = update(testHost, testProduct, "bogus-token-semver-3", testDevice, "1.2.3-beta.1+build.123", NULL, testFile, NULL, 0, 0);
     teqi(rc, -1, "Full semantic version format should be accepted");
 }
 
@@ -451,10 +464,13 @@ static void test_nonexistent_script(void)
 {
     int rc;
 
-    rc = update(testHost, testProduct, testToken, testDevice, testVersion, NULL, testFile, "/nonexistent/script.sh", 0,
+    /*
+        Use bogus token to ensure failure before trying to run script
+     */
+    rc = update(testHost, testProduct, "bogus-token-script-test", testDevice, testVersion, NULL, testFile, "/nonexistent/script.sh", 0,
                 0);
     /*
-        Should fail on network/auth before trying to run script
+        Should fail on auth before trying to run script
      */
     teqi(rc, -1, "Nonexistent script path should be accepted, expected auth failure");
 }

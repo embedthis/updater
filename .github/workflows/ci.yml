@@ -88,22 +88,13 @@ jobs:
           # Get-ChildItem -Recurse -Path "."
 
       - name: Run test suite (Unix)
-        if: runner.os == 'linux'
-        env:
-          PRODUCT: ${{ secrets.PRODUCT }}
-          TOKEN: ${{ secrets.TOKEN }}
-          ENDPOINT: ${{ secrets.ENDPOINT }}
-        run: |
-          tm -v test
-
-      - name: Run test suite (Unix)
         if: runner.os != 'Windows'
         env:
           PRODUCT: ${{ secrets.PRODUCT }}
           TOKEN: ${{ secrets.TOKEN }}
           ENDPOINT: ${{ secrets.ENDPOINT }}
         run: |
-          tm -v test
+          tm test
 
       - name: Run test suite (Windows)
         if: runner.os == 'Windows'
@@ -114,7 +105,7 @@ jobs:
           ENDPOINT: ${{ secrets.ENDPOINT }}
         run: |
           call projects\win-prep.bat
-          tm -v test
+          tm test
 
       - name: Upload test results
         if: failure()
