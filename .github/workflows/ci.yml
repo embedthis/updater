@@ -59,7 +59,7 @@ jobs:
         if: runner.os == 'Windows'
         run: |
           tm.exe --version
-          # Get-ChildItem -Recurse -Path "C:\Program Files\OpenSSL"
+          Get-ChildItem -Recurse -Path "C:\Program Files\OpenSSL"
 
       - name: Build (Unix)
         if: runner.os != 'Windows'
@@ -82,7 +82,7 @@ jobs:
         shell: cmd
         run: |
           SET LIBPATHS="-libpath:$(ME_COM_OPENSSL_PATH)\lib\VC\x64\MDd"
-          SET IFLAGS="-DMOB -I$(ME_COM_OPENSSL_PATH)\include"
+          SET IFLAGS="-I$(ME_COM_OPENSSL_PATH)\include"
           SET SHOW=1
           make
           # Get-ChildItem -Recurse -Path "."
