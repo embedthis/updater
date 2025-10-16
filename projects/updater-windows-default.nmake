@@ -278,6 +278,11 @@ prep:
 	@if not exist "$(BUILD)/inc" md "$(BUILD)/inc"
 	@if not exist "$(BUILD)/obj" md "$(BUILD)/obj"
 	@powershell -Command "Copy-Item \"projects/$(PROJECT)-me.h\" \"$(BUILD)/inc/me.h\" -ErrorAction SilentlyContinue | Out-Null"
+    @if exist "$(USERPROFILE)/vcpkg/installed/$(ARCH)-windows/bin/libcrypto-3-$(ARCH).dll" powershell -Command "Copy-Item \"$(USERPROFILE)/vcpkg/installed/$(ARCH)-windows/bin/libcrypto-*.dll\" \"$(BUILD)/bin/\" -Force -ErrorAction SilentlyContinue" $(LOG)
+    @if exist "$(USERPROFILE)/vcpkg/installed/$(ARCH)-windows/bin/libssl-3-$(ARCH).dll" powershell -Command "Copy-Item \"$(USERPROFILE)/vcpkg/installed/$(ARCH)-windows/bin/libssl-*.dll\" \"$(BUILD)/bin/\" -Force -ErrorAction SilentlyContinue" $(LOG)
+    @if exist "$(ME_COM_OPENSSL_PATH)/bin/libcrypto-3-$(ARCH).dll" powershell -Command "Copy-Item \"$(ME_COM_OPENSSL_PATH)/bin/libcrypto-*.dll\" \"$(BUILD)/bin/\" -Force -ErrorAction SilentlyContinue" $(LOG)
+    @if exist "$(ME_COM_OPENSSL_PATH)/bin/libssl-3-$(ARCH).dll" powershell -Command "Copy-Item \"$(ME_COM_OPENSSL_PATH)/bin/libssl-*.dll\" \"$(BUILD)/bin/\" -Force -ErrorAction SilentlyContinue" $(LOG)
+
 !IF "$(SHOW)" != ""
 	@echo ..... [Info] Use "make SHOW=1" to trace executed commands and errors.
 LOG =
@@ -290,13 +295,13 @@ test::
     tm 
 
 clean:
-	if exist "$(BUILD)/obj/main.obj" del /Q "$(BUILD)/obj/main.obj"
-	if exist "$(BUILD)/obj/updater.obj" del /Q "$(BUILD)/obj/updater.obj"
-	if exist "$(BUILD)/bin/libupdater.lib" del /Q "$(BUILD)/bin/libupdater.lib"
-	if exist "$(BUILD)/bin/updater.exe" del /Q "$(BUILD)/bin/updater.exe"
-	if exist "$(BUILD)/bin/updater.lib" del /Q "$(BUILD)/bin/updater.lib"
-	if exist "$(BUILD)/bin/updater.pdb" del /Q "$(BUILD)/bin/updater.pdb"
-	if exist "$(BUILD)/bin/updater.exp" del /Q "$(BUILD)/bin/updater.exp"
+	powershell -Command "if (Test-Path '$(BUILD)/obj/main.obj') { Remove-Item '$(BUILD)/obj/main.obj' }"
+	powershell -Command "if (Test-Path '$(BUILD)/obj/updater.obj') { Remove-Item '$(BUILD)/obj/updater.obj' }"
+	powershell -Command "if (Test-Path '$(BUILD)/bin/libupdater.lib') { Remove-Item '$(BUILD)/bin/libupdater.lib' }"
+	powershell -Command "if (Test-Path '$(BUILD)/bin/updater.exe') { Remove-Item '$(BUILD)/bin/updater.exe' }"
+	powershell -Command "if (Test-Path '$(BUILD)/bin/updater.lib') { Remove-Item '$(BUILD)/bin/updater.lib' }"
+	powershell -Command "if (Test-Path '$(BUILD)/bin/updater.pdb') { Remove-Item '$(BUILD)/bin/updater.pdb' }"
+	powershell -Command "if (Test-Path '$(BUILD)/bin/updater.exp') { Remove-Item '$(BUILD)/bin/updater.exp' }"
 
 #
 #   me.h
@@ -377,7 +382,7 @@ LIBS_8 = $(LIBS_8) libupdater.lib
 
 $(BUILD)/bin/updater.exe: $(DEPS_8)
 	@echo ..... [Link] $(BUILD)/bin/updater.exe
-	"$(LD)" -nologo -out:"$(BUILD)/bin/updater.exe" -entry:mainCRTStartup -subsystem:console $(LDFLAGS) $(LIBPATHS) "-libpath:$(ME_COM_OPENSSL_PATH)/lib/VC/$(ARCH)/MDd" $(INPUT) "$(BUILD)/obj/main.obj" $(LIBPATHS_8) $(LIBS_8) $(LIBS) "libcrypto.lib" "libssl.lib"  $(LOG)
+	"$(LD)" -nologo -out:"$(BUILD)/bin/updater.exe" -entry:mainCRTStartup -subsystem:console $(LDFLAGS) $(LIBPATHS) "-libpath:$(USERPROFILE)/vcpkg/installed/x64-windows/lib" "-libpath:$(ME_COM_OPENSSL_PATH)/lib/VC/$(ARCH)/MDd" $(INPUT) "$(BUILD)/obj/main.obj" $(LIBPATHS_8) $(LIBS_8) $(LIBS) "libcrypto.lib" "libssl.lib"  $(LOG)
 
 #
 #   installPrep

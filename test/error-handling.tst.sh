@@ -191,7 +191,7 @@ rm -f error-$PID-test.bin
 echo "Test 14: Very long property value"
 LONG_VALUE=$(printf 'a%.0s' {1..5000})
 ${UPDATER} --device ${DEVICE} --file error-$PID-test.bin --host ${ENDPOINT} --product ${PRODUCT} \
-    --token ${TOKEN} --version ${VERSION} longkey=${LONG_VALUE} --quiet
+    --token ${TOKEN} --version ${VERSION} --quiet longkey=${LONG_VALUE}
 # Should fail due to buffer overflow protection
 if [ $RC != 0 ] ; then
     echo "✓ Oversized property correctly rejected (exit code: $RC)"
@@ -230,7 +230,7 @@ rm -f error-$PID-test.bin error-$PID-noperm.sh
 # Test 17: Malformed property (missing value)
 echo "Test 17: Malformed property syntax"
 ${UPDATER} --device ${DEVICE} --file error-$PID-test.bin --host ${ENDPOINT} --product ${PRODUCT} \
-    --token ${TOKEN} --version ${VERSION} badproperty --quiet
+    --token ${TOKEN} --version ${VERSION} --quiet badproperty
 RC=$?
 if [ $RC != 0 ] ; then
     echo "✓ Malformed property correctly rejected (exit code: $RC)"
@@ -242,7 +242,7 @@ rm -f error-$PID-test.bin
 
 # Test 18: HTTP instead of HTTPS (if implementation validates)
 echo "Test 18: HTTP endpoint (insecure)"
-${UPDATER} --device ${DEVICE} --file error-$PID-test.bin --host "http://api.embedthis.com" --product ${PRODUCT} \
+${UPDATER} --device ${DEVICE} --file error-$PID-test.bin --host "http://unknown.example.com" --product ${PRODUCT} \
     --token ${TOKEN} --version ${VERSION} --quiet
 # Should fail at connection or protocol level
 if [ $RC != 0 ] ; then

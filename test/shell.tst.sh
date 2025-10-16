@@ -12,7 +12,7 @@ PID=$$
 # Test 1: Basic update check
 echo "Test 1: Basic update check with shell script"
 bash "$UPDATER_SH" --device "${DEVICE}" --file shell-$PID-update.bin --host "${ENDPOINT}" \
-    --product "${PRODUCT}" --token "${TOKEN}" --version "${VERSION}" --cmd ./apply.sh
+    --product "${PRODUCT}" --token "${TOKEN}" --version "${VERSION}" --cmd ./apply.sh --quiet
 RC=$?
 if [ $RC = 0 ] || [ $RC = 1 ]; then
     echo "✓ Shell script update check passed (exit code: $RC)"
@@ -81,7 +81,7 @@ fi
 # Test 6: Update with device properties
 echo "Test 6: Update with device properties"
 bash "$UPDATER_SH" --device "${DEVICE}" --file shell-$PID-props.bin --host "${ENDPOINT}" \
-    --product "${PRODUCT}" --token "${TOKEN}" --version "${VERSION}" model=pro region=us-west --quiet
+    --product "${PRODUCT}" --token "${TOKEN}" --version "${VERSION}" --quiet model=pro region=us-west
 RC=$?
 if [ $RC = 0 ] || [ $RC = 1 ]; then
     echo "✓ Update with properties passed (exit code: $RC)"

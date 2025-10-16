@@ -73,7 +73,7 @@ static void initTestConfig(void)
         Use defaults if environment variables are not set
      */
     if (!testHost) {
-        testHost = strdup("https://api.embedthis.com");
+        testHost = strdup("https://unknown.example.com");
     }
     if (!testProduct) {
         testProduct = strdup("test-product");
@@ -199,7 +199,7 @@ static void test_null_properties(void)
     /*
         Use bogus token to ensure failure, but NULL properties should still be accepted
      */
-    rc = update(testHost, testProduct, "bogus-invalid-token-12345", testDevice, testVersion, NULL, testFile, NULL, 0, 0);
+    rc = update(testHost, testProduct, "bogus-invalid-token-12345", testDevice, testVersion, NULL, testFile, NULL, 0, 1);
     /*
         We expect failure due to authentication, but not due to NULL properties
         The function should at least attempt to make the request
@@ -217,7 +217,7 @@ static void test_null_script(void)
     /*
         Use bogus token to ensure failure, but NULL script should still be accepted
      */
-    rc = update(testHost, testProduct, "bogus-invalid-token-67890", testDevice, testVersion, NULL, testFile, NULL, 0, 0);
+    rc = update(testHost, testProduct, "bogus-invalid-token-67890", testDevice, testVersion, NULL, testFile, NULL, 0, 1);
     /*
         Should fail on auth, not on NULL script
      */
@@ -241,7 +241,7 @@ static void test_oversized_host(void)
     }
     strcat(longHost, ".com");
 
-    rc = update(longHost, testProduct, testToken, testDevice, testVersion, NULL, testFile, NULL, 0, 0);
+    rc = update(longHost, testProduct, testToken, testDevice, testVersion, NULL, testFile, NULL, 0, 1);
     teqi(rc, -1, "Oversized host should be rejected");
 }
 
@@ -262,7 +262,7 @@ static void test_oversized_properties(void)
     }
     strcat(longProps, "\"");
 
-    rc = update(testHost, testProduct, testToken, testDevice, testVersion, longProps, testFile, NULL, 0, 0);
+    rc = update(testHost, testProduct, testToken, testDevice, testVersion, longProps, testFile, NULL, 0, 1);
     teqi(rc, -1, "Oversized properties should be rejected");
 }
 
@@ -280,7 +280,7 @@ static void test_http_host(void)
         This should fail eventually, though may not fail immediately
      */
     rc =
-        update("http://api.embedthis.com", testProduct, testToken, testDevice, testVersion, NULL, testFile, NULL, 0, 0);
+        update("http://api.embedthis.com", testProduct, testToken, testDevice, testVersion, NULL, testFile, NULL, 0, 1);
     teqi(rc, -1, "HTTP host should fail");
 }
 
@@ -330,7 +330,7 @@ static void test_tmp_path_warning(void)
         Use bogus token to ensure failure on auth
      */
     snprintf(tmpPath, sizeof(tmpPath), "/tmp/test-%d.bin", getpid());
-    rc = update(testHost, testProduct, "bogus-token-tmp-test", testDevice, testVersion, NULL, tmpPath, NULL, 0, 0);
+    rc = update(testHost, testProduct, "bogus-token-tmp-test", testDevice, testVersion, NULL, tmpPath, NULL, 0, 1);
     teqi(rc, -1, "/tmp path should warn but fail on auth");
 }
 
@@ -346,7 +346,7 @@ static void test_invalid_file_path(void)
         Use bogus token to ensure failure on auth, not just file path
      */
     snprintf(invalidPath, sizeof(invalidPath), "./nonexistent-%d/path/to/file.bin", getpid());
-    rc = update(testHost, testProduct, "bogus-token-path-test", testDevice, testVersion, NULL, invalidPath, NULL, 0, 0);
+    rc = update(testHost, testProduct, "bogus-token-path-test", testDevice, testVersion, NULL, invalidPath, NULL, 0, 1);
     teqi(rc, -1, "Invalid file path should be rejected");
 }
 
@@ -362,7 +362,7 @@ static void test_valid_properties(void)
         Use bogus token to ensure failure
      */
     rc = update(testHost, testProduct, "bogus-token-props-test", testDevice, testVersion,
-                "\"model\":\"pro\",\"region\":\"us-west\"", testFile, NULL, 0, 0);
+                "\"model\":\"pro\",\"region\":\"us-west\"", testFile, NULL, 0, 1);
     /*
         Will fail on auth but should accept the properties format
      */
@@ -396,7 +396,7 @@ static void test_special_chars_device(void)
     /*
         Use bogus token to ensure failure
      */
-    rc = update(testHost, testProduct, "bogus-token-special-chars", "device-001_test.v2", testVersion, NULL, testFile, NULL, 0, 0);
+    rc = update(testHost, testProduct, "bogus-token-special-chars", "device-001_test.v2", testVersion, NULL, testFile, NULL, 0, 1);
     teqi(rc, -1, "Special chars in device ID should be accepted, expected auth failure");
 }
 
@@ -411,13 +411,13 @@ static void test_semver_formats(void)
         Test various semantic version formats
         Use bogus token to ensure failure
      */
-    rc = update(testHost, testProduct, "bogus-token-semver-1", testDevice, "1.2.3", NULL, testFile, NULL, 0, 0);
+    rc = update(testHost, testProduct, "bogus-token-semver-1", testDevice, "1.2.3", NULL, testFile, NULL, 0, 1);
     teqi(rc, -1, "Semantic version 1.2.3 should be accepted");
 
-    rc = update(testHost, testProduct, "bogus-token-semver-2", testDevice, "1.2.3-beta", NULL, testFile, NULL, 0, 0);
+    rc = update(testHost, testProduct, "bogus-token-semver-2", testDevice, "1.2.3-beta", NULL, testFile, NULL, 0, 1);
     teqi(rc, -1, "Semantic version with pre-release should be accepted");
 
-    rc = update(testHost, testProduct, "bogus-token-semver-3", testDevice, "1.2.3-beta.1+build.123", NULL, testFile, NULL, 0, 0);
+    rc = update(testHost, testProduct, "bogus-token-semver-3", testDevice, "1.2.3-beta.1+build.123", NULL, testFile, NULL, 0, 1);
     teqi(rc, -1, "Full semantic version format should be accepted");
 }
 
@@ -434,7 +434,7 @@ static void test_long_token(void)
     }
     longToken[250] = '\0';
 
-    rc = update(testHost, testProduct, longToken, testDevice, testVersion, NULL, testFile, NULL, 0, 0);
+    rc = update(testHost, testProduct, longToken, testDevice, testVersion, NULL, testFile, NULL, 0, 1);
     /*
         Should fail on overflow or auth, not on token length itself if within buffer
      */
@@ -453,7 +453,7 @@ static void test_nonexistent_script(void)
         Use bogus token to ensure failure before trying to run script
      */
     snprintf(nonexistentScript, sizeof(nonexistentScript), "./nonexistent-script-%d.sh", getpid());
-    rc = update(testHost, testProduct, "bogus-token-script-test", testDevice, testVersion, NULL, testFile, nonexistentScript, 0, 0);
+    rc = update(testHost, testProduct, "bogus-token-script-test", testDevice, testVersion, NULL, testFile, nonexistentScript, 0, 1);
     /*
         Should fail on auth before trying to run script
      */

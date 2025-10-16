@@ -13,7 +13,7 @@ PID=$$
 # Test 1: Basic update check (may or may not have update available)
 echo "Test 1: Basic update check"
 updater --device ${DEVICE} --file binary-$PID-update.bin --host ${ENDPOINT} --product ${PRODUCT} \
-    --token ${TOKEN} --version ${VERSION} --cmd ./apply.sh
+    --token ${TOKEN} --version ${VERSION} --cmd ./apply.sh --quiet
 RC=$?
 if [ $RC = 0 ] || [ $RC = 1 ]; then
     echo "✓ Basic update check passed (exit code: $RC)"
@@ -27,7 +27,7 @@ fi
 # Test 2: Update check with properties
 echo "Test 2: Update check with device properties"
 updater --device ${DEVICE} --file binary-$PID-props.bin --host ${ENDPOINT} --product ${PRODUCT} \
-    --token ${TOKEN} --version ${VERSION} model=pro region=us-west
+    --token ${TOKEN} --version ${VERSION} --quiet model=pro region=us-west
 RC=$?
 if [ $RC = 0 ] || [ $RC = 1 ]; then
     echo "✓ Update with properties passed (exit code: $RC)"

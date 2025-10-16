@@ -11,8 +11,8 @@ FAILED=0
 # Use process ID to create unique filenames for parallel test execution
 PID=$$
 
-# Test 7: Multiple properties
-echo "Test 7: Multiple device properties"
+# Test 1: Multiple properties
+echo "Test 1: Multiple device properties"
 updater --device ${DEVICE} --file binary-$PID-multiprops.bin --host ${ENDPOINT} --product ${PRODUCT} \
     --token ${TOKEN} --version ${VERSION} model=pro region=us-west tier=premium
 RC=$?
@@ -25,8 +25,8 @@ else
     FAILED=1
 fi
 
-# Test 8: Very old version (should likely get update)
-echo "Test 8: Check with old version"
+# Test 2: Very old version (should likely get update)
+echo "Test 2: Check with old version"
 updater --device ${DEVICE} --file binary-$PID-old.bin --host ${ENDPOINT} --product ${PRODUCT} \
     --token ${TOKEN} --version "0.0.1" --quiet
 RC=$?
@@ -39,8 +39,8 @@ else
     FAILED=1
 fi
 
-# Test 9: Very new version (should not get update)
-echo "Test 9: Check with future version"
+# Test 3: Very new version (should not get update)
+echo "Test 3: Check with future version"
 updater --device ${DEVICE} --file binary-$PID-new.bin --host ${ENDPOINT} --product ${PRODUCT} \
     --token ${TOKEN} --version "999.999.999" --quiet
 RC=$?

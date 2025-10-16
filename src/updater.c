@@ -62,6 +62,7 @@ static int quiet;          // Global flag to suppress all output (stdout and std
 /********************************** Forwards **********************************/
 
 static int applyUpdate(cchar *path, cchar *script);
+static Socket connectToHost(cchar *host);
 static Fetch *fetch(cchar *method, char *url, char *headers, char *body);
 static Fetch *fetchAlloc(Socket fd, cchar *host);
 static void fetchFree(Fetch *fp);
@@ -73,8 +74,13 @@ static ssize fetchWrite(Fetch *fp, char *buf, size_t buflen);
 static int getFileSum(cchar *path, char sum[EVP_MAX_MD_SIZE * 2 + 1]);
 static char *json(cchar *jsonText, cchar *key);
 static void *memdup(cvoid *ptr, size_t size);
+static int parseResponseBody(Fetch *fp, char *response, ssize bytes);
+static void parseUrl(char *url, char **hostOut, char **pathOut);
 static int postReport(int success, cchar *host, cchar *device, cchar *update, cchar *token);
+static void printSslErrors(void);
+static ssize readAndValidateResponse(Fetch *fp, char *response, size_t responseSize);
 static int run(cchar *script, cchar *path);
+static int sendHttpRequest(Fetch *fp, cchar *method, cchar *path, cchar *host, cchar *headers, cchar *body);
 
 /************************************ Code ************************************/
 /**
@@ -87,7 +93,7 @@ static int run(cchar *script, cchar *path);
     4. Optionally applies the update using the provided script
     5. Reports the update result back to the Builder service
 
-    @param host Builder cloud endpoint URL (e.g., "https://api.embedthis.com")
+    @param host Builder cloud endpoint URL
     @param product Product ID from the Builder token list
     @param token CloudAPI access token for authentication
     @param device Unique device identifier
@@ -109,70 +115,93 @@ int update(cchar *host, cchar *product, cchar *token, cchar *device, cchar *vers
     char  body[UBSIZE], url[UBSIZE], headers[256], fileSum[EVP_MAX_MD_SIZE * 2 + 1];
     char  *checksum, *downloadUrl, *response, *update, *updateVersion;
     int   count, rc, status;
+#if ME_WIN_LIKE
+    WSADATA wsaData;
+    int wsaInitialized = 0;
+#endif
 
-    rc = 0;
-
-    if (!host || !product || !token || !device || !version || !path) {
-        if (!quietArg) {
-            fprintf(stderr, "Bad update args\n");
-        }
-        return -1;
-    }
-    verbose = verboseArg;
-    quiet = quietArg;
+    fp = NULL;
+    rc = -1;
+    checksum = downloadUrl = response = update = updateVersion = NULL;
 
     /*
-        Issue update request to determine if there is an update.
-        Authentication is using the CloudAPI builder token.
+        Block to make error handling easier
      */
-    count = snprintf(url, sizeof(url), "%s/tok/provision/update", host);
-    if (count < 0 || (size_t) count >= sizeof(url)) {
-        if (!quiet) {
-            fprintf(stderr, "Host URL is too long\n");
+    do {
+        if (!host || !product || !token || !device || !version || !path) {
+            if (!quietArg) {
+                fprintf(stderr, "Bad update args\n");
+            }
+            break;
         }
-        return -1;
-    }
-    /*
-        SECURITY Acceptable: - The developer is responsible for validating the inputs to this function.
-     */
-    count = snprintf(body, sizeof(body),
-                     "{\"id\":\"%s\",\"product\":\"%s\",\"version\":\"%s\"%s%s}",
-                     device, product, version,
-                     properties ? "," : "",
-                     properties ? properties : "");
-    if (count < 0 || (size_t) count >= sizeof(body)) {
-        if (!quiet) {
-            fprintf(stderr, "Request body is too long\n");
-        }
-        return -1;
-    }
-    count = snprintf(headers, sizeof(headers), "Content-Type: application/json\r\nAuthorization: %s\r\n", token);
-    if (count < 0 || (size_t) count >= sizeof(headers)) {
-        if (!quiet) {
-            fprintf(stderr, "Headers buffer too small\n");
-        }
-        return -1;
-    }
+        verbose = verboseArg;
+        quiet = quietArg;
 
-    if (verbose) {
-        printf("\nCheck for update at: %s\n", url);
-    }
-    if ((fp = fetch("POST", url, headers, body)) == NULL) {
-        return -1;
-    }
-    if ((response = fetchString(fp)) == NULL) {
+#if ME_WIN_LIKE
+        if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
+            if (!quiet) {
+                fprintf(stderr, "WSAStartup failed\n");
+            }
+            break;
+        }
+        wsaInitialized = 1;
+#endif
+
+        /*
+            Issue update request to determine if there is an update.
+            Authentication is using the CloudAPI builder token.
+         */
+        count = snprintf(url, sizeof(url), "%s/tok/provision/update", host);
+        if (count < 0 || (size_t) count >= sizeof(url)) {
+            if (!quiet) {
+                fprintf(stderr, "Host URL is too long\n");
+            }
+            break;
+        }
+        /*
+            SECURITY Acceptable: - The developer is responsible for validating the inputs to this function.
+         */
+        count = snprintf(body, sizeof(body),
+                         "{\"id\":\"%s\",\"product\":\"%s\",\"version\":\"%s\"%s%s}",
+                         device, product, version,
+                         properties ? "," : "",
+                         properties ? properties : "");
+        if (count < 0 || (size_t) count >= sizeof(body)) {
+            if (!quiet) {
+                fprintf(stderr, "Request body is too long\n");
+            }
+            break;
+        }
+        count = snprintf(headers, sizeof(headers), "Content-Type: application/json\r\nAuthorization: %s\r\n", token);
+        if (count < 0 || (size_t) count >= sizeof(headers)) {
+            if (!quiet) {
+                fprintf(stderr, "Headers buffer too small\n");
+            }
+            break;
+        }
+        if (verbose) {
+            printf("\nCheck for update at: %s\n", url);
+        }
+        if ((fp = fetch("POST", url, headers, body)) == NULL) {
+            break;
+        }
+        if ((response = fetchString(fp)) == NULL) {
+            break;
+        }
         fetchFree(fp);
-        return -1;
-    }
-    fetchFree(fp);
+        fp = NULL;
 
-    /*
-        If an update is available, the "url" will be defined to point to the update image
-        The "update" field contains the selected update ID and is use when posting update status.
-     */
-    downloadUrl = checksum = update = updateVersion = NULL;
+        /*
+            If an update is available, the "url" will be defined to point to the update image
+            The "update" field contains the selected update ID and is use when posting update status.
+         */
+        if ((downloadUrl = json(response, "url")) == NULL) {
+            free(response);
+            response = NULL;
+            rc = 0;
+            break;
+        }
 
-    if ((downloadUrl = json(response, "url")) != NULL) {
         checksum = json(response, "checksum");
         update = json(response, "update");
         updateVersion = json(response, "version");
@@ -183,11 +212,7 @@ int update(cchar *host, cchar *product, cchar *token, cchar *device, cchar *vers
             if (!quiet) {
                 fprintf(stderr, "Incomplete update response\n");
             }
-            if (downloadUrl) free(downloadUrl);
-            if (checksum) free(checksum);
-            if (update) free(update);
-            if (updateVersion) free(updateVersion);
-            return -1;
+            break;
         }
 
         count = snprintf(headers, sizeof(headers), "Accept: */*\r\n");
@@ -195,53 +220,70 @@ int update(cchar *host, cchar *product, cchar *token, cchar *device, cchar *vers
             if (!quiet) {
                 fprintf(stderr, "Headers buffer too small\n");
             }
-            if (downloadUrl) free(downloadUrl);
-            if (checksum) free(checksum);
-            if (update) free(update);
-            if (updateVersion) free(updateVersion);
-            return -1;
+            break;
         }
 
-        rc = 0;
         if (strncmp(downloadUrl, "https://", 8) != 0) {
             if (!quiet) {
                 fprintf(stderr, "Insecure download URL (HTTPS required)\n");
             }
-            rc = -1;
-        } else if ((fp = fetch("GET", downloadUrl, headers, NULL)) == NULL) {
-            rc = -1;
-        } else {
-            //  Fetch the update and save to the given path
-            if (fetchFile(fp, path) < 0) {
-                rc = -1;
+            break;
+        }
+        if ((fp = fetch("GET", downloadUrl, headers, NULL)) == NULL) {
+            break;
+        }
+        //  Fetch the update and save to the given path
+        if (fetchFile(fp, path) < 0) {
+            break;
+        }
+        fetchFree(fp);
+        fp = NULL;
+
+        if (verbose) {
+            printf("Verify update checksum in %s\n", path);
+        }
+        if (getFileSum(path, fileSum) != 0) {
+            break;
+        }
+        if (strcmp(fileSum, checksum) != 0) {
+            if (!quiet) {
+                fprintf(stderr, "Checksum does not match\n%s vs\n%s\n", fileSum, checksum);
             }
-            fetchFree(fp);
-            if (rc == 0) {
-                if (verbose) {
-                    printf("Verify update checksum in %s\n", path);
-                }
-                if (getFileSum(path, fileSum) == 0) {
-                    if (strcmp(fileSum, checksum) != 0) {
-                        if (!quiet) {
-                            fprintf(stderr, "Checksum does not match\n%s vs\n%s\n", fileSum, checksum);
-                        }
-                        rc = -1;
-                    } else if (script) {
-                        status = applyUpdate(path, script);
-                        if (postReport(status, host, device, update, token) < 0) {
-                            rc = -1;
-                        }
-                    }
-                }
+            break;
+        }
+        if (script) {
+            status = applyUpdate(path, script);
+            if (postReport(status, host, device, update, token) < 0) {
+                break;
             }
         }
-        if (downloadUrl) free(downloadUrl);
-        if (checksum) free(checksum);
-        if (update) free(update);
-        if (updateVersion) free(updateVersion);
-    } else {
+        rc = 0;
+
+    } while (0);
+
+    if (fp) {
+        fetchFree(fp);
+    }
+    if (downloadUrl) {
+        free(downloadUrl);
+    }
+    if (checksum) {
+        free(checksum);
+    }
+    if (update) {
+        free(update);
+    }
+    if (updateVersion) {
+        free(updateVersion);
+    }
+    if (response) {
         free(response);
     }
+#if ME_WIN_LIKE
+    if (wsaInitialized) {
+        WSACleanup();
+    }
+#endif
     return rc;
 }
 
@@ -449,6 +491,216 @@ static int postReport(int status, cchar *host, cchar *device, cchar *update, cch
 }
 
 /**
+    Parse URL to extract host and path components
+
+    Modifies the url string in place to separate host from path.
+    Strips https:// prefix if present.
+
+    @param url URL string to parse (modified in place)
+    @param hostOut Pointer to receive host component
+    @param pathOut Pointer to receive path component (or empty string if no path)
+    @stability Internal
+ */
+static void parseUrl(char *url, char **hostOut, char **pathOut)
+{
+    static char emptyPath[] = "";
+    char *host, *path;
+
+    if ((host = strstr(url, "https://")) != NULL) {
+        host += 8;
+    } else {
+        host = url;
+    }
+    if ((path = strchr(host, '/')) != NULL) {
+        *path++ = '\0';
+    } else {
+        path = emptyPath;
+    }
+    *hostOut = host;
+    *pathOut = path;
+}
+
+/**
+    Create socket and establish TCP connection to host
+
+    Resolves hostname via DNS and connects to SERVER_PORT (443).
+
+    @param host Hostname to connect to
+    @return Connected socket descriptor on success, -1 on error
+    @stability Internal
+ */
+static Socket connectToHost(cchar *host)
+{
+    struct sockaddr_in server_addr;
+    struct hostent     *server;
+    Socket fd;
+
+    fd = socket(AF_INET, SOCK_STREAM, 0);
+    if (fd < 0) {
+        if (!quiet) {
+            perror("Cannot open socket");
+        }
+        return -1;
+    }
+    server = gethostbyname(host);
+    if (server == NULL) {
+        closesocket(fd);
+        if (!quiet) {
+            fprintf(stderr, "Cannot find host\n");
+        }
+        return -1;
+    }
+    memset(&server_addr, 0, sizeof(server_addr));
+    server_addr.sin_family = AF_INET;
+    memcpy(&server_addr.sin_addr.s_addr, server->h_addr, server->h_length);
+    server_addr.sin_port = htons(SERVER_PORT);
+
+    if (connect(fd, (struct sockaddr*) &server_addr, sizeof(server_addr)) < 0) {
+        if (!quiet) {
+            perror("Error connecting to host");
+        }
+        closesocket(fd);
+        return -1;
+    }
+    return fd;
+}
+
+/**
+    Format and send HTTP request
+
+    Constructs HTTP/1.1 request with given method, path, headers, and optional body.
+
+    @param fp Fetch structure with active TLS connection
+    @param method HTTP method (e.g., "GET", "POST")
+    @param path URL path component
+    @param host Hostname for Host header
+    @param headers Additional HTTP headers (must end with \r\n)
+    @param body Optional request body (may be NULL)
+    @return 0 on success, -1 on error
+    @stability Internal
+ */
+static int sendHttpRequest(Fetch *fp, cchar *method, cchar *path, cchar *host, cchar *headers, cchar *body)
+{
+    char request[UBSIZE];
+
+    snprintf(request, sizeof(request),
+             "%s /%s HTTP/1.1\r\n" \
+             "Host: %s\r\n" \
+             "Content-Length: %d\r\n" \
+             "%s\r\n" \
+             "%s",
+             method, path, host, body ? (int) strlen(body) : 0, headers, body ? body : "");
+
+    if (fetchWrite(fp, request, strlen(request)) <= 0) {
+        return -1;
+    }
+    return 0;
+}
+
+/**
+    Read and validate HTTP response
+
+    Reads initial response data and validates HTTP/1.1 protocol and status code.
+
+    @param fp Fetch structure with active TLS connection
+    @param response Buffer to receive response data
+    @param responseSize Size of response buffer
+    @return Number of bytes read on success, -1 on error
+    @stability Internal
+ */
+static ssize readAndValidateResponse(Fetch *fp, char *response, size_t responseSize)
+{
+    char *status;
+    ssize bytes;
+
+    memset(response, 0, responseSize);
+    if ((bytes = fetchRead(fp, response, responseSize - 1)) < 0) {
+        return -1;
+    }
+    if (strncmp(response, "HTTP/1.1 ", 9) != 0) {
+        if (!quiet) {
+            fprintf(stderr, "Bad response\n%s\n", response);
+        }
+        return -1;
+    }
+    if ((status = strchr(response, ' ')) == NULL) {
+        if (!quiet) {
+            fprintf(stderr, "Bad response\n%s\n", response);
+        }
+        return -1;
+    }
+    fp->status = atoi(++status);
+    if (fp->status != 200) {
+        if (!quiet) {
+            fprintf(stderr, "Bad response status %d\n%s\n", fp->status, response);
+        }
+        return -1;
+    }
+    return bytes;
+}
+
+/**
+    Parse response body and Content-Length header
+
+    Extracts Content-Length from headers and handles any body fragment
+    that was received with the headers.
+
+    @param fp Fetch structure to populate with body information
+    @param response Response buffer containing headers and possible body fragment
+    @param bytes Total bytes read into response buffer
+    @return 0 on success, -1 on error
+    @stability Internal
+ */
+static int parseResponseBody(Fetch *fp, char *response, ssize bytes)
+{
+    char *data, *header;
+    size_t headerBytes;
+    int contentLength;
+
+    if ((data = strstr(response, "\r\n\r\n")) == NULL) {
+        if (!quiet) {
+            fprintf(stderr, "Bad response\n%s\n", response);
+        }
+        return -1;
+    }
+    *data = '\0';
+    data += 4;
+
+    if ((header = fetchHeader(response, "Content-Length")) == NULL) {
+        if (!quiet) {
+            fprintf(stderr, "Missing Content-Length\n");
+        }
+        return -1;
+    }
+    contentLength = atoi(header);
+    free(header);
+
+    if (contentLength < 0 || contentLength > 100 * 1024 * 1024) {
+        if (!quiet) {
+            fprintf(stderr, "Invalid Content-Length\n");
+        }
+        return -1;
+    }
+    fp->contentLength = (size_t) contentLength;
+
+    headerBytes = (size_t) (data - response);
+    if ((size_t) bytes > headerBytes) {
+        fp->bodyLength = ((size_t) bytes - headerBytes);
+        fp->body = memdup(data, fp->bodyLength);
+        if (!fp->body) {
+            if (!quiet) {
+                fprintf(stderr, "Cannot allocate body buffer\n");
+            }
+            return -1;
+        }
+    } else {
+        fp->bodyLength = 0;
+        fp->body = NULL;
+    }
+    return 0;
+}
+
+/**
     Perform an HTTPS request to the specified URL
 
     This is a minimal HTTPS client designed specifically for the Builder API needs.
@@ -467,148 +719,34 @@ static int postReport(int status, cchar *host, cchar *device, cchar *update, cch
  */
 static Fetch *fetch(cchar *method, char *url, char *headers, char *body)
 {
-    struct sockaddr_in server_addr;
-    struct hostent     *server;
-    Fetch              *fp;
-    char               request[UBSIZE], response[UBSIZE], uri[UBSIZE];
-    char               *path;
-    char               *data, *header, *host, *status;
-    static char        emptyPath[] = "";
-    size_t             headerBytes;
-    ssize              bytes;
-    Socket             fd;
-    int                contentLength;
+    Fetch  *fp;
+    char   uri[UBSIZE], response[UBSIZE];
+    char   *host, *path;
+    Socket fd;
+    ssize  bytes;
 
     snprintf(uri, sizeof(uri), "%s", url);
     if (verbose) {
         printf("Fetching %s\n", uri);
     }
-    if ((host = strstr(uri, "https://")) != NULL) {
-        host += 8;
-    } else {
-        host = uri;
-    }
-    if ((path = strchr(host, '/')) != NULL) {
-        *path++ = '\0';
-    } else {
-        path = emptyPath;
-    }
-    fd = socket(AF_INET, SOCK_STREAM, 0);
-    if (fd < 0) {
-        if (!quiet) {
-            perror("Cannot open socket");
-        }
-        return NULL;
-    }
-    server = gethostbyname(host);
-    if (server == NULL) {
-        close((int) fd);
-        if (!quiet) {
-            fprintf(stderr, "Cannot find host\n");
-        }
-        return NULL;
-    }
-    memset(&server_addr, 0, sizeof(server_addr));
-    server_addr.sin_family = AF_INET;
-    memcpy(&server_addr.sin_addr.s_addr, server->h_addr, server->h_length);
-    server_addr.sin_port = htons(SERVER_PORT);
+    parseUrl(uri, &host, &path);
 
-    if (connect(fd, (struct sockaddr*) &server_addr, sizeof(server_addr)) < 0) {
-        if (!quiet) {
-            perror("Error connecting to host");
-        }
-        close((int) fd);
+    if ((fd = connectToHost(host)) < 0) {
         return NULL;
     }
     if ((fp = fetchAlloc(fd, host)) == NULL) {
-        close((int) fd);
+        closesocket(fd);
         return NULL;
     }
-    /*
-        Format the request and calculate the body content length
-     */
-    snprintf(request, sizeof(request),
-             "%s /%s HTTP/1.1\r\n" \
-             "Host: %s\r\n" \
-             "Content-Length: %d\r\n" \
-             "%s\r\n" \
-             "%s",
-             method, path, host, body ? (int) strlen(body) : 0, headers, body ? body : "");
-
-    /*
-        Write the request and wait for a response
-     */
-    if (fetchWrite(fp, request, strlen(request)) <= 0) {
+    if (sendHttpRequest(fp, method, path, host, headers, body) < 0) {
         fetchFree(fp);
         return NULL;
     }
-    memset(response, 0, UBSIZE);
-    if ((bytes = fetchRead(fp, response, UBSIZE - 1)) < 0) {
+    if ((bytes = readAndValidateResponse(fp, response, sizeof(response))) < 0) {
         fetchFree(fp);
         return NULL;
     }
-    if (strncmp(response, "HTTP/1.1 ", 9) != 0) {
-        if (!quiet) {
-            fprintf(stderr, "Bad response\n%s\n", response);
-        }
-        fetchFree(fp);
-        return NULL;
-    }
-    if ((status = strchr(response, ' ')) == NULL) {
-        if (!quiet) {
-            fprintf(stderr, "Bad response\n%s\n", response);
-        }
-        fetchFree(fp);
-        return NULL;
-    }
-    fp->status = atoi(++status);
-    if (fp->status != 200) {
-        if (!quiet) {
-            fprintf(stderr, "Bad response status %d\n%s\n", fp->status, response);
-        }
-        fetchFree(fp);
-        return NULL;
-    }
-    if ((data = strstr(response, "\r\n\r\n")) == NULL) {
-        if (!quiet) {
-            fprintf(stderr, "Bad response\n%s\n", response);
-        }
-        fetchFree(fp);
-        return NULL;
-    }
-    *data = '\0';
-    data += 4;
-    if ((header = fetchHeader(response, "Content-Length")) != NULL) {
-        contentLength = atoi(header);
-        free(header);
-        if (contentLength < 0 || contentLength > 100 * 1024 * 1024) {
-            if (!quiet) {
-                fprintf(stderr, "Invalid Content-Length\n");
-            }
-            fetchFree(fp);
-            return NULL;
-        }
-        fp->contentLength = (size_t) contentLength;
-
-        headerBytes = (size_t) (data - response);
-        if ((size_t) bytes > headerBytes) {
-            fp->bodyLength = ((size_t) bytes - headerBytes);
-            fp->body = memdup(data, fp->bodyLength);
-            if (!fp->body) {
-                if (!quiet) {
-                    fprintf(stderr, "Cannot allocate body buffer\n");
-                }
-                fetchFree(fp);
-                return NULL;
-            }
-        } else {
-            fp->bodyLength = 0;
-            fp->body = NULL;
-        }
-    } else {
-        if (!quiet) {
-            fprintf(stderr, "Missing Content-Length\n");
-        }
+    if (parseResponseBody(fp, response, bytes) < 0) {
         fetchFree(fp);
         return NULL;
     }
@@ -800,7 +938,7 @@ static ssize fetchRead(Fetch *fp, char *buf, size_t buflen)
     rc = SSL_read(fp->ssl, buf, (int) buflen);
     if (rc <= 0) {
         if (!quiet) {
-            ERR_print_errors_fp(stderr);
+            printSslErrors();
         }
         return -1;
     }
@@ -825,7 +963,7 @@ static ssize fetchWrite(Fetch *fp, char *buf, size_t buflen)
     rc = SSL_write(fp->ssl, buf, (int) buflen);
     if (rc <= 0) {
         if (!quiet) {
-            ERR_print_errors_fp(stderr);
+            printSslErrors();
         }
         return -1;
     }
@@ -866,7 +1004,7 @@ static Fetch *fetchAlloc(Socket fd, cchar *host)
     if (!fp->ctx) {
         if (!quiet) {
             perror("Unable to create SSL context");
-            ERR_print_errors_fp(stderr);
+            printSslErrors();
         }
         free(fp);
         return NULL;
@@ -881,7 +1019,7 @@ static Fetch *fetchAlloc(Socket fd, cchar *host)
     if (!SSL_CTX_set_default_verify_paths(fp->ctx)) {
         if (!quiet) {
             fprintf(stderr, "Cannot load system CA certificates.\n");
-            ERR_print_errors_fp(stderr);
+            printSslErrors();
         }
         SSL_CTX_free(fp->ctx);
         free(fp);
@@ -907,7 +1045,7 @@ static Fetch *fetchAlloc(Socket fd, cchar *host)
     if (!X509_VERIFY_PARAM_set1_host(param, host, 0)) {
         if (!quiet) {
             fprintf(stderr, "Failed to set hostname for verification\n");
-            ERR_print_errors_fp(stderr);
+            printSslErrors();
         }
         SSL_free(fp->ssl);
         SSL_CTX_free(fp->ctx);
@@ -917,7 +1055,7 @@ static Fetch *fetchAlloc(Socket fd, cchar *host)
 
     if (SSL_connect(fp->ssl) != 1) {
         if (!quiet) {
-            ERR_print_errors_fp(stderr);
+            printSslErrors();
         }
         SSL_free(fp->ssl);
         SSL_CTX_free(fp->ctx);
@@ -950,7 +1088,7 @@ static void fetchFree(Fetch *fp)
         fp->ctx = NULL;
     }
     if (fp->fd >= 0) {
-        close((int) fp->fd);
+        closesocket(fp->fd);
         fp->fd = -1;
     }
     if (fp->body) {
@@ -1107,4 +1245,25 @@ static void *memdup(cvoid *ptr, size_t size)
     memcpy(newp, ptr, size);
     newp[size] = '\0';
     return newp;
+}
+
+/**
+    Print OpenSSL error messages safely
+
+    This function provides a Windows-safe alternative to ERR_print_errors_fp(stderr).
+    On Windows, ERR_print_errors_fp can crash when stderr is not properly initialized
+    or redirected. This function uses ERR_error_string_n to get error messages and
+    prints them using fprintf, which is more reliable across platforms.
+
+    @stability Internal
+ */
+static void printSslErrors(void)
+{
+    char  buf[256];
+    ulong err;
+
+    while ((err = ERR_get_error()) != 0) {
+        ERR_error_string_n(err, buf, sizeof(buf));
+        fprintf(stderr, "OpenSSL error: %s\n", buf);
+    }
 }

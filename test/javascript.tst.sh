@@ -11,7 +11,7 @@ PID=$$
 # Test 1: Basic update check (may or may not have update available)
 echo "Test 1: Basic update check"
 bun ../src/updater.js --device ${DEVICE} --file js-$PID-update.bin --host ${ENDPOINT} --product ${PRODUCT} \
-    --token ${TOKEN} --version ${VERSION} --cmd ./apply.sh
+    --token ${TOKEN} --version ${VERSION} --cmd ./apply.sh --quiet
 RC=$?
 if [ $RC = 0 ] || [ $RC = 1 ]; then
     echo "✓ Basic update check passed (exit code: $RC)"
@@ -25,7 +25,7 @@ fi
 # Test 2: Update check with properties
 echo "Test 2: Update check with device properties"
 bun ../src/updater.js --device ${DEVICE} --file js-$PID-props.bin --host ${ENDPOINT} --product ${PRODUCT} \
-    --token ${TOKEN} --version ${VERSION} model=pro region=us-west
+    --token ${TOKEN} --version ${VERSION} --quiet model=pro region=us-west
 RC=$?
 if [ $RC = 0 ] || [ $RC = 1 ]; then
     echo "✓ Update with properties passed (exit code: $RC)"
@@ -54,7 +54,7 @@ fi
 echo "Test 4: Custom file path"
 CUSTOM_FILE="js-$PID-custom.bin"
 bun ../src/updater.js --device ${DEVICE} --file ${CUSTOM_FILE} --host ${ENDPOINT} --product ${PRODUCT} \
-    --token ${TOKEN} --version ${VERSION}
+    --token ${TOKEN} --version ${VERSION} --quiet
 RC=$?
 if [ $RC = 0 ] || [ $RC = 1 ]; then
     echo "✓ Custom file path passed (exit code: $RC)"
@@ -97,7 +97,7 @@ fi
 # Test 7: Multiple properties
 echo "Test 7: Multiple device properties"
 bun ../src/updater.js --device ${DEVICE} --file js-$PID-multiprops.bin --host ${ENDPOINT} --product ${PRODUCT} \
-    --token ${TOKEN} --version ${VERSION} model=pro region=us-west tier=premium
+    --token ${TOKEN} --version ${VERSION} --quiet model=pro region=us-west tier=premium
 RC=$?
 if [ $RC = 0 ] || [ $RC = 1 ]; then
     echo "✓ Multiple properties passed (exit code: $RC)"

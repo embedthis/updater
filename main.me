@@ -54,6 +54,7 @@ Me.load({
             libpaths: [],
             postresolve: `
                 if (me.platform.os == 'windows') {
+                    me.target.libpaths.push(Path('$(USERPROFILE)/vcpkg/installed/x64-windows/lib'))
                     me.target.libpaths.push(Path('$(ME_COM_OPENSSL_PATH)/lib/VC/$(ARCH)/MDd'))
                     me.target.libraries.push('libcrypto.lib', 'libssl.lib')
                 } else if (me.platform.os == 'macosx') {

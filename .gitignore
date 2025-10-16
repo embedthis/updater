@@ -21,3 +21,4 @@ projects/updater-macosx-mine*
 test/node_modules
 test/package.json
 .DS_Store
+.cdrc.bat

@@ -34,7 +34,7 @@ extern "C" {
     The function uses HTTPS with certificate verification for all network communications.
     All parameters must be non-NULL except for 'properties' and 'script'.
 
-    @param host Builder cloud endpoint URL (e.g., "https://api.embedthis.com"). Must not be NULL.
+    @param host Builder cloud endpoint URL. Must not be NULL.
     @param product Product ID from the Builder token list. Must not be NULL.
     @param token CloudAPI access token from the Builder token list for authentication. Must not be NULL.
     @param device Unique device identifier. Must not be NULL.

@@ -284,7 +284,14 @@ function parseArgs() {
     }
     let propCount = 0
     for (; i < args.length && propCount < MAX_PROPERTIES; i++, propCount++) {
-        let [key, value] = args[i].split('=')
+        let arg = args[i]
+        if (arg[0] === '-') {
+            if (!quiet) {
+                console.error('Options must come before properties. Found:', arg)
+            }
+            usage()
+        }
+        let [key, value] = arg.split('=')
         if (!key || !value) {
             if (!quiet) {
                 console.error('Invalid property format. Expected key=value')

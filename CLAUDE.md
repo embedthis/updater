@@ -19,7 +19,7 @@ The Embedthis Builder is a cloud service that provides a platform for managing a
 
 ## Embedthis Builder API
 
-The Embedthis Builder API is a RESTful API that provides a platform for managing and distributing software updates to IoT devices. It allows you to create and manage updates, and distribute them to your devices over-the-air. [Embedthis Builder API](https://api.embedthis.com)
+The Embedthis Builder API is a RESTful API that provides a platform for managing and distributing software updates to IoT devices. It allows you to create and manage updates, and distribute them to your devices over-the-air.
 
 See the [Embedthis Builder API](https://www.embedthis.com/doc) documentation for more information.
 
