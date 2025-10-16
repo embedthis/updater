@@ -109,7 +109,7 @@ jobs:
           VERSION: "1.0.0"
         run: |
           call bin\test-prep.bat
-          tm test
+          tm -s -v test
 
       - name: Upload test results
         if: failure()
