@@ -542,6 +542,7 @@ ENABLE_TESTABILITY = YES;
     				HEADER_SEARCH_PATHS = (
 					"../src",
 					"../src/osdep",
+					"../../../../../opt/homebrew/include",
 					"$(inherited)"
 				);
 				GCC_PREPROCESSOR_DEFINITIONS = (
@@ -570,6 +571,7 @@ ENABLE_TESTABILITY = YES;
     				HEADER_SEARCH_PATHS = (
 					"../src",
 					"../src/osdep",
+					"../../../../../opt/homebrew/include",
 					"$(inherited)"
 				);
 				GCC_PREPROCESSOR_DEFINITIONS = (

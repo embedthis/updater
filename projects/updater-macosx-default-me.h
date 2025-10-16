@@ -181,7 +181,7 @@
 
 /* Profile */
 #ifndef ME_CONFIG_CMD
-    #define ME_CONFIG_CMD "me -d -q -platform macosx-arm64-default -configure . -gen make"
+    #define ME_CONFIG_CMD "me -d -q -platform macosx-arm64-default -configure . -gen xcode"
 #endif
 #ifndef ME_UPDATER_PRODUCT
     #define ME_UPDATER_PRODUCT 1

@@ -274,7 +274,7 @@ prep:
 	@if not exist "$(BUILD)/bin" md "$(BUILD)/bin"
 	@if not exist "$(BUILD)/inc" md "$(BUILD)/inc"
 	@if not exist "$(BUILD)/obj" md "$(BUILD)/obj"
-	@powershell -Command "Copy-Item \"projects/$(PROJECT)-me.h\" \"$(BUILD)/inc/me.h\" -NoClobber -ErrorAction SilentlyContinue"
+	@powershell -Command "Copy-Item \"projects/$(PROJECT)-me.h\" \"$(BUILD)/inc/me.h\" -ErrorAction SilentlyContinue | Out-Null"
 !IF "$(SHOW)" != ""
 	@echo ..... [Info] Use "make SHOW=1" to trace executed commands and errors.
 LOG =
@@ -302,7 +302,7 @@ DEPS_1 = $(DEPS_1) src/me.h
 
 $(BUILD)/inc/me.h: $(DEPS_1)
 	@echo ..... [Copy] $(BUILD)/inc/me.h
-	powershell -Command "New-Item -Path $(BUILD)/inc -ItemType Directory -Force"
+	powershell -Command "New-Item -Path $(BUILD)/inc -ItemType Directory -Force | Out-Null"
 	powershell -Command "Copy-Item \"src/me.h\" \"$(BUILD)/inc/me.h\" -Force" $(LOG)
 
 #
@@ -312,7 +312,7 @@ DEPS_2 = $(DEPS_2) src/osdep/osdep.h
 
 $(BUILD)/inc/osdep.h: $(DEPS_2)
 	@echo ..... [Copy] $(BUILD)/inc/osdep.h
-	powershell -Command "New-Item -Path $(BUILD)/inc -ItemType Directory -Force"
+	powershell -Command "New-Item -Path $(BUILD)/inc -ItemType Directory -Force | Out-Null"
 	powershell -Command "Copy-Item \"src/osdep/osdep.h\" \"$(BUILD)/inc/osdep.h\" -Force" $(LOG)
 
 #
@@ -322,7 +322,7 @@ DEPS_3 = $(DEPS_3) src/updater.h
 
 $(BUILD)/inc/updater.h: $(DEPS_3)
 	@echo ..... [Copy] $(BUILD)/inc/updater.h
-	powershell -Command "New-Item -Path $(BUILD)/inc -ItemType Directory -Force"
+	powershell -Command "New-Item -Path $(BUILD)/inc -ItemType Directory -Force | Out-Null"
 	powershell -Command "Copy-Item \"src/updater.h\" \"$(BUILD)/inc/updater.h\" -Force" $(LOG)
 
 #
@@ -339,7 +339,7 @@ DEPS_5 = $(DEPS_5) src/updater.h
 $(BUILD)/obj/main.obj: \
     src/main.c $(DEPS_5)
 	@echo .. [Compile] $(BUILD)/obj/main.obj
-	"$(CC)" -c -Fo"$(BUILD)/obj/main.obj" -Fd"$(BUILD)/obj/main.pdb" $(CFLAGS) $(DFLAGS) $(IFLAGS) "-Isrc" "-Isrc/osdep" $(INPUT) "src/main.c" $(LOG)
+	"$(CC)" -c -Fo"$(BUILD)/obj/main.obj" -Fd"$(BUILD)/obj/main.pdb" $(CFLAGS) $(DFLAGS) $(IFLAGS) "-Isrc" "-Isrc/osdep" "-I$(USERPROFILE)/vcpkg/installed/x64-windows" "-I$(ME_BASE_PREFIX)/OpenSSL" $(INPUT) "src/main.c" $(LOG)
 
 #
 #   updater.obj
@@ -349,7 +349,7 @@ DEPS_6 = $(DEPS_6) src/updater.h
 $(BUILD)/obj/updater.obj: \
     src/updater.c $(DEPS_6)
 	@echo .. [Compile] $(BUILD)/obj/updater.obj
-	"$(CC)" -c -Fo"$(BUILD)/obj/updater.obj" -Fd"$(BUILD)/obj/updater.pdb" $(CFLAGS) $(DFLAGS) $(IFLAGS) "-Isrc" "-Isrc/osdep" $(INPUT) "src/updater.c" $(LOG)
+	"$(CC)" -c -Fo"$(BUILD)/obj/updater.obj" -Fd"$(BUILD)/obj/updater.pdb" $(CFLAGS) $(DFLAGS) $(IFLAGS) "-Isrc" "-Isrc/osdep" "-I$(USERPROFILE)/vcpkg/installed/x64-windows" "-I$(ME_BASE_PREFIX)/OpenSSL" $(INPUT) "src/updater.c" $(LOG)
 
 #
 #   libupdater

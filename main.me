@@ -40,10 +40,9 @@ Me.load({
             postresolve: `
                 if (me.platform.os == 'macosx') {
                     me.target.includes.push('/opt/homebrew/include')
-                    print("HERE", me.target.includes)
                 } else if (me.platform.os == 'windows') {
-                    me.target.includes.push('$(USERPROFILE)/vcpkg/installed/x64-windows')
-                    me.target.includes.push('C:\Program Files\OpenSSL')
+                    me.target.includes.push(Path('$(USERPROFILE)/vcpkg/installed/x64-windows'))
+                    me.target.includes.push(Path('C:/Program Files/OpenSSL'))
                 }
             `
         },

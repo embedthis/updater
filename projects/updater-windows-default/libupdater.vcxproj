@@ -4,7 +4,7 @@
       <ItemDefinitionGroup>
         <ClCompile>
           <PreprocessorDefinitions>ME_DEBUG=1;_CRT_SECURE_NO_WARNINGS=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-          <AdditionalIncludeDirectories>..\..\src;..\..\src\osdep;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+          <AdditionalIncludeDirectories>..\..\src;..\..\src\osdep;$(USERPROFILE)/vcpkg/installed/x64-windows;..\..\C:\Program Files\OpenSSL;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
           <AdditionalDependencies>ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
