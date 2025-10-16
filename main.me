@@ -34,18 +34,31 @@ Me.load({
         libupdater: {
             type: 'lib',
             depends: [ 'osdep' ],
-            includes: [ 'src', 'src/osdep', '/opt/homebrew/include' ],
+            includes: [ 'src', 'src/osdep' ],
             headers: [ 'src/*.h' ],
             sources: [ 'src/updater.c' ],
+            postresolve: `
+                if (me.platform.os == 'macosx') {
+                    me.target.includes.push('/opt/homebrew/include')
+                    print("HERE", me.target.includes)
+                } else if (me.platform.os == 'windows') {
+                    me.target.includes.push('$(USERPROFILE)/vcpkg/installed/x64-windows')
+                    me.target.includes.push('C:\Program Files\OpenSSL')
+                }
+            `
         },
         updater: {
             type: 'exe',
             sources: [ 'src/main.c' ],
             depends: [ 'libupdater', 'osdep' ],
-            libpaths: [ '/opt/homebrew/lib' ],
-            prebuild: `
+            libpaths: [],
+            postresolve: `
                 if (me.platform.os == 'windows') {
+                    me.target.libpaths.push(Path('$(ME_COM_OPENSSL_PATH)/lib/VC/$(ARCH)/MDd'))
                     me.target.libraries.push('libcrypto.lib', 'libssl.lib')
+                } else if (me.platform.os == 'macosx') {
+                    me.target.libpaths.push('/opt/homebrew/lib')
+                    me.target.libraries.push('crypto', 'ssl')
                 } else {
                     me.target.libraries.push('crypto', 'ssl')
                 }

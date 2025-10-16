@@ -191,7 +191,7 @@ DEPS_5 += src/updater.h
 $(BUILD)/obj/main.o: \
     src/main.c $(DEPS_5)
 	@echo '   [Compile] $(BUILD)/obj/main.o'
-	$(CC) -c -o "$(BUILD)/obj/main.o" $(CFLAGS) $(DFLAGS) $(IFLAGS) "-Isrc" "-Isrc/osdep" "-I/opt/homebrew/include" $(INPUT) "src/main.c"
+	$(CC) -c -o "$(BUILD)/obj/main.o" $(CFLAGS) $(DFLAGS) $(IFLAGS) "-Isrc" "-Isrc/osdep" $(INPUT) "src/main.c"
 
 #
 #   updater.o
@@ -201,7 +201,7 @@ DEPS_6 += src/updater.h
 $(BUILD)/obj/updater.o: \
     src/updater.c $(DEPS_6)
 	@echo '   [Compile] $(BUILD)/obj/updater.o'
-	$(CC) -c -o "$(BUILD)/obj/updater.o" $(CFLAGS) $(DFLAGS) $(IFLAGS) "-Isrc" "-Isrc/osdep" "-I/opt/homebrew/include" $(INPUT) "src/updater.c"
+	$(CC) -c -o "$(BUILD)/obj/updater.o" $(CFLAGS) $(DFLAGS) $(IFLAGS) "-Isrc" "-Isrc/osdep" $(INPUT) "src/updater.c"
 
 #
 #   libupdater
@@ -226,7 +226,7 @@ LIBS_8 += -lupdater
 
 $(BUILD)/bin/updater: $(DEPS_8)
 	@echo '      [Link] $(BUILD)/bin/updater'
-	$(CC) -o "$(BUILD)/bin/updater" $(LDFLAGS) $(LIBPATHS) "-L/opt/homebrew/lib" $(INPUT) "$(BUILD)/obj/main.o" $(LIBPATHS_8) $(LIBS_8) $(LIBS_8) $(LIBS) "-lcrypto" "-lssl" $(LIBS) "-lcrypto" "-lssl" 
+	$(CC) -o "$(BUILD)/bin/updater" $(LDFLAGS) $(LIBPATHS) $(INPUT) "$(BUILD)/obj/main.o" $(LIBPATHS_8) $(LIBS_8) $(LIBS_8) $(LIBS) "-lcrypto" "-lssl" $(LIBS) "-lcrypto" "-lssl" 
 
 #
 #   installPrep
@@ -278,13 +278,6 @@ uninstall: $(DEPS_14)
 #
 
 uninstallBinary: $(DEPS_15)
-
-#
-#   version
-#
-
-version: $(DEPS_16)
-	echo $(VERSION)
 
 
 EXTRA_MAKEFILE := $(strip $(wildcard ./projects/extra.mk))

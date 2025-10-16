@@ -279,13 +279,6 @@ uninstall: $(DEPS_14)
 
 uninstallBinary: $(DEPS_15)
 
-#
-#   version
-#
-
-version: $(DEPS_16)
-	echo $(VERSION)
-
 
 EXTRA_MAKEFILE := $(strip $(wildcard ./projects/extra.mk))
 ifneq ($(EXTRA_MAKEFILE),)
