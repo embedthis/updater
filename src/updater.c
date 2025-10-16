@@ -502,7 +502,7 @@ static Fetch *fetch(cchar *method, char *url, char *headers, char *body)
     }
     server = gethostbyname(host);
     if (server == NULL) {
-        close(fd);
+        close((int) fd);
         if (!quiet) {
             fprintf(stderr, "Cannot find host\n");
         }
@@ -517,11 +517,11 @@ static Fetch *fetch(cchar *method, char *url, char *headers, char *body)
         if (!quiet) {
             perror("Error connecting to host");
         }
-        close(fd);
+        close((int) fd);
         return NULL;
     }
     if ((fp = fetchAlloc(fd, host)) == NULL) {
-        close(fd);
+        close((int) fd);
         return NULL;
     }
     /*
@@ -890,7 +890,7 @@ static Fetch *fetchAlloc(Socket fd, cchar *host)
 
     fp->ssl = SSL_new(fp->ctx);
     fp->fd = fd;
-    SSL_set_fd(fp->ssl, fd);
+    SSL_set_fd(fp->ssl, (int) fd);
     /*
         Send SNI - SSL_set_tlsext_host_name macro casts to void*, triggering const warning.
         This is an OpenSSL API limitation, not a security issue.
@@ -950,7 +950,7 @@ static void fetchFree(Fetch *fp)
         fp->ctx = NULL;
     }
     if (fp->fd >= 0) {
-        close(fp->fd);
+        close((int) fp->fd);
         fp->fd = -1;
     }
     if (fp->body) {

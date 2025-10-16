@@ -40,7 +40,7 @@ CONFIG                = $(OS)-$(ARCH)-$(PROFILE)
 !ENDIF
 
 !IFNDEF BUILD
-BUILD                 = build/$(OS)-$(ARCH)-$(PROFILE)
+BUILD                 = build
 !ENDIF
 
 !IFNDEF LBIN
@@ -91,6 +91,9 @@ ME_COM_COMPILER       = 1
 #
 !IFNDEF ME_AUTHOR
 ME_AUTHOR             = \"updater\"
+!ENDIF
+!IFNDEF ME_BUILD
+ME_BUILD              = \"build\"
 !ENDIF
 !IFNDEF ME_COMPANY
 ME_COMPANY            = \"updater\"

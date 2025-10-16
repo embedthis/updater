@@ -85,6 +85,7 @@ jobs:
           SET IFLAGS="-I$(ME_COM_OPENSSL_PATH)\include"
           SET SHOW=1
           make
+          Get-ChildItem -Recurse -Path "build"
           # Get-ChildItem -Recurse -Path "."
 
       - name: Run test suite (Unix)

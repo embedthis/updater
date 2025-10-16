@@ -11,7 +11,7 @@ CC_ARCH               ?= $(shell echo $(ARCH) | sed 's/x86/i686/;s/x64/x86_64/')
 OS                    ?= macosx
 CC                    ?= clang
 AR                    ?= ar
-BUILD                 ?= build/$(OS)-$(ARCH)-$(PROFILE)
+BUILD                 ?= build
 CONFIG                ?= $(OS)-$(ARCH)-$(PROFILE)
 LBIN                  ?= $(BUILD)/bin
 PATH                  := $(LBIN):$(PATH)
@@ -34,6 +34,7 @@ endif
 # Settings
 #
 ME_AUTHOR             ?= \"updater\"
+ME_BUILD              ?= \"build\"
 ME_COMPANY            ?= \"updater\"
 ME_COMPATIBLE         ?= \"1.1\"
 ME_COMPILER_FORTIFY   ?= 1

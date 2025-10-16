@@ -6,6 +6,9 @@
 #ifndef ME_AUTHOR
     #define ME_AUTHOR "updater"
 #endif
+#ifndef ME_BUILD
+    #define ME_BUILD "build"
+#endif
 #ifndef ME_COMPANY
     #define ME_COMPANY "updater"
 #endif

@@ -12,7 +12,7 @@ OS                    ?= vxworks
 CC                    ?= cc$(subst x86,pentium,$(ARCH))
 LD                    ?= ldundefined
 AR                    ?= arundefined
-BUILD                 ?= build/$(OS)-$(ARCH)-$(PROFILE)
+BUILD                 ?= build
 CONFIG                ?= $(OS)-$(ARCH)-$(PROFILE)
 LBIN                  ?= $(BUILD)/bin
 PATH                  := $(LBIN):$(PATH)
@@ -39,6 +39,7 @@ endif
 # Settings
 #
 ME_AUTHOR             ?= \"updater\"
+ME_BUILD              ?= \"build\"
 ME_COMPANY            ?= \"updater\"
 ME_COMPATIBLE         ?= \"1.1\"
 ME_COMPILER_FORTIFY   ?= 1
