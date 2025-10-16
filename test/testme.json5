@@ -47,7 +47,7 @@
             include: ['**/*.tst.win.c'],  // Windows-specific tests
         },
     },
-    env: {
+    environment: {
         default: {
             PATH: '../build/bin:${PATH}',
         },
@@ -56,6 +56,7 @@
         },
     },
     services: {
+        environment: './env.sh',
         cleanup: './cleanup.sh',
     },
 }

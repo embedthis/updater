@@ -6,8 +6,6 @@
 #   Note: Old version test (0.0.1) may trigger actual update download and be slower.
 #
 
-. creds.sh
-
 FAILED=0
 
 # Use process ID to create unique filenames for parallel test execution

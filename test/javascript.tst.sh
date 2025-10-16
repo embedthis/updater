@@ -3,8 +3,6 @@
 #   javascript.sh.tst -- Test the updater.js script
 #
 
-. creds.sh
-
 FAILED=0
 
 # Use process ID to create unique filenames for parallel test execution

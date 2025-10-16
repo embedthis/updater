@@ -99,6 +99,7 @@ All implementations require these parameters:
 - **C version**: Requires OpenSSL/LibreSSL (`-lssl -lcrypto`)
 - **Node.js version**: Uses built-in modules (fetch, crypto, fs)
 - **macOS**: Uses Homebrew paths (`/opt/homebrew/include`, `/opt/homebrew/lib`)
+- **Windows**: Requires Git for Windows (includes bash), enabling all shell scripts and tests to run on Windows
 
 ### File Structure
 - **Root** - C implementation and build files

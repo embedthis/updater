@@ -6,8 +6,6 @@
 #   This test focuses on negative test cases and error paths.
 #
 
-. creds.sh
-
 UPDATER="updater"
 
 # Use process ID to create unique filenames for parallel test execution

@@ -16,18 +16,17 @@
 /********************************** Test Data *********************************/
 
 /*
-    Test configuration - These values are loaded from creds.sh
+    Test configuration - These values are loaded from environment variables
     For pure unit tests, we test parameter validation without making network calls
 
-    Credentials are loaded by executing: bash ./creds.sh --print
-    This outputs KEY=VALUE pairs that are parsed to set:
+    Credentials are loaded from environment variables set by TestMe env.sh.
     - ENDPOINT -> testHost
     - PRODUCT -> testProduct
     - TOKEN -> testToken
     - DEVICE -> testDevice
     - VERSION -> testVersion
 
-    If creds.sh is not available or doesn't provide values, defaults are used.
+    If environment variables are not set, defaults are used.
  */
 static cchar *testHost;
 static cchar *testProduct;
@@ -39,38 +38,11 @@ static cchar *testScript = "./test-script.sh";
 
 /************************************* Code ***********************************/
 /*
-    Parse a line from creds.sh output in format "KEY=VALUE"
- */
-static void parseCredLine(char *line)
-{
-    char *key, *value;
-
-    if ((value = strchr(line, '=')) == NULL) {
-        return;
-    }
-    *value++ = '\0';
-    key = line;
-
-    if (strcmp(key, "ENDPOINT") == 0) {
-        testHost = strdup(value);
-    } else if (strcmp(key, "PRODUCT") == 0) {
-        testProduct = strdup(value);
-    } else if (strcmp(key, "TOKEN") == 0) {
-        testToken = strdup(value);
-    } else if (strcmp(key, "DEVICE") == 0) {
-        testDevice = strdup(value);
-    } else if (strcmp(key, "VERSION") == 0) {
-        testVersion = strdup(value);
-    }
-}
-
-/*
-    Initialize test credentials by executing creds.sh --print and parsing output
+    Initialize test credentials from environment variables
  */
 static void initTestConfig(void)
 {
-    FILE *fp;
-    char line[512];
+    char *value;
 
     /*
         Create unique test file path using process ID for parallel test execution
@@ -78,23 +50,27 @@ static void initTestConfig(void)
     snprintf(testFile, sizeof(testFile), "update-test-%d.bin", getpid());
 
     /*
-        Execute creds.sh --print to get credentials
-        The script will output KEY=VALUE pairs
+        Get credentials from environment variables
+        These are set by sourcing creds.sh before running tests
      */
-    fp = popen("bash ./creds.sh --print 2>/dev/null", "r");
-    if (fp) {
-        while (fgets(line, sizeof(line), fp) != NULL) {
-            /*
-                Remove trailing newline
-             */
-            line[strcspn(line, "\r\n")] = '\0';
-            parseCredLine(line);
-        }
-        pclose(fp);
+    if ((value = getenv("ENDPOINT")) != NULL) {
+        testHost = strdup(value);
+    }
+    if ((value = getenv("PRODUCT")) != NULL) {
+        testProduct = strdup(value);
+    }
+    if ((value = getenv("TOKEN")) != NULL) {
+        testToken = strdup(value);
+    }
+    if ((value = getenv("DEVICE")) != NULL) {
+        testDevice = strdup(value);
+    }
+    if ((value = getenv("VERSION")) != NULL) {
+        testVersion = strdup(value);
     }
 
     /*
-        Use defaults if creds.sh didn't provide values
+        Use defaults if environment variables are not set
      */
     if (!testHost) {
         testHost = strdup("https://api.embedthis.com");

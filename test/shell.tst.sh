@@ -3,8 +3,6 @@
 #   shell.sh.tst -- Test the updater.sh script
 #
 
-. creds.sh
-
 FAILED=0
 UPDATER_SH="../src/updater.sh"
 

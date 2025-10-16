@@ -5,8 +5,6 @@
 #   Tests validation and error cases: missing parameters, invalid credentials.
 #
 
-. creds.sh
-
 FAILED=0
 
 # Use process ID to create unique filenames for parallel test execution
