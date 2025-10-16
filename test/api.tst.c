@@ -34,7 +34,7 @@ static cchar *testProduct;
 static cchar *testToken;
 static cchar *testDevice;
 static cchar *testVersion;
-static cchar *testFile = "/tmp/update-test.bin";
+static char  testFile[256];
 static cchar *testScript = "./test-script.sh";
 
 /************************************* Code ***********************************/
@@ -71,6 +71,11 @@ static void initTestConfig(void)
 {
     FILE *fp;
     char line[512];
+
+    /*
+        Create unique test file path using process ID for parallel test execution
+     */
+    snprintf(testFile, sizeof(testFile), "update-test-%d.bin", getpid());
 
     /*
         Execute creds.sh --print to get credentials
@@ -341,13 +346,15 @@ static void test_empty_version(void)
  */
 static void test_tmp_path_warning(void)
 {
-    int rc;
+    char tmpPath[256];
+    int  rc;
 
     /*
         Using /tmp/ path - should warn but attempt to proceed
         Use bogus token to ensure failure on auth
      */
-    rc = update(testHost, testProduct, "bogus-token-tmp-test", testDevice, testVersion, NULL, "/tmp/test.bin", NULL, 0, 0);
+    snprintf(tmpPath, sizeof(tmpPath), "/tmp/test-%d.bin", getpid());
+    rc = update(testHost, testProduct, "bogus-token-tmp-test", testDevice, testVersion, NULL, tmpPath, NULL, 0, 0);
     teqi(rc, -1, "/tmp path should warn but fail on auth");
 }
 
@@ -356,13 +363,14 @@ static void test_tmp_path_warning(void)
  */
 static void test_invalid_file_path(void)
 {
-    int rc;
+    char invalidPath[256];
+    int  rc;
 
     /*
         Use bogus token to ensure failure on auth, not just file path
      */
-    rc = update(testHost, testProduct, "bogus-token-path-test", testDevice, testVersion, NULL, "/nonexistent/path/to/file.bin", NULL,
-                0, 0);
+    snprintf(invalidPath, sizeof(invalidPath), "./nonexistent-%d/path/to/file.bin", getpid());
+    rc = update(testHost, testProduct, "bogus-token-path-test", testDevice, testVersion, NULL, invalidPath, NULL, 0, 0);
     teqi(rc, -1, "Invalid file path should be rejected");
 }
 
@@ -462,13 +470,14 @@ static void test_long_token(void)
  */
 static void test_nonexistent_script(void)
 {
-    int rc;
+    char nonexistentScript[256];
+    int  rc;
 
     /*
         Use bogus token to ensure failure before trying to run script
      */
-    rc = update(testHost, testProduct, "bogus-token-script-test", testDevice, testVersion, NULL, testFile, "/nonexistent/script.sh", 0,
-                0);
+    snprintf(nonexistentScript, sizeof(nonexistentScript), "./nonexistent-script-%d.sh", getpid());
+    rc = update(testHost, testProduct, "bogus-token-script-test", testDevice, testVersion, NULL, testFile, nonexistentScript, 0, 0);
     /*
         Should fail on auth before trying to run script
      */
