@@ -20,3 +20,4 @@ projects/updater-macosx-mine*
 .testme
 test/node_modules
 test/package.json
+.DS_Store
