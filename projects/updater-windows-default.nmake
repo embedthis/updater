@@ -342,7 +342,7 @@ DEPS_5 = $(DEPS_5) src/updater.h
 $(BUILD)/obj/main.obj: \
     src/main.c $(DEPS_5)
 	@echo .. [Compile] $(BUILD)/obj/main.obj
-	"$(CC)" -c -Fo"$(BUILD)/obj/main.obj" -Fd"$(BUILD)/obj/main.pdb" $(CFLAGS) $(DFLAGS) $(IFLAGS) "-Isrc" "-Isrc/osdep" "-I$(USERPROFILE)/vcpkg/installed/x64-windows" "-I$(ME_BASE_PREFIX)/OpenSSL" $(INPUT) "src/main.c" $(LOG)
+	"$(CC)" -c -Fo"$(BUILD)/obj/main.obj" -Fd"$(BUILD)/obj/main.pdb" $(CFLAGS) $(DFLAGS) $(IFLAGS) "-Isrc" "-Isrc/osdep" "-I$(USERPROFILE)/vcpkg/installed/x64-windows/include" "-I$(ME_BASE_PREFIX)/OpenSSL" $(INPUT) "src/main.c" $(LOG)
 
 #
 #   updater.obj
@@ -352,7 +352,7 @@ DEPS_6 = $(DEPS_6) src/updater.h
 $(BUILD)/obj/updater.obj: \
     src/updater.c $(DEPS_6)
 	@echo .. [Compile] $(BUILD)/obj/updater.obj
-	"$(CC)" -c -Fo"$(BUILD)/obj/updater.obj" -Fd"$(BUILD)/obj/updater.pdb" $(CFLAGS) $(DFLAGS) $(IFLAGS) "-Isrc" "-Isrc/osdep" "-I$(USERPROFILE)/vcpkg/installed/x64-windows" "-I$(ME_BASE_PREFIX)/OpenSSL" $(INPUT) "src/updater.c" $(LOG)
+	"$(CC)" -c -Fo"$(BUILD)/obj/updater.obj" -Fd"$(BUILD)/obj/updater.pdb" $(CFLAGS) $(DFLAGS) $(IFLAGS) "-Isrc" "-Isrc/osdep" "-I$(USERPROFILE)/vcpkg/installed/x64-windows/include" "-I$(ME_BASE_PREFIX)/OpenSSL" $(INPUT) "src/updater.c" $(LOG)
 
 #
 #   libupdater
