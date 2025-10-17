@@ -30,10 +30,14 @@ Devices can use the **updater** command or library to enable Over-The-Air (OTA) 
 - Ability to defer or rollback updates
 
 **Monitoring & Analytics:**
-- Real-time update metrics and reporting
+
+Using the EmbedThis Builder cloud service, you can publish, distribute, monitor and analyze update metrics and reporting.
+
+- View real-time update metrics and reporting via the Builder Portal
 - Track successful, failed, and deferred updates
-- Per-product and per-version analytics
-- Comprehensive device update history
+- Analyze per-product and per-version update metrics
+
+The Builder cloud service stores and distributes update packages to devices using a secure, global CDN. The Builder update policies are evaluated per device so you can target updates to specific devices, device groups, or device properties.
 
 The updater client works by periodically checking in with the Builder cloud service. The cloud evaluates the distribution policy for each device and returns an update URL if the device qualifies. The updater then downloads, verifies, and applies the update.
 
