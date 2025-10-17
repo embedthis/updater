@@ -34,8 +34,10 @@
 #include "updater.h"
 
 /********************************** Locals ************************************/
+
 #define SERVER_PORT 443
 #define UBSIZE      4096
+#define CA_BUNDLE   ""          // Override CA bundle file path
 
 /**
     Fetch - Internal HTTP/HTTPS client state
@@ -64,7 +66,7 @@ static int quiet;          // Global flag to suppress all output (stdout and std
 static int applyUpdate(cchar *path, cchar *script);
 static Socket connectToHost(cchar *host);
 static Fetch *fetch(cchar *method, char *url, char *headers, char *body);
-static Fetch *fetchAlloc(Socket fd, cchar *host);
+static Fetch *fetchAlloc(cchar *host);
 static void fetchFree(Fetch *fp);
 static char *fetchString(Fetch *fp);
 static int fetchFile(Fetch *fp, cchar *path);
@@ -119,7 +121,6 @@ int update(cchar *host, cchar *product, cchar *token, cchar *device, cchar *vers
     WSADATA wsaData;
     int wsaInitialized = 0;
 #endif
-
     fp = NULL;
     rc = -1;
     checksum = downloadUrl = response = update = updateVersion = NULL;
@@ -722,7 +723,6 @@ static Fetch *fetch(cchar *method, char *url, char *headers, char *body)
     Fetch  *fp;
     char   uri[UBSIZE], response[UBSIZE];
     char   *host, *path;
-    Socket fd;
     ssize  bytes;
 
     snprintf(uri, sizeof(uri), "%s", url);
@@ -731,11 +731,7 @@ static Fetch *fetch(cchar *method, char *url, char *headers, char *body)
     }
     parseUrl(uri, &host, &path);
 
-    if ((fd = connectToHost(host)) < 0) {
-        return NULL;
-    }
-    if ((fp = fetchAlloc(fd, host)) == NULL) {
-        closesocket(fd);
+    if ((fp = fetchAlloc(host)) == NULL) {
         return NULL;
     }
     if (sendHttpRequest(fp, method, path, host, headers, body) < 0) {
@@ -840,7 +836,7 @@ static int fetchFile(Fetch *fp, cchar *path)
         printf("Downloading update to %s\n", path);
     }
     unlink(path);
-    flags = O_WRONLY | O_CREAT | O_EXCL;
+    flags = O_WRONLY | O_CREAT | O_EXCL | O_BINARY;
 #ifdef O_NOFOLLOW
     flags |= O_NOFOLLOW;
 #endif
@@ -971,7 +967,7 @@ static ssize fetchWrite(Fetch *fp, char *buf, size_t buflen)
 }
 
 /**
-    Allocate and initialize a Fetch structure with TLS context
+    Allocate and initialize a Fetch structure with a socket connection and TLS context
 
     Creates a new Fetch structure and configures OpenSSL for secure communication:
     - Enforces TLS 1.2 or higher
@@ -984,7 +980,7 @@ static ssize fetchWrite(Fetch *fp, char *buf, size_t buflen)
     @return Initialized Fetch structure on success, NULL on error
     @stability Internal
  */
-static Fetch *fetchAlloc(Socket fd, cchar *host)
+static Fetch *fetchAlloc(cchar *host)
 {
     Fetch             *fp;
     X509_VERIFY_PARAM *param;
@@ -999,6 +995,10 @@ static Fetch *fetchAlloc(Socket fd, cchar *host)
     }
     memset(fp, 0, sizeof(Fetch));
 
+    if ((fp->fd = connectToHost(host)) < 0) {
+        fetchFree(fp);
+        return NULL;
+    }
     method = TLS_client_method();
     fp->ctx = SSL_CTX_new(method);
     if (!fp->ctx) {
@@ -1006,7 +1006,7 @@ static Fetch *fetchAlloc(Socket fd, cchar *host)
             perror("Unable to create SSL context");
             printSslErrors();
         }
-        free(fp);
+        fetchFree(fp);
         return NULL;
     }
     /* Enforce modern TLS */
@@ -1016,19 +1016,34 @@ static Fetch *fetchAlloc(Socket fd, cchar *host)
         Verify server certificate using system default CA certificates
      */
     SSL_CTX_set_verify(fp->ctx, SSL_VERIFY_PEER, NULL);
-    if (!SSL_CTX_set_default_verify_paths(fp->ctx)) {
+
+    /*
+        Override CA bundle if provided
+     */
+    if (CA_BUNDLE && *CA_BUNDLE) {
+        if (!SSL_CTX_load_verify_locations(fp->ctx, CA_BUNDLE, NULL)) {
+            if (!quiet) {
+                fprintf(stderr, "Unable to set certificate locations: %s", CA_BUNDLE);
+                printSslErrors();
+            }
+            fetchFree(fp);
+            return NULL;
+        }
+    } else if (!SSL_CTX_set_default_verify_paths(fp->ctx)) {
+        /*
+            OpenSSL uses the env vars: SSL_CERT_FILE and SSL_CERT_DIR to override the default CA bundle locations. 
+            Windows may not have a default defined.
+        */
         if (!quiet) {
             fprintf(stderr, "Cannot load system CA certificates.\n");
             printSslErrors();
         }
-        SSL_CTX_free(fp->ctx);
-        free(fp);
+        fetchFree(fp);
         return NULL;
     }
 
     fp->ssl = SSL_new(fp->ctx);
-    fp->fd = fd;
-    SSL_set_fd(fp->ssl, (int) fd);
+    SSL_set_fd(fp->ssl, fp->fd);
     /*
         Send SNI - SSL_set_tlsext_host_name macro casts to void*, triggering const warning.
         This is an OpenSSL API limitation, not a security issue.
@@ -1047,19 +1062,14 @@ static Fetch *fetchAlloc(Socket fd, cchar *host)
             fprintf(stderr, "Failed to set hostname for verification\n");
             printSslErrors();
         }
-        SSL_free(fp->ssl);
-        SSL_CTX_free(fp->ctx);
-        free(fp);
+        fetchFree(fp);
         return NULL;
     }
-
     if (SSL_connect(fp->ssl) != 1) {
         if (!quiet) {
             printSslErrors();
         }
-        SSL_free(fp->ssl);
-        SSL_CTX_free(fp->ctx);
-        free(fp);
+        fetchFree(fp);
         return NULL;
     }
     return fp;

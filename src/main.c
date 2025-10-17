@@ -47,39 +47,46 @@ static int quiet = 0;
 static int parseArgs(int argc, char **argv);
 
 /************************************ Code ************************************/
-
 /**
     Display usage information and exit
 
-    Prints the command-line syntax and available options to stderr, then exits
-    with status code 2 (conventional for usage errors).
+    Prints the command-line syntax and available options to stderr, then exits.
+    If isError is true, also prints error details and exits with code 2.
+    If isError is false (help request), exits with code 0.
 
+    @param argp Argument that caused the error (NULL for help requests)
+    @param argc Number of command-line arguments
+    @param argv Array of command-line argument strings
+    @param isError True if called due to error, false if called for --help
     @stability Stable
  */
-static int usage(cchar *argp, int argc, char **argv)
+static int usage(cchar *argp, int argc, char **argv, int isError)
 {
     if (!quiet) {
-        fprintf(stderr, "usage: updater [options] [key=value,...]\n"
-                "--cmd script        # Script to invoke to apply the update\n"
-                "--device ID         # Unique device ID\n"
-                "--file image/path   # Path to save the downloaded update\n"
-                "--host host.domain  # Device cloud endpoint from the Builder cloud edit panel\n"
-                "--product ProductID # ProductID from the Builder token list\n"
-                "--quiet, -q         # Suppress all output (completely silent)\n"
-                "--token TokenID     # CloudAPI access token from the Builder token list\n"
-                "--version SemVer    # Current device firmware version\n"
-                "--verbose, -v       # Trace execution and show errors\n"
-                "key=value,...       # Device-specific properties for the distribution policy\n");
-        if (argp) {
-            fprintf(stderr, "Error with arg: %s\n", argp);
+        fprintf(stderr, "\nusage: updater [options] [key=value,...]\n"
+                "  --cmd script        # Script to invoke to apply the update\n"
+                "  --device ID         # Unique device ID\n"
+                "  --file image/path   # Path to save the downloaded update\n"
+                "  --help, -h, -?      # Display this help message\n"
+                "  --host host.domain  # Device cloud endpoint from the Builder cloud edit panel\n"
+                "  --product ProductID # ProductID from the Builder token list\n"
+                "  --quiet, -q         # Suppress all output (completely silent)\n"
+                "  --token TokenID     # CloudAPI access token from the Builder token list\n"
+                "  --version SemVer    # Current device firmware version\n"
+                "  --verbose, -v       # Trace execution and show errors\n"
+                "  key=value, ...      # Device-specific properties for the distribution policy\n\n");
+        if (isError) {
+            if (argp) {
+                fprintf(stderr, "Error with arg: %s\n", argp);
+            }
+            fprintf(stderr, "Invoked as: %s", argv[0]);
+            for (int i = 0; i < argc; i++) {
+                fprintf(stderr, " %s", argv[i]);
+            }
+            fprintf(stderr, "\n");
         }
-        fprintf(stderr, "Invoked as: %s", argv[0]);
-        for (int i = 0; i < argc; i++) {
-            fprintf(stderr, " %s", argv[i]);
-        }
-        fprintf(stderr, "\n");
     }
-    exit(2);
+    exit(isError ? 2 : 0);
 }
 
 /**
@@ -105,7 +112,7 @@ int main(int argc, char **argv)
 
     // Validate that all required parameters are present
     if (!host || !product || !token || !device || !version) {
-        usage(NULL, argc, argv);
+        usage(NULL, argc, argv, 1);
     }
 
     // Perform the OTA update
@@ -151,54 +158,57 @@ static int parseArgs(int argc, char **argv)
         }
         if (strcmp(argp, "--cmd") == 0) {
             if (nextArg + 1 >= argc) {
-                usage(argp, argc, argv);
+                usage(argp, argc, argv, 1);
             }
             cmd = argv[++nextArg];
 
+        } else if (strcmp(argp, "--device") == 0) {
+            if (nextArg + 1 >= argc) {
+                usage(argp, argc, argv, 1);
+            }
+            device = argv[++nextArg];
+
         } else if (strcmp(argp, "--file") == 0) {
             if (nextArg + 1 >= argc) {
-                usage(argp, argc, argv);
+                usage(argp, argc, argv, 1);
             }
             file = argv[++nextArg];
 
+        } else if (strcmp(argp, "--help") == 0 || strcmp(argp, "-h") == 0 || strcmp(argp, "-?") == 0) {
+            usage(NULL, argc, argv, 0);
+
         } else if (strcmp(argp, "--host") == 0) {
             if (nextArg + 1 >= argc) {
-                usage(argp, argc, argv);
+                usage(argp, argc, argv, 1);
             }
             host = argv[++nextArg];
 
         } else if (strcmp(argp, "--product") == 0) {
             if (nextArg + 1 >= argc) {
-                usage(argp, argc, argv);
+                usage(argp, argc, argv, 1);
             }
             product = argv[++nextArg];
 
+        } else if (strcmp(argp, "--quiet") == 0 || strcmp(argp, "-q") == 0) {
+            quiet = 1;
+
         } else if (strcmp(argp, "--token") == 0) {
             if (nextArg + 1 >= argc) {
-                usage(argp, argc, argv);
+                usage(argp, argc, argv, 1);
             }
             token = argv[++nextArg];
 
-        } else if (strcmp(argp, "--device") == 0) {
-            if (nextArg + 1 >= argc) {
-                usage(argp, argc, argv);
-            }
-            device = argv[++nextArg];
-
         } else if (strcmp(argp, "--version") == 0) {
             if (nextArg + 1 >= argc) {
-                usage(argp, argc, argv);
+                usage(argp, argc, argv, 1);
             }
             version = argv[++nextArg];
 
         } else if (strcmp(argp, "--verbose") == 0 || strcmp(argp, "-v") == 0) {
             verbose = 1;
 
-        } else if (strcmp(argp, "--quiet") == 0 || strcmp(argp, "-q") == 0) {
-            quiet = 1;
-
         } else {
-            usage(argp, argc, argv);  // Unknown option
+            usage(argp, argc, argv, 1);  // Unknown option
         }
     }
 
@@ -214,7 +224,7 @@ static int parseArgs(int argc, char **argv)
                     fprintf(stderr, "Invalid property format. Use: key=value\n");
                 }
                 free(dup);
-                usage(argp, argc, argv);
+                usage(argp, argc, argv, 1);
             }
 
             // Format as JSON: "key":"value",
@@ -224,7 +234,7 @@ static int parseArgs(int argc, char **argv)
                     fprintf(stderr, "Parameter buffer overflow - arguments too long\n");
                 }
                 free(dup);
-                usage(argp, argc, argv);
+                usage(argp, argc, argv, 1);
             }
             mark += (size_t) count;
             free(dup);

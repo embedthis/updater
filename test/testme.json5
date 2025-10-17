@@ -53,6 +53,7 @@
         },
         windows: {
             PATH: '../build/bin;C:/Program Files/OpenSSL;${USERPROFILE}/vcpkg/installed/x64-windows/bin;${PATH}',
+            SSL_CERT_DIR: 'c:/Program Files/Git/mingw64/etc/ssl/certs/ca-bundle.crt',
         },
     },
     services: {
