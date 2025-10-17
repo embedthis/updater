@@ -55,18 +55,38 @@ static void initTestConfig(void)
      */
     if ((value = getenv("ENDPOINT")) != NULL) {
         testHost = strdup(value);
+        if (!testHost) {
+            fprintf(stderr, "Failed to allocate memory for testHost from ENDPOINT\n");
+            exit(1);
+        }
     }
     if ((value = getenv("PRODUCT")) != NULL) {
         testProduct = strdup(value);
+        if (!testProduct) {
+            fprintf(stderr, "Failed to allocate memory for testProduct from PRODUCT\n");
+            exit(1);
+        }
     }
     if ((value = getenv("TOKEN")) != NULL) {
         testToken = strdup(value);
+        if (!testToken) {
+            fprintf(stderr, "Failed to allocate memory for testToken from TOKEN\n");
+            exit(1);
+        }
     }
     if ((value = getenv("DEVICE")) != NULL) {
         testDevice = strdup(value);
+        if (!testDevice) {
+            fprintf(stderr, "Failed to allocate memory for testDevice from DEVICE\n");
+            exit(1);
+        }
     }
     if ((value = getenv("VERSION")) != NULL) {
         testVersion = strdup(value);
+        if (!testVersion) {
+            fprintf(stderr, "Failed to allocate memory for testVersion from VERSION\n");
+            exit(1);
+        }
     }
 
     /*
@@ -74,18 +94,38 @@ static void initTestConfig(void)
      */
     if (!testHost) {
         testHost = strdup("https://unknown.example.com");
+        if (!testHost) {
+            fprintf(stderr, "Failed to allocate memory for testHost\n");
+            exit(1);
+        }
     }
     if (!testProduct) {
         testProduct = strdup("test-product");
+        if (!testProduct) {
+            fprintf(stderr, "Failed to allocate memory for testProduct\n");
+            exit(1);
+        }
     }
     if (!testToken) {
         testToken = strdup("test-token");
+        if (!testToken) {
+            fprintf(stderr, "Failed to allocate memory for testToken\n");
+            exit(1);
+        }
     }
     if (!testDevice) {
         testDevice = strdup("test-device-001");
+        if (!testDevice) {
+            fprintf(stderr, "Failed to allocate memory for testDevice\n");
+            exit(1);
+        }
     }
     if (!testVersion) {
         testVersion = strdup("1.0.0");
+        if (!testVersion) {
+            fprintf(stderr, "Failed to allocate memory for testVersion\n");
+            exit(1);
+        }
     }
 }
 

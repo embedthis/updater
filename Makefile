@@ -54,8 +54,7 @@ install installBinary uninstall:
 	@$(MAKE) -f $(PROJECT) TOP=$(TOP) PROFILE=$(PROFILE) $@
 
 info:
-	@VERSION=`json --default 1.2.3 version pak.json` ; \
-	echo "      [Info] Built Updater $${VERSION} optimized for \"$(OPTIMIZE)\""
+	echo "      [Info] Built Updater optimized for \"$(OPTIMIZE)\""
 	echo "      [Info] Run via: \"sudo make run\". Run \"Updater\" manually with \"$(BUILD)/bin\" in your path."
 
 run:

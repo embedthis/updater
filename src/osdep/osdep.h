@@ -1758,24 +1758,6 @@ typedef int64 Ticks;
     #ifndef strncasecmp
         #define strncasecmp sncaselesscmp
     #endif
-
-    /*
-        Define S_ISREG and S_ISDIR macros for Windows if not already defined
-     */
-    #ifndef S_ISDIR
-        #define S_ISDIR(m) (((m) & _S_IFMT) == _S_IFDIR)
-    #endif
-    #ifndef S_ISREG
-        #define S_ISREG(m) (((m) & _S_IFMT) == _S_IFREG)
-    #endif
-
-    /*
-        Windows uses strtok_s instead of strtok_r
-     */
-    #ifndef strtok_r
-        #define strtok_r strtok_s
-    #endif
-
     #pragma comment( lib, "ws2_32.lib" )
 #endif /* WIN_LIKE */
 

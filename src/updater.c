@@ -553,7 +553,7 @@ static Socket connectToHost(cchar *host)
     }
     memset(&server_addr, 0, sizeof(server_addr));
     server_addr.sin_family = AF_INET;
-    memcpy(&server_addr.sin_addr.s_addr, server->h_addr, server->h_length);
+    memcpy(&server_addr.sin_addr.s_addr, server->h_addr, (size_t) server->h_length);
     server_addr.sin_port = htons(SERVER_PORT);
 
     if (connect(fd, (struct sockaddr*) &server_addr, sizeof(server_addr)) < 0) {
