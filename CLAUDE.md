@@ -116,3 +116,28 @@ All implementations require these parameters:
 - It is assumed that the program is run in a secure environment with a secure file system.
 - The user is a developer with control of the system. 
 - Code comments prefixed with "SECURITY Acceptable:" indicate intentional security tradeoffs
+
+## Project Documentation
+
+This module maintains structured documentation in the `AI/` directory to assist Claude Code and developers:
+
+- **AI/designs/** - Architectural and design documentation
+- **AI/context/** - Current status and progress (CONTEXT.md)
+- **AI/plans/** - Implementation plans and roadmaps
+- **AI/procedures/** - Testing and development procedures
+- **AI/logs/** - Change logs and session activity logs
+- **AI/references/** - External documentation and resources
+- **AI/releases/** - Version release notes
+- **AI/agents/** - Claude sub-agent definitions
+- **AI/skills/** - Claude skill definitions
+- **AI/prompts/** - Reusable prompts
+- **AI/workflows/** - Development workflows
+- **AI/commands/** - Custom commands
+
+See `AI/README.md` for detailed information about the documentation structure.
+
+## Additional Resources
+
+- **Parent Project**: See `../CLAUDE.md` for general build commands, testing procedures, and overall EmbedThis architecture
+- **API Documentation**: Generated via `make doc` → `doc/index.html`
+- **Project Documentation**: See `AI/` directory for designs, plans, procedures, and context
