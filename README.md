@@ -159,6 +159,43 @@ node src/updater.js [options]
 bun src/updater.js [options]
 ```
 
+### Shell Script Implementation
+
+The shell script implementation requires no additional dependencies:
+
+```bash
+./src/updater.sh [options]
+```
+
+## Tests
+
+The test suite is located in the `test/` directory and uses the [TestMe](https://www.embedthis.com/testme/) framework. 
+
+The test suite requires the following prerequisites:
+
+- **Bun**: v1.2.23 or later
+- **TestMe**: Test runner (installed globally)
+
+Install Bun by following the instructions at: 
+
+    https://bun.com/docs/installation
+
+Install TestMe globally with:
+
+    bun install -g --trust @embedthis/testme
+
+Run the tests with:
+
+    make test
+
+or manually via the `tm` command. 
+
+    tm
+
+To run a specific test or group of tests, use the `tm` command with the test name.
+
+    tm NAME
+
 ## Security Features
 
 All implementations provide robust security:
