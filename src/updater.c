@@ -37,7 +37,7 @@
 
 #define SERVER_PORT 443
 #define UBSIZE      4096
-#define CA_BUNDLE   ""          // Override CA bundle file path
+#define CA_BUNDLE   ""     // Override CA bundle file path
 
 /**
     Fetch - Internal HTTP/HTTPS client state
@@ -117,9 +117,10 @@ int update(cchar *host, cchar *product, cchar *token, cchar *device, cchar *vers
     char  body[UBSIZE], url[UBSIZE], headers[256], fileSum[EVP_MAX_MD_SIZE * 2 + 1];
     char  *checksum, *downloadUrl, *response, *update, *updateVersion;
     int   count, rc, status;
+
 #if ME_WIN_LIKE
     WSADATA wsaData;
-    int wsaInitialized = 0;
+    int     wsaInitialized = 0;
 #endif
     fp = NULL;
     rc = -1;
@@ -403,7 +404,7 @@ static int run(cchar *script, cchar *path)
             NULL,           // lpCurrentDirectory - inherit parent directory
             &si,            // lpStartupInfo
             &pi             // lpProcessInformation
-        )) {
+            )) {
         if (!quiet) {
             fprintf(stderr, "Cannot create process: error %lu\n", GetLastError());
         }
@@ -505,7 +506,7 @@ static int postReport(int status, cchar *host, cchar *device, cchar *update, cch
 static void parseUrl(char *url, char **hostOut, char **pathOut)
 {
     static char emptyPath[] = "";
-    char *host, *path;
+    char        *host, *path;
 
     if ((host = strstr(url, "https://")) != NULL) {
         host += 8;
@@ -534,7 +535,7 @@ static Socket connectToHost(cchar *host)
 {
     struct sockaddr_in server_addr;
     struct hostent     *server;
-    Socket fd;
+    Socket             fd;
 
     fd = socket(AF_INET, SOCK_STREAM, 0);
     if (fd < 0) {
@@ -611,7 +612,7 @@ static int sendHttpRequest(Fetch *fp, cchar *method, cchar *path, cchar *host, c
  */
 static ssize readAndValidateResponse(Fetch *fp, char *response, size_t responseSize)
 {
-    char *status;
+    char  *status;
     ssize bytes;
 
     memset(response, 0, responseSize);
@@ -654,9 +655,9 @@ static ssize readAndValidateResponse(Fetch *fp, char *response, size_t responseS
  */
 static int parseResponseBody(Fetch *fp, char *response, ssize bytes)
 {
-    char *data, *header;
+    char   *data, *header;
     size_t headerBytes;
-    int contentLength;
+    int    contentLength;
 
     if ((data = strstr(response, "\r\n\r\n")) == NULL) {
         if (!quiet) {
@@ -720,10 +721,10 @@ static int parseResponseBody(Fetch *fp, char *response, ssize bytes)
  */
 static Fetch *fetch(cchar *method, char *url, char *headers, char *body)
 {
-    Fetch  *fp;
-    char   uri[UBSIZE], response[UBSIZE];
-    char   *host, *path;
-    ssize  bytes;
+    Fetch *fp;
+    char  uri[UBSIZE], response[UBSIZE];
+    char  *host, *path;
+    ssize bytes;
 
     snprintf(uri, sizeof(uri), "%s", url);
     if (verbose) {
@@ -1031,9 +1032,9 @@ static Fetch *fetchAlloc(cchar *host)
         }
     } else if (!SSL_CTX_set_default_verify_paths(fp->ctx)) {
         /*
-            OpenSSL uses the env vars: SSL_CERT_FILE and SSL_CERT_DIR to override the default CA bundle locations. 
+            OpenSSL uses the env vars: SSL_CERT_FILE and SSL_CERT_DIR to override the default CA bundle locations.
             Windows may not have a default defined.
-        */
+         */
         if (!quiet) {
             fprintf(stderr, "Cannot load system CA certificates.\n");
             printSslErrors();

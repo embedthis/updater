@@ -239,7 +239,8 @@ static void test_null_properties(void)
     /*
         Use bogus token to ensure failure, but NULL properties should still be accepted
      */
-    rc = update(testHost, testProduct, "bogus-invalid-token-12345", testDevice, testVersion, NULL, testFile, NULL, 0, 1);
+    rc = update(testHost, testProduct, "bogus-invalid-token-12345", testDevice, testVersion, NULL, testFile, NULL, 0,
+                1);
     /*
         We expect failure due to authentication, but not due to NULL properties
         The function should at least attempt to make the request
@@ -257,7 +258,8 @@ static void test_null_script(void)
     /*
         Use bogus token to ensure failure, but NULL script should still be accepted
      */
-    rc = update(testHost, testProduct, "bogus-invalid-token-67890", testDevice, testVersion, NULL, testFile, NULL, 0, 1);
+    rc = update(testHost, testProduct, "bogus-invalid-token-67890", testDevice, testVersion, NULL, testFile, NULL, 0,
+                1);
     /*
         Should fail on auth, not on NULL script
      */
@@ -436,7 +438,8 @@ static void test_special_chars_device(void)
     /*
         Use bogus token to ensure failure
      */
-    rc = update(testHost, testProduct, "bogus-token-special-chars", "device-001_test.v2", testVersion, NULL, testFile, NULL, 0, 1);
+    rc = update(testHost, testProduct, "bogus-token-special-chars", "device-001_test.v2", testVersion, NULL, testFile,
+                NULL, 0, 1);
     teqi(rc, -1, "Special chars in device ID should be accepted, expected auth failure");
 }
 
@@ -457,7 +460,8 @@ static void test_semver_formats(void)
     rc = update(testHost, testProduct, "bogus-token-semver-2", testDevice, "1.2.3-beta", NULL, testFile, NULL, 0, 1);
     teqi(rc, -1, "Semantic version with pre-release should be accepted");
 
-    rc = update(testHost, testProduct, "bogus-token-semver-3", testDevice, "1.2.3-beta.1+build.123", NULL, testFile, NULL, 0, 1);
+    rc = update(testHost, testProduct, "bogus-token-semver-3", testDevice, "1.2.3-beta.1+build.123", NULL, testFile,
+                NULL, 0, 1);
     teqi(rc, -1, "Full semantic version format should be accepted");
 }
 
@@ -493,7 +497,8 @@ static void test_nonexistent_script(void)
         Use bogus token to ensure failure before trying to run script
      */
     snprintf(nonexistentScript, sizeof(nonexistentScript), "./nonexistent-script-%d.sh", getpid());
-    rc = update(testHost, testProduct, "bogus-token-script-test", testDevice, testVersion, NULL, testFile, nonexistentScript, 0, 1);
+    rc = update(testHost, testProduct, "bogus-token-script-test", testDevice, testVersion, NULL, testFile,
+                nonexistentScript, 0, 1);
     /*
         Should fail on auth before trying to run script
      */

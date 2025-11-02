@@ -56,7 +56,7 @@ extern "C" {
     @ingroup Updater
  */
 PUBLIC int update(cchar *host, cchar *product, cchar *token, cchar *device, cchar *version, cchar *properties,
-           cchar *path, cchar *script, int verbose, int quiet);
+                  cchar *path, cchar *script, int verbose, int quiet);
 
 
 #ifdef __cplusplus
