@@ -3,7 +3,7 @@
 #
 
 NAME                  = updater
-VERSION               = 1.1.2
+VERSION               = 1.1.3
 
 OS                    = windows
 PA                    = $(PROCESSOR_ARCHITECTURE)
@@ -180,7 +180,7 @@ ME_TLS                = \"openssl\"
 ME_TUNE               = \"size\"
 !ENDIF
 !IFNDEF ME_VERSION
-ME_VERSION            = \"1.1.2\"
+ME_VERSION            = \"1.1.3\"
 !ENDIF
 
 !IFNDEF CC

@@ -3,7 +3,7 @@
 #
 
 NAME                  := updater
-VERSION               := 1.1.2
+VERSION               := 1.1.3
 PROJECT               := updater-vxworks-default
 PROFILE               ?= dev
 ARCH                  ?= $(shell echo $(WIND_HOST_TYPE) | sed 's/-.*$(ME_ROOT_PREFIX)/')
@@ -73,7 +73,7 @@ ME_STATIC             ?= 1
 ME_TITLE              ?= \"EmbedThis Updater\"
 ME_TLS                ?= \"openssl\"
 ME_TUNE               ?= \"size\"
-ME_VERSION            ?= \"1.1.2\"
+ME_VERSION            ?= \"1.1.3\"
 
 export PATH           := $(WIND_GNU_PATH)/$(WIND_HOST_TYPE)/bin:$(PATH)
 CFLAGS                += -fomit-frame-pointer -fno-builtin -fno-defer-pop -fvolatile

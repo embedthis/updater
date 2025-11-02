@@ -3,7 +3,7 @@
 #
 
 NAME                  := updater
-VERSION               := 1.1.2
+VERSION               := 1.1.3
 PROJECT               := updater-macosx-default
 PROFILE               ?= dev
 ARCH                  ?= $(shell uname -m | sed 's/i.86/x86/;s/x86_64/x64/;s/mips.*/mips/')
@@ -69,7 +69,7 @@ ME_STATIC             ?= 1
 ME_TITLE              ?= \"EmbedThis Updater\"
 ME_TLS                ?= \"openssl\"
 ME_TUNE               ?= \"size\"
-ME_VERSION            ?= \"1.1.2\"
+ME_VERSION            ?= \"1.1.3\"
 
 CFLAGS                += -Wno-unused-result -Wshorten-64-to-32 -Wall -Wno-unknown-warning-option -g -fstack-protector --param=ssp-buffer-size=4 -Wformat -Wformat-security -Wsign-compare -Wsign-conversion
 DFLAGS                +=  $(patsubst %,-D%,$(filter ME_%,$(MAKEFLAGS))) "-DME_COM_COMPILER=$(ME_COM_COMPILER)" "-DME_COM_LIB=$(ME_COM_LIB)" "-DME_COM_OSDEP=$(ME_COM_OSDEP)" "-DME_COM_R=$(ME_COM_R)" "-DME_COM_VXWORKS=$(ME_COM_VXWORKS)" "-DME_MBEDTLS_COMPACT=$(ME_MBEDTLS_COMPACT)" 
