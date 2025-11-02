@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 #   javascript.sh.tst -- Test the updater.js script
 #

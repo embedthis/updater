@@ -59,5 +59,6 @@
     services: {
         environment: './env.sh',
         cleanup: './cleanup.sh',
+        prep: './prep.sh',
     },
 }

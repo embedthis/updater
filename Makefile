@@ -49,10 +49,6 @@ clean:
 	@echo '       [Run] $@'
 	@$(MAKE) -f $(PROJECT) TOP=$(TOP) PROFILE=$(PROFILE) $@
 
-install installBinary uninstall:
-	@echo '       [Run] $@'
-	@$(MAKE) -f $(PROJECT) TOP=$(TOP) PROFILE=$(PROFILE) $@
-
 info:
 	echo "      [Info] Built Updater optimized for \"$(OPTIMIZE)\""
 	echo "      [Info] Run via: \"sudo make run\". Run \"Updater\" manually with \"$(BUILD)/bin\" in your path."

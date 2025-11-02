@@ -6,6 +6,12 @@
 
 The EmbedThis Updater is a secure, lightweight command-line utility and library for downloading and applying device software updates published on the [EmbedThis Builder](https://admin.embedthis.com).
 
+## Security for Devices
+
+The European Union has introduced the Cyber Resilience Act (CRA), a regulation aimed at enhancing cybersecurity for IoT products. This legislation mandates that manufacturers ensure their products are secure throughout their entire lifecycle, from design to decommissioning. This requires that software updates are provided for the lifetime of the device.
+
+To meet this need, the Updater can be used to automatically download and apply software updates to all your connected devices. 
+
 ## Description
 
 Devices can use the **updater** command or library to enable Over-The-Air (OTA) software update capabilities. The [EmbedThis Builder](https://www.embedthis.com/builder/) cloud service provides:
@@ -29,6 +35,7 @@ Devices can use the **updater** command or library to enable Over-The-Air (OTA) 
 - Update rate control to minimize service load
 - Ability to defer or rollback updates
 
+
 **Monitoring & Analytics:**
 
 Using the EmbedThis Builder cloud service, you can publish, distribute, monitor and analyze update metrics and reporting.
@@ -39,7 +46,7 @@ Using the EmbedThis Builder cloud service, you can publish, distribute, monitor 
 
 The Builder cloud service stores and distributes update packages to devices using a secure, global CDN. The Builder update policies are evaluated per device so you can target updates to specific devices, device groups, or device properties.
 
-The updater client works by periodically checking in with the Builder cloud service. The cloud evaluates the distribution policy for each device and returns an update URL if the device qualifies. The updater then downloads, verifies, and applies the update.
+The updater client works by periodically checking in with the Builder cloud service. The cloud evaluates the software update distribution policy and returns an update URL if the device qualifies. The updater then downloads, verifies, and applies the update.
 
 **Learn More:**
 - [Builder Documentation](https://www.embedthis.com/doc/builder/) - Complete Builder platform documentation
@@ -140,7 +147,6 @@ The `update()` function performs a complete OTA update cycle:
 
 ```bash
 make                # Build updater program
-make install        # Install to /usr/local/bin
 make clean          # Clean build artifacts
 ```
 

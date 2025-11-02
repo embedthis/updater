@@ -79,15 +79,10 @@ Me.load({
             `
         },
 
-        mine: {
-            action: `genProjects('', 'mine', Config.OS + '-' + Config.CPU)`,
-        },
-
         format: {
             shell: `uncrustify -q -c .uncrustify --replace --no-backup  src/*.{c,h} test/*.tst.c`
         },
     },
-
     manifest: {
         packages: {
             pak: {
@@ -99,36 +94,7 @@ Me.load({
         },
         sets: {
             pak: [
-                {
-                    from:       'dist.me',
-                    to:         '${src}/dist/r.me',
-
-                },{
-                    from:       'CLAUDE.md',
-                    to:         '${src}/dist',
-
-                },{
-                    from:       'src/r.h',
-                    to:         '${src}/dist/r.h',
-                    
-                },{
-                    from: [
-                                'src/*.h',
-                                'src/*.c',
-                    ],
-                    to:        '${src}/dist/updater.c',
-                    append:    true,
-                    header:    '/*\n * ${settings.title} Library Source\n */\n\n#include "r.h"\n\n#if ME_COM_UPDATER\n',
-                    footer:    '#else\nvoid dummyUpdater(){}\n#endif /* ME_COM_UPDATER */',
-                    divider:   true,
-                    filter:    /^#inc.*updater.*$/mg,
-
-                },{
-                    from:       ['doc/api/updater.html', 'doc/api/updater.tags', 'doc/api/updater.dtags'],
-                    to:         '${src}/doc/api/',
-                    relative:   'doc/api',
-                },
-            ],
+            ]
         },
 	},
 })

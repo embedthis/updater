@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 #   binary-versions.tst.sh -- Test version handling in updater binary
 #
@@ -10,6 +10,11 @@ FAILED=0
 
 # Use process ID to create unique filenames for parallel test execution
 PID=$$
+
+if [ "${DEVICE}" = "" ] ; then
+    echo "Device not configured" >&2
+    exit 1
+fi
 
 # Test 1: Multiple properties
 echo "Test 1: Multiple device properties"

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 #   binary-basic.tst.sh -- Test core functionality of updater binary
 #

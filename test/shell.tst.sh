@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 #   shell.sh.tst -- Test the updater.sh script
 #
