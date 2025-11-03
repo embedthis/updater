@@ -3,7 +3,7 @@
 #
 
 NAME                  = updater
-VERSION               = 1.1.3
+VERSION               = 1.1.2
 
 OS                    = windows
 PA                    = $(PROCESSOR_ARCHITECTURE)
@@ -180,7 +180,7 @@ ME_TLS                = \"openssl\"
 ME_TUNE               = \"size\"
 !ENDIF
 !IFNDEF ME_VERSION
-ME_VERSION            = \"1.1.3\"
+ME_VERSION            = \"1.1.2\"
 !ENDIF
 
 !IFNDEF CC
@@ -278,12 +278,21 @@ prep:
 	@if not exist "$(BUILD)/inc" md "$(BUILD)/inc"
 	@if not exist "$(BUILD)/obj" md "$(BUILD)/obj"
 	@powershell -Command "Copy-Item \"projects/$(PROJECT)-me.h\" \"$(BUILD)/inc/me.h\" -ErrorAction SilentlyContinue | Out-Null"
+    @if exist "$(USERPROFILE)/vcpkg/installed/$(ARCH)-windows/bin/libcrypto-3-$(ARCH).dll" powershell -Command "Copy-Item \"$(USERPROFILE)/vcpkg/installed/$(ARCH)-windows/bin/libcrypto-*.dll\" \"$(BUILD)/bin/\" -Force -ErrorAction SilentlyContinue" $(LOG)
+    @if exist "$(USERPROFILE)/vcpkg/installed/$(ARCH)-windows/bin/libssl-3-$(ARCH).dll" powershell -Command "Copy-Item \"$(USERPROFILE)/vcpkg/installed/$(ARCH)-windows/bin/libssl-*.dll\" \"$(BUILD)/bin/\" -Force -ErrorAction SilentlyContinue" $(LOG)
+    @if exist "$(ME_COM_OPENSSL_PATH)/bin/libcrypto-3-$(ARCH).dll" powershell -Command "Copy-Item \"$(ME_COM_OPENSSL_PATH)/bin/libcrypto-*.dll\" \"$(BUILD)/bin/\" -Force -ErrorAction SilentlyContinue" $(LOG)
+    @if exist "$(ME_COM_OPENSSL_PATH)/bin/libssl-3-$(ARCH).dll" powershell -Command "Copy-Item \"$(ME_COM_OPENSSL_PATH)/bin/libssl-*.dll\" \"$(BUILD)/bin/\" -Force -ErrorAction SilentlyContinue" $(LOG)
+
 !IF "$(SHOW)" != ""
 	@echo ..... [Info] Use "make SHOW=1" to trace executed commands and errors.
 LOG =
 !ELSE
 LOG = >nul
 !ENDIF
+
+test::
+    ./bin/test-prep.bat
+    tm 
 
 clean:
 	powershell -Command "if (Test-Path '$(BUILD)/obj/main.obj') { Remove-Item '$(BUILD)/obj/main.obj' }"

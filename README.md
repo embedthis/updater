@@ -4,6 +4,12 @@
     <img src="https://www.embedthis.com/images/pics/circuit-3.png" alt="EmbedThis Updater" width="50%">
 </p>
 
+<p align="center">
+  <a href="https://github.com/embedthis/updater/actions/workflows/ci.yml"><img src="https://github.com/embedthis/updater/actions/workflows/ci.yml/badge.svg" alt="CI Status"></a>
+  <a href="https://www.npmjs.com/package/@embedthis/updater"><img src="https://img.shields.io/npm/v/@embedthis/updater.svg" alt="npm version"></a>
+  <a href="https://github.com/embedthis/updater/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License"></a>
+</p>
+
 The EmbedThis Updater is a secure, lightweight command-line utility and library for downloading and applying device software updates published on the [EmbedThis Builder](https://admin.embedthis.com).
 
 ## Security for Devices
