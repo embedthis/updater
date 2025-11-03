@@ -94,7 +94,22 @@ Me.load({
         },
         sets: {
             pak: [
-            ]
+               { 
+                    from: [
+                        '${TOP}/src/updater.h',
+                        '${TOP}/src/updater.c',
+                        '${TOP}/src/updater.js',
+                        '${TOP}/src/updater.sh',
+                        '${TOP}/src/main.c',
+                        '${TOP}/src/me.h',
+                        '${TOP}/src/osdep/osdep.h',
+                        '${TOP}/src/Makefile',
+                        '${TOP}/test/apply.sh',
+                        '${TOP}/README.md',
+                    ],
+                    to: '${src}/dist/',
+                },
+            ],
         },
-	},
+    },
 })

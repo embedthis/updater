@@ -14,7 +14,7 @@
       </ItemDefinitionGroup>
 
       <PropertyGroup Label="Globals">
-        <ProjectGuid>{e2f740a0-21b8-437f-bfd3-2a85669936af}</ProjectGuid>
+        <ProjectGuid>{1a632ba6-27ec-4c9b-8e56-da8b3b7aea84}</ProjectGuid>
         <RootNamespace />
         <Keyword>Win32Proj</Keyword>
       </PropertyGroup>
@@ -119,7 +119,7 @@
 
     <ItemGroup>
       <ProjectReference Include="libupdater.vcxproj">
-      <Project>3aa9e05a-455a-4061-883d-36a6e48f1d2a</Project>
+      <Project>5739f3a0-5486-4b7d-862c-7272371146c9</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
       </ProjectReference>
     </ItemGroup>
