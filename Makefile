@@ -26,7 +26,7 @@ CDPATH		:=
 
 .EXPORT_ALL_VARIABLES:
 
-.PHONY:		app build clean compile config info show test
+.PHONY:		app build clean compile config info projects show test
 
 ifndef SHOW
 .SILENT:

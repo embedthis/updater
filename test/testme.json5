@@ -6,14 +6,9 @@
                     '-Wformat', '-Wformat-security', '-Wsign-compare', '-Wsign-conversion',
                     '-I../src',
                     '-I../src/osdep',
-                    '-I../build/inc', '-L../build/bin'
+                    '-I../build/inc', '-L../build/bin',
+                    '-Wl,-rpath,${CONFIGDIR}/../build/bin',
                 ],
-                linux: {
-                    flags: ['-Wl,-rpath,$ORIGIN/${CONFIGDIR}/../build/bin'],
-                },
-                macosx: {
-                    flags: ['-Wl,-rpath,@executable_path/${CONFIGDIR}/../build/bin'],
-                },
                 libraries: ['updater', 'crypto', 'ssl'],
             },
             msvc: {
