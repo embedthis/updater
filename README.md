@@ -41,7 +41,6 @@ Devices can use the **updater** command or library to enable Over-The-Air (OTA) 
 - Update rate control to minimize service load
 - Ability to defer or rollback updates
 
-
 **Monitoring & Analytics:**
 
 Using the EmbedThis Builder cloud service, you can publish, distribute, monitor and analyze update metrics and reporting.
