@@ -1044,7 +1044,7 @@ static Fetch *fetchAlloc(cchar *host)
     }
 
     fp->ssl = SSL_new(fp->ctx);
-    SSL_set_fd(fp->ssl, fp->fd);
+    SSL_set_fd(fp->ssl, (int) fp->fd);
     /*
         Send SNI - SSL_set_tlsext_host_name macro casts to void*, triggering const warning.
         This is an OpenSSL API limitation, not a security issue.

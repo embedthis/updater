@@ -71,10 +71,10 @@ ME_TLS                ?= \"openssl\"
 ME_TUNE               ?= \"size\"
 ME_VERSION            ?= \"1.1.3\"
 
-CFLAGS                += -Wno-unused-result -Wshorten-64-to-32 -Wall -Wno-unknown-warning-option -g -fstack-protector --param=ssp-buffer-size=4 -Wformat -Wformat-security -Wsign-compare -Wsign-conversion
+CFLAGS                += -Wno-unused-result -Wshorten-64-to-32 -Wall -Wno-unknown-warning-option -fstack-protector --param=ssp-buffer-size=4 -Wformat -Wformat-security -Wsign-compare -Wsign-conversion
 DFLAGS                +=  $(patsubst %,-D%,$(filter ME_%,$(MAKEFLAGS))) "-DME_COM_COMPILER=$(ME_COM_COMPILER)" "-DME_COM_LIB=$(ME_COM_LIB)" "-DME_COM_OSDEP=$(ME_COM_OSDEP)" "-DME_COM_R=$(ME_COM_R)" "-DME_COM_VXWORKS=$(ME_COM_VXWORKS)" "-DME_MBEDTLS_COMPACT=$(ME_MBEDTLS_COMPACT)" 
 IFLAGS                += "-I$(BUILD)/inc"
-LDFLAGS               += "-g" "-Wl,-no_warn_duplicate_libraries" "-Wl,-rpath,@executable_path/" "-Wl,-rpath,@loader_path/"
+LDFLAGS               += "-Wl,-no_warn_duplicate_libraries" "-Wl,-rpath,@executable_path/" "-Wl,-rpath,@loader_path/"
 LIBPATHS              += "-L$(BUILD)/bin"
 LIBS                  += "-ldl" "-lpthread" "-lm"
 

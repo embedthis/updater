@@ -71,10 +71,10 @@ ME_TLS                ?= \"openssl\"
 ME_TUNE               ?= \"size\"
 ME_VERSION            ?= \"1.1.3\"
 
-CFLAGS                += -Wno-unused-result -Wall -g -fstack-protector --param=ssp-buffer-size=4 -Wformat -Wformat-security -Wsign-compare -Wsign-conversion -Wl,-z,relro,-z,now -Wl,--as-needed -Wl,--no-copy-dt-needed-entries -Wl,-z,noexecheap -Wl,--no-warn-execstack -pie -fPIE
+CFLAGS                += -Wno-unused-result -Wall -fstack-protector --param=ssp-buffer-size=4 -Wformat -Wformat-security -Wsign-compare -Wsign-conversion -Wl,-z,relro,-z,now -Wl,--as-needed -Wl,--no-copy-dt-needed-entries -Wl,-z,noexecheap -Wl,--no-warn-execstack -pie -fPIE
 DFLAGS                +=  $(patsubst %,-D%,$(filter ME_%,$(MAKEFLAGS))) "-DME_COM_COMPILER=$(ME_COM_COMPILER)" "-DME_COM_LIB=$(ME_COM_LIB)" "-DME_COM_OSDEP=$(ME_COM_OSDEP)" "-DME_COM_R=$(ME_COM_R)" "-DME_COM_VXWORKS=$(ME_COM_VXWORKS)" "-DME_MBEDTLS_COMPACT=$(ME_MBEDTLS_COMPACT)" 
 IFLAGS                += "-I$(BUILD)/inc"
-LDFLAGS               += "-g"
+LDFLAGS               += 
 LIBPATHS              += "-L$(BUILD)/bin"
 LIBS                  += "-lrt" "-ldl" "-lpthread" "-lm"
 
@@ -227,7 +227,7 @@ LIBS_8 += -lupdater
 
 $(BUILD)/bin/updater: $(DEPS_8)
 	@echo '      [Link] $(BUILD)/bin/updater'
-	$(CC) -o "$(BUILD)/bin/updater" $(LDFLAGS) $(LIBPATHS) $(INPUT) "$(BUILD)/obj/main.o" $(LIBPATHS_8) $(LIBS_8) $(LIBS_8) $(LIBS) "-lcrypto" "-lssl" $(LIBS) "-lcrypto" "-lssl" 
+	$(CC) -o "$(BUILD)/bin/updater" $(LIBPATHS) $(INPUT) "$(BUILD)/obj/main.o" $(LIBPATHS_8) $(LIBS_8) $(LIBS_8) $(LIBS) "-lcrypto" "-lssl" $(LIBS) "-lcrypto" "-lssl" 
 
 #
 #   installPrep
