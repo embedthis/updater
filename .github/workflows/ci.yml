@@ -59,7 +59,8 @@ jobs:
         if: runner.os == 'Windows'
         run: |
           tm.exe --version
-          Get-ChildItem -Recurse -Path "C:\Program Files\OpenSSL"
+          Get-ChildItem -Path "C:\Program Files\OpenSSL"
+          Get-ChildItem -Path "C:\Program Files\Git\mingw64\etc\ssl\certs"
 
       - name: Build (Unix)
         if: runner.os != 'Windows'
@@ -108,9 +109,9 @@ jobs:
           ENDPOINT: ${{ secrets.ENDPOINT }}
           DEVICE: "UPDATER001"
           VERSION: "1.0.0"
-          SSL_CERT_FILE: "C:/Program Files/OpenSSL/ssl/cert.pem"
+          SSL_CERT_FILE: "C:/Program Files/Git/mingw64/etc/ssl/certs/ca-bundle.crt"
         run: |
-          dir C:/Program Files/OpenSSL/ssl
+          if exist "C:\Program Files\Git\mingw64\etc\ssl\certs\ca-bundle.crt" echo CA bundle found
           call bin\test-prep.bat
           tm -v test
 
