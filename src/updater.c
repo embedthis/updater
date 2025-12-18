@@ -1024,7 +1024,7 @@ static Fetch *fetchAlloc(cchar *host)
     if (CA_BUNDLE && *CA_BUNDLE) {
         if (!SSL_CTX_load_verify_locations(fp->ctx, CA_BUNDLE, NULL)) {
             if (!quiet) {
-                fprintf(stderr, "Unable to set certificate locations: %s", CA_BUNDLE);
+                fprintf(stderr, "Unable to set certificate locations: %s\n", CA_BUNDLE);
                 printSslErrors();
             }
             fetchFree(fp);

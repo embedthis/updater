@@ -18,8 +18,8 @@ fi
 
 # Test 1: Multiple properties
 echo "Test 1: Multiple device properties"
-updater --device ${DEVICE} --file binary-$PID-multiprops.bin --host ${ENDPOINT} --product ${PRODUCT} \
-    --token ${TOKEN} --version ${VERSION} model=pro region=us-west tier=premium
+updater --device "${DEVICE}" --file binary-$PID-multiprops.bin --host "${ENDPOINT}" --product "${PRODUCT}" \
+    --token "${TOKEN}" --version "${VERSION}" model=pro region=us-west tier=premium
 RC=$?
 if [ $RC = 0 ] || [ $RC = 1 ]; then
     echo "✓ Multiple properties passed (exit code: $RC)"
@@ -32,8 +32,8 @@ fi
 
 # Test 2: Very old version (should likely get update)
 echo "Test 2: Check with old version"
-updater --device ${DEVICE} --file binary-$PID-old.bin --host ${ENDPOINT} --product ${PRODUCT} \
-    --token ${TOKEN} --version "0.0.1" --quiet
+updater --device "${DEVICE}" --file binary-$PID-old.bin --host "${ENDPOINT}" --product "${PRODUCT}" \
+    --token "${TOKEN}" --version "0.0.1" --quiet
 RC=$?
 if [ $RC = 0 ] || [ $RC = 1 ]; then
     echo "✓ Old version check passed (exit code: $RC)"
@@ -46,8 +46,8 @@ fi
 
 # Test 3: Very new version (should not get update)
 echo "Test 3: Check with future version"
-updater --device ${DEVICE} --file binary-$PID-new.bin --host ${ENDPOINT} --product ${PRODUCT} \
-    --token ${TOKEN} --version "999.999.999" --quiet
+updater --device "${DEVICE}" --file binary-$PID-new.bin --host "${ENDPOINT}" --product "${PRODUCT}" \
+    --token "${TOKEN}" --version "999.999.999" --quiet
 RC=$?
 if [ $RC = 0 ] || [ $RC = 1 ]; then
     echo "✓ Future version check passed (exit code: $RC)"

@@ -12,8 +12,8 @@ PID=$$
 
 # Test 5: Missing required parameter (should fail)
 echo "Test 5: Missing required parameter (--device)"
-updater --file binary-$PID-error.bin --host ${ENDPOINT} --product ${PRODUCT} \
-    --token ${TOKEN} --version ${VERSION} --quiet
+updater --file binary-$PID-error.bin --host "${ENDPOINT}" --product "${PRODUCT}" \
+    --token "${TOKEN}" --version "${VERSION}" --quiet
 RC=$?
 if [ $RC != 0 ] ; then
     echo "✓ Missing parameter correctly rejected (exit code: $RC)"
@@ -25,8 +25,8 @@ fi
 
 # Test 6: Invalid token (should fail with auth error)
 echo "Test 6: Invalid token"
-updater --device ${DEVICE} --file binary-$PID-badtoken.bin --host ${ENDPOINT} --product ${PRODUCT} \
-    --token "invalid-token-12345" --version ${VERSION} --quiet
+updater --device "${DEVICE}" --file binary-$PID-badtoken.bin --host "${ENDPOINT}" --product "${PRODUCT}" \
+    --token "invalid-token-12345" --version "${VERSION}" --quiet
 RC=$?
 if [ $RC != 0 ] ; then
     echo "✓ Invalid token correctly rejected (exit code: $RC)"
