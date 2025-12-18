@@ -106,7 +106,7 @@
     #define ME_TUNE "size"
 #endif
 #ifndef ME_VERSION
-    #define ME_VERSION "1.1.3"
+    #define ME_VERSION "1.1.4"
 #endif
 
 /* Prefixes */
@@ -126,7 +126,7 @@
     #define ME_APP_PREFIX "/usr/local/lib/updater"
 #endif
 #ifndef ME_VAPP_PREFIX
-    #define ME_VAPP_PREFIX "/usr/local/lib/updater/1.1.3"
+    #define ME_VAPP_PREFIX "/usr/local/lib/updater/1.1.4"
 #endif
 #ifndef ME_BIN_PREFIX
     #define ME_BIN_PREFIX "/usr/local/bin"
@@ -162,7 +162,7 @@
     #define ME_CACHE_PREFIX "/var/spool/updater/cache"
 #endif
 #ifndef ME_SRC_PREFIX
-    #define ME_SRC_PREFIX "updater-1.1.3"
+    #define ME_SRC_PREFIX "updater-1.1.4"
 #endif
 
 /* Suffixes */
@@ -204,10 +204,10 @@
     #define ME_MINOR_VERSION 1
 #endif
 #ifndef ME_PATCH_VERSION
-    #define ME_PATCH_VERSION 3
+    #define ME_PATCH_VERSION 4
 #endif
 #ifndef ME_VNUM
-    #define ME_VNUM 100010003
+    #define ME_VNUM 100010004
 #endif
 
 /* Components */
