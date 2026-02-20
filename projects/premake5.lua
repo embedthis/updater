@@ -81,6 +81,7 @@ workspace "updater"
         location  "vs2022"
         cdialect  "C11"
         architecture "x86_64"
+        characterset "MBCS"
     elseif isXcode then
         platforms { "macosx" }
         location  "xcode"
