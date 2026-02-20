@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(premake5:*)",
+      "Bash(rm:*)",
+      "Bash(SHOW=1 make:*)",
+      "Bash(git -C:*)"
+    ]
+  }
+}
