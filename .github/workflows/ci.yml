@@ -101,6 +101,7 @@ jobs:
           SSL_CERT_FILE: "C:/Program Files/Git/mingw64/etc/ssl/certs/ca-bundle.crt"
         run: |
           if exist "C:\Program Files\Git\mingw64\etc\ssl\certs\ca-bundle.crt" echo CA bundle found
+          call projects\openssl-prep.bat
           call bin\test-prep.bat
           tm -v test
 
