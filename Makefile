@@ -1,32 +1,45 @@
 #
-#   Makefile - Top-level Updater makefile
+#   Makefile -- Updater Top-level Makefile
 #
-#	This Makefile is used for native builds and for ESP32 configuration.
-#	It is a wrapper over generated makefiles under ./projects.
+#   Uses pre-generated project files from projects/gmake2/.
+#   Auto-detects platform. No premake5 required for building.
 #
-#	Use "make help" for a list of available make variable options.
+#   Use "make help" for available targets and options.
 #
 
-SHELL		:= /bin/bash
-PROFILE 	?= dev
-OPTIMIZE	?= debug
-TOP			:= $(shell realpath .)
-MAKE		:= $(shell if which gmake >/dev/null 2>&1; then echo gmake ; else echo make ; fi) --no-print-directory
-OS			:= $(shell uname | sed 's/CYGWIN.*/windows/;s/Darwin/macosx/' | tr '[A-Z]' '[a-z]')
-ARCH		?= $(shell uname -m | sed 's/i.86/x86/;s/x86_64/x64/;s/mips.*/mips/;s/aarch/arm/')
-LOCAL 		:= $(strip $(wildcard ./.local.mk))
-PROJECT		:= projects/updater-$(OS)-default.mk
+NAME        := updater
+OPTIMIZE    ?= debug
+TOP         := $(shell realpath .)
+BUILD       := build
+BIN         := $(TOP)/$(BUILD)/bin
+LOCAL       := $(strip $(wildcard ./.local.mk))
 
-# BUILD		:= build/$(OS)-$(ARCH)-$(PROFILE)
-BUILD		:= build
+#
+#   Detect make command (prefer gmake)
+#
+MAKE        := $(shell if which gmake >/dev/null 2>&1; then echo gmake ; else echo make ; fi) --no-print-directory
 
-BIN			:= $(TOP)/$(BUILD)/bin
-PATH		:= $(TOP)/bin:$(BIN):$(PATH)
-CDPATH		:=
+#
+#   Auto-detect platform from host OS
+#
+UNAME       := $(shell uname -s)
+ifeq ($(UNAME),Darwin)
+    PLATFORM := macosx
+else ifeq ($(UNAME),Linux)
+    PLATFORM := linux
+else ifeq ($(UNAME),FreeBSD)
+    PLATFORM := freebsd
+else
+    $(error Unsupported platform: $(UNAME). Use premake5 to regenerate for your OS.)
+endif
+
+CONFIG      := $(OPTIMIZE)_$(PLATFORM)
+PATH        := $(BIN):$(PATH)
+CDPATH      :=
 
 .EXPORT_ALL_VARIABLES:
 
-.PHONY:		app build clean compile config info projects show test
+.PHONY: all build clean doc format help package projects test
 
 ifndef SHOW
 .SILENT:
@@ -34,57 +47,61 @@ endif
 
 all: build
 
-build: config compile info
-
-config:
-	@mkdir -p $(BUILD)/bin
-
-compile:
-	@if [ ! -f $(PROJECT) ] ; then \
-		echo "The build configuration $(PROJECT) is not supported" ; exit 255 ; \
+build:
+	@if [ ! -f projects/gmake2/Makefile ] ; then \
+		echo "      [Error] projects/gmake2/Makefile not found. Run: cd projects && premake5 gmake2" ; exit 255 ; \
 	fi
-	$(MAKE) -f $(PROJECT) OPTIMIZE=$(OPTIMIZE) PROFILE=$(PROFILE) BUILD=$(BUILD) compile 
+	$(MAKE) -C projects/gmake2 config=$(CONFIG) verbose=$(SHOW)
+	@echo "      [Info] Updater $(OPTIMIZE) [$(PLATFORM)]"
 
 clean:
-	@echo '       [Run] $@'
-	@$(MAKE) -f $(PROJECT) TOP=$(TOP) PROFILE=$(PROFILE) $@
-
-info:
-	echo "      [Info] Built Updater optimized for \"$(OPTIMIZE)\""
-	echo "      [Info] Run via: \"sudo make run\". Run \"Updater\" manually with \"$(BUILD)/bin\" in your path."
-
-run:
-	$(BUILD)/bin/updater -v
+	@echo "       [Run] clean"
+	rm -fr $(BUILD)
 
 test:
 	@bin/test-prep.sh
 	tm test
 
-path:
-	echo $(PATH)
+doc:
+	cp paks/*/doc/api/* doc/api
+	bun ~/bin/make-doc doc/updater.dox src/updater.h Updater doc/api paks/*/doc/api/*.tags
+
+format:
+	uncrustify -q -c .uncrustify --replace --no-backup src/*.{c,h}
+
+package:
+	bash bin/buildLib.sh
+	cp CLAUDE.md dist/CLAUDE.md
+	cp src/updater.h dist/updater.h
+
+cache: build doc package
+	cache
+
+#
+#   Regenerate all premake project files (developer only -- requires premake5)
+#
+projects:
+	cd projects && premake5 gmake2 && premake5 vs2022 && premake5 xcode4
 
 help:
 	@echo '' >&2
-	@echo 'usage: make [clean, build, run]' >&2
+	@echo 'usage: make [clean, build, test]' >&2
 	@echo '' >&2
-	@echo 'Other make environment variables:' >&2
-	@echo '  ARCH               # CPU architecture (x86, x64, ppc, ...)' >&2
-	@echo '  OS                 # Operating system (linux, macosx, ...)' >&2
-	@echo '  CC                 # Compiler to use ' >&2
-	@echo '  LD                 # Linker to use' >&2
-	@echo '  OPTIMIZE           # Set to "debug" or "release" for a debug or release build of the agent.' >&2
-	@echo '  CFLAGS             # Add compiler options. For example: -Wall' >&2
-	@echo '  DFLAGS             # Add compiler defines. For example: -DCOLOR=blue' >&2
-	@echo '  IFLAGS             # Add compiler include directories. For example: -I/extra/includes' >&2
-	@echo '  LDFLAGS            # Add linker options' >&2
-	@echo '  LIBPATHS           # Add linker library search directories. For example: -L/libraries' >&2
-	@echo '  LIBS               # Add linker libraries. For example: -lpthreads' >&2
+	@echo 'Targets:' >&2
+	@echo '  build               Build libupdater and updater utility (default)' >&2
+	@echo '  clean               Remove build artifacts' >&2
+	@echo '  test                Run unit tests' >&2
+	@echo '  doc                 Generate API documentation' >&2
+	@echo '  format              Format source code' >&2
+	@echo '  package             Build dist/updaterLib.c amalgamated source' >&2
+	@echo '  cache               Build, package and cache' >&2
+	@echo '  projects            Regenerate premake makefiles (developer only)' >&2
 	@echo '' >&2
-	@echo 'Use "SHOW=1 make" to show executed commands.' >&2
+	@echo 'Make variables:' >&2
+	@echo '  OPTIMIZE=debug|release    Optimization level (default: debug)' >&2
+	@echo '  SHOW=1                    Show build commands' >&2
 	@echo '' >&2
 
 ifneq ($(LOCAL),)
 include $(LOCAL)
 endif
-
-# vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4:

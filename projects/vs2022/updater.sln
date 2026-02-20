@@ -1,0 +1,29 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "updater", "updater.vcxproj", "{1AE6A73E-86C5-26DA-8FDD-B1B0FB3B8D3B}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "updater-exe", "updater-exe.vcxproj", "{A9CD1B7E-1583-9473-9E77-8E4A0A2C8B77}"
+	ProjectSection(ProjectDependencies) = postProject
+		{1AE6A73E-86C5-26DA-8FDD-B1B0FB3B8D3B} = {1AE6A73E-86C5-26DA-8FDD-B1B0FB3B8D3B}
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		debug|windows = debug|windows
+		release|windows = release|windows
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{1AE6A73E-86C5-26DA-8FDD-B1B0FB3B8D3B}.debug|windows.ActiveCfg = debug windows|x64
+		{1AE6A73E-86C5-26DA-8FDD-B1B0FB3B8D3B}.debug|windows.Build.0 = debug windows|x64
+		{1AE6A73E-86C5-26DA-8FDD-B1B0FB3B8D3B}.release|windows.ActiveCfg = release windows|x64
+		{1AE6A73E-86C5-26DA-8FDD-B1B0FB3B8D3B}.release|windows.Build.0 = release windows|x64
+		{A9CD1B7E-1583-9473-9E77-8E4A0A2C8B77}.debug|windows.ActiveCfg = debug windows|x64
+		{A9CD1B7E-1583-9473-9E77-8E4A0A2C8B77}.debug|windows.Build.0 = debug windows|x64
+		{A9CD1B7E-1583-9473-9E77-8E4A0A2C8B77}.release|windows.ActiveCfg = release windows|x64
+		{A9CD1B7E-1583-9473-9E77-8E4A0A2C8B77}.release|windows.Build.0 = release windows|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

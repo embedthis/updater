@@ -2,7 +2,30 @@
 
 All notable changes to the EmbedThis Updater project are documented in this file in reverse chronological order.
 
+## 2026
+
+### February 20, 2026
+- **DEV**: Migrated build system from MakeMe to premake5
+- **DEV**: Created `projects/premake5.lua` build configuration
+- **DEV**: Generated gmake2, VS2022, and Xcode project files
+- **DEV**: Replaced top-level Makefile to delegate to premake gmake2
+- **DEV**: Created `bin/buildLib.sh` for amalgamated `dist/updaterLib.c`
+- **DEV**: Added ME_COM_ defaults to `src/updater.h` with `#ifndef` guards
+- **DEV**: Wrapped OpenSSL includes in `#if ME_COM_OPENSSL` conditional
+- **DEV**: Bumped version to 1.2.0
+- **CHORE**: Deleted all MakeMe artifacts (main.me, start.me, make.bat, src/me.h, src/Makefile, old platform makefiles/configs, old VS/Xcode projects, GUID files, nmake helpers)
+- **DOC**: Updated README with new build instructions and file listing
+
 ## 2025
+
+### December 2025
+- **DEV**: Bumped version to 1.1.4
+- **DEV**: Updated osdep dependency
+- **FIX**: Fixed compiler warning
+- **DEV**: Regenerated all platform project files (FreeBSD, FreeRTOS, Linux, macOS, Windows, VxWorks)
+- **TEST**: Updated unit test compiler settings and testme.json5
+- **DEV**: Updated CI workflow
+- **DOC**: Updated release notes for 1.1.3
 
 ### October 17, 2025
 - **DEV**: Major code refactoring to improve maintainability and structure

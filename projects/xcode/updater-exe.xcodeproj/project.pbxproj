@@ -1,0 +1,349 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		727E4273353EA2E5927380B3 /* libupdater.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F81DD3B53C8E56DD7B6137B /* libupdater.a */; };
+		78667B8C71CC7CFE6567D9CC /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = 6E0F7DF4115B07262C2BD434 /* main.c */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		34A238378B2FA2A963A8B677 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 5D8C140A8F855EBC09649A4A /* updater.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 7BD063047C835FF6F0653144;
+			remoteInfo = libupdater.a;
+		};
+		86DCAAD0DD6A1542B5E32910 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 5D8C140A8F855EBC09649A4A /* updater.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = E6D5EA6A89C4111C18E9F0AA;
+			remoteInfo = libupdater.a;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		5D8C140A8F855EBC09649A4A /* libupdater.a */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = "updater.xcodeproj"; path = updater.xcodeproj; sourceTree = SOURCE_ROOT; };
+		6E0F7DF4115B07262C2BD434 /* main.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = main.c; path = ../../src/main.c; sourceTree = "<group>"; };
+		9F2981FE437C1FB055B4683E /* updater */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; name = updater; path = updater; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		BA9E286E0AB1BD208D2FEEAE /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				727E4273353EA2E5927380B3 /* libupdater.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		B0954C5A53E0D58C6EB1A29A /* Embed Libraries */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+			);
+			name = "Embed Libraries";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXGroup section */
+		9D968EAA920D05DCE0E0A4EA /* Projects */ = {
+			isa = PBXGroup;
+			children = (
+				5D8C140A8F855EBC09649A4A /* updater.xcodeproj */,
+				5D8C140A8F855EBC09649A4A /* updater.xcodeproj */,
+			);
+			name = Projects;
+			sourceTree = "<group>";
+		};
+		A6C936B49B3FADE6EA134CF4 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				9F2981FE437C1FB055B4683E /* updater */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		DA95282444A7AA16DDD29664 /* updater-exe */ = {
+			isa = PBXGroup;
+			children = (
+				6E0F7DF4115B07262C2BD434 /* main.c */,
+				A6C936B49B3FADE6EA134CF4 /* Products */,
+				9D968EAA920D05DCE0E0A4EA /* Projects */,
+			);
+			name = "updater-exe";
+			sourceTree = "<group>";
+		};
+		FF201A974790FEC98C2FD0D7 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				6F81DD3B53C8E56DD7B6137B /* libupdater.a */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		EFAA1224FC66C19671513064 /* updater-exe */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A8D970CDF8ED057F7B6B370D /* Build configuration list for PBXNativeTarget "updater-exe" */;
+			buildPhases = (
+				2A85A90E7A993DC0FD176F4E /* Resources */,
+				9432C265E446571766C488A5 /* Sources */,
+				BA9E286E0AB1BD208D2FEEAE /* Frameworks */,
+				B0954C5A53E0D58C6EB1A29A /* Embed Libraries */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				ECD857A035493BD279E80DE0 /* PBXTargetDependency */,
+				ECD857A035493BD279E80DE0 /* PBXTargetDependency */,
+			);
+			name = "updater-exe";
+			productInstallPath = "$(HOME)/bin";
+			productName = "updater-exe";
+			productReference = 9F2981FE437C1FB055B4683E /* updater */;
+			productType = "com.apple.product-type.tool";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		08FB7793FE84155DC02AAC07 /* Project object */ = {
+			isa = PBXProject;
+			buildConfigurationList = 1DEB928908733DD80010E9CD /* Build configuration list for PBXProject "updater-exe" */;
+			compatibilityVersion = "Xcode 3.2";
+			hasScannedForEncodings = 1;
+			mainGroup = DA95282444A7AA16DDD29664 /* updater-exe */;
+			projectDirPath = "";
+			projectReferences = (
+				{
+					ProductGroup = FF201A974790FEC98C2FD0D7 /* Products */;
+					ProjectRef = 5D8C140A8F855EBC09649A4A /* updater.xcodeproj */;
+				},
+				{
+					ProductGroup = FF201A974790FEC98C2FD0D7 /* Products */;
+					ProjectRef = 5D8C140A8F855EBC09649A4A /* updater.xcodeproj */;
+				},
+			);
+			projectRoot = "";
+			targets = (
+				EFAA1224FC66C19671513064 /* updater */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXReferenceProxy section */
+		6F81DD3B53C8E56DD7B6137B /* libupdater.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libupdater.a;
+			remoteRef = 34A238378B2FA2A963A8B677 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+/* End PBXReferenceProxy section */
+
+/* Begin PBXResourcesBuildPhase section */
+		2A85A90E7A993DC0FD176F4E /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		9432C265E446571766C488A5 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				78667B8C71CC7CFE6567D9CC /* main.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		ECD857A035493BD279E80DE0 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = libupdater.a;
+			targetProxy = 86DCAAD0DD6A1542B5E32910 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin PBXVariantGroup section */
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		110A2153147AF38595E79793 /* debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CONFIGURATION_BUILD_DIR = "$(SYMROOT)";
+				CONFIGURATION_TEMP_DIR = "$(OBJROOT)";
+				COPY_PHASE_STRIP = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"ME_VERSION=\\\"1.2.0\\\"",
+					"ME_DEBUG=1",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LIBRARY_SEARCH_PATHS = (
+					../../build/bin,
+					/opt/homebrew/lib,
+				);
+				OBJROOT = "../../build/obj/updater-exe-macosx-debug";
+				ONLY_ACTIVE_ARCH = YES;
+				OTHER_CFLAGS = (
+					"-Wno-sign-conversion",
+					"-Wno-unused-parameter",
+					"-Wno-unused-result",
+					"-Wshorten-64-to-32",
+					"-Wall",
+					"-Wno-unknown-warning-option",
+					"-fstack-protector",
+					"--param=ssp-buffer-size=4",
+					"-Wformat",
+					"-Wformat-security",
+					"-Wsign-compare",
+				);
+				OTHER_LDFLAGS = (
+					"-ldl",
+					"-lpthread",
+					"-lm",
+					"-lssl",
+					"-lcrypto",
+					"-g",
+					"-Wl,-no_warn_duplicate_libraries",
+					"-Wl,-rpath,@executable_path/",
+					"-Wl,-rpath,@loader_path/",
+				);
+				STANDARD_C_PLUS_PLUS_LIBRARY_TYPE = static;
+				SYMROOT = ../../build/bin;
+				USER_HEADER_SEARCH_PATHS = (
+					../../src,
+					../../src/osdep,
+					/opt/homebrew/include,
+				);
+				WARNING_CFLAGS = "-Wall -Wextra";
+			};
+			name = debug;
+		};
+		3CACE93362D318E5C9DA0F73 /* debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CONFIGURATION_BUILD_DIR = ../../build/bin;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_DYNAMIC_NO_PIC = NO;
+				INSTALL_PATH = /usr/local/bin;
+				PRODUCT_NAME = updater;
+			};
+			name = debug;
+		};
+		624F1CEDAAC0011FEF5ED32D /* release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CONFIGURATION_BUILD_DIR = ../../build/bin;
+				GCC_DYNAMIC_NO_PIC = NO;
+				INSTALL_PATH = /usr/local/bin;
+				PRODUCT_NAME = updater;
+			};
+			name = release;
+		};
+		707F9C4D136DC2FFA293A28D /* release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CONFIGURATION_BUILD_DIR = "$(SYMROOT)";
+				CONFIGURATION_TEMP_DIR = "$(OBJROOT)";
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_OPTIMIZATION_LEVEL = 3;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"ME_VERSION=\\\"1.2.0\\\"",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LIBRARY_SEARCH_PATHS = (
+					../../build/bin,
+					/opt/homebrew/lib,
+				);
+				OBJROOT = "../../build/obj/updater-exe-macosx-release";
+				ONLY_ACTIVE_ARCH = NO;
+				OTHER_CFLAGS = (
+					"-Wno-sign-conversion",
+					"-Wno-unused-parameter",
+					"-Wno-unused-result",
+					"-Wshorten-64-to-32",
+					"-Wall",
+					"-Wno-unknown-warning-option",
+					"-fstack-protector",
+					"--param=ssp-buffer-size=4",
+					"-Wformat",
+					"-Wformat-security",
+					"-Wsign-compare",
+				);
+				OTHER_LDFLAGS = (
+					"-ldl",
+					"-lpthread",
+					"-lm",
+					"-lssl",
+					"-lcrypto",
+					"-s",
+					"-Wl,-no_warn_duplicate_libraries",
+					"-Wl,-rpath,@executable_path/",
+					"-Wl,-rpath,@loader_path/",
+				);
+				STANDARD_C_PLUS_PLUS_LIBRARY_TYPE = static;
+				SYMROOT = ../../build/bin;
+				USER_HEADER_SEARCH_PATHS = (
+					../../src,
+					../../src/osdep,
+					/opt/homebrew/include,
+				);
+				WARNING_CFLAGS = "-Wall -Wextra";
+			};
+			name = release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		1DEB928908733DD80010E9CD /* Build configuration list for PBXProject "updater-exe" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				110A2153147AF38595E79793 /* debug */,
+				707F9C4D136DC2FFA293A28D /* release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = debug;
+		};
+		A8D970CDF8ED057F7B6B370D /* Build configuration list for PBXNativeTarget "updater" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				3CACE93362D318E5C9DA0F73 /* debug */,
+				624F1CEDAAC0011FEF5ED32D /* release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = debug;
+		};
+/* End XCConfigurationList section */
+};
+rootObject = 08FB7793FE84155DC02AAC07 /* Project object */;
+}

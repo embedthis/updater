@@ -13,7 +13,6 @@ test/.creds.sh
 updater
 updater.bin
 updater.dSYM/
-start.me
 build/
 .agent/**
 projects/updater-macosx-mine*
@@ -22,3 +21,4 @@ test/node_modules
 test/package.json
 .DS_Store
 .cdrc.bat
+settings.local.json
