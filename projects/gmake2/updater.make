@@ -64,8 +64,8 @@ endif
 RESCOMP = windres
 OBJDIR = ../../build/obj/updater-linux-debug
 DEFINES += -DME_VERSION=\"1.2.0\" -DME_DEBUG=1
-ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -O0 -g -Wall -Wextra -std=gnu11 -Wno-unused-result -Wall -fstack-protector --param=ssp-buffer-size=4 -Wformat -Wformat-security -Wsign-compare -pie -fPIE
-ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -O0 -g -Wall -Wextra -Wno-unused-result -Wall -fstack-protector --param=ssp-buffer-size=4 -Wformat -Wformat-security -Wsign-compare -pie -fPIE
+ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -O0 -g -Wall -Wextra -std=gnu11 -Wno-unused-parameter -Wno-unused-result -Wall -fstack-protector --param=ssp-buffer-size=4 -Wformat -Wformat-security -Wsign-compare -pie -fPIE
+ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -O0 -g -Wall -Wextra -Wno-unused-parameter -Wno-unused-result -Wall -fstack-protector --param=ssp-buffer-size=4 -Wformat -Wformat-security -Wsign-compare -pie -fPIE
 LIBS += -lrt -ldl -lpthread -lm
 ALL_LDFLAGS += $(LDFLAGS) -g -Wl,-z,relro,-z,now -Wl,--as-needed -Wl,--no-copy-dt-needed-entries -Wl,-z,noexecheap -Wl,--no-warn-execstack
 
@@ -82,8 +82,8 @@ endif
 RESCOMP = windres
 OBJDIR = ../../build/obj/updater-freebsd-debug
 DEFINES += -DME_VERSION=\"1.2.0\" -DME_DEBUG=1
-ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -O0 -g -Wall -Wextra -std=gnu11 -Wno-unused-result -Wall -fstack-protector --param=ssp-buffer-size=4 -Wformat -Wformat-security -Wsign-compare
-ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -O0 -g -Wall -Wextra -Wno-unused-result -Wall -fstack-protector --param=ssp-buffer-size=4 -Wformat -Wformat-security -Wsign-compare
+ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -O0 -g -Wall -Wextra -std=gnu11 -Wno-unused-parameter -Wno-unused-result -Wall -fstack-protector --param=ssp-buffer-size=4 -Wformat -Wformat-security -Wsign-compare
+ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -O0 -g -Wall -Wextra -Wno-unused-parameter -Wno-unused-result -Wall -fstack-protector --param=ssp-buffer-size=4 -Wformat -Wformat-security -Wsign-compare
 LIBS += -ldl -lpthread -lm
 ALL_LDFLAGS += $(LDFLAGS) -g
 
@@ -118,8 +118,8 @@ endif
 RESCOMP = windres
 OBJDIR = ../../build/obj/updater-linux-release
 DEFINES += -DME_VERSION=\"1.2.0\"
-ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -O2 -Wall -Wextra -std=gnu11 -Wno-unused-result -Wall -fstack-protector --param=ssp-buffer-size=4 -Wformat -Wformat-security -Wsign-compare -pie -fPIE
-ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -O2 -Wall -Wextra -Wno-unused-result -Wall -fstack-protector --param=ssp-buffer-size=4 -Wformat -Wformat-security -Wsign-compare -pie -fPIE
+ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -O2 -Wall -Wextra -std=gnu11 -Wno-unused-parameter -Wno-unused-result -Wall -fstack-protector --param=ssp-buffer-size=4 -Wformat -Wformat-security -Wsign-compare -pie -fPIE
+ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -O2 -Wall -Wextra -Wno-unused-parameter -Wno-unused-result -Wall -fstack-protector --param=ssp-buffer-size=4 -Wformat -Wformat-security -Wsign-compare -pie -fPIE
 LIBS += -lrt -ldl -lpthread -lm
 ALL_LDFLAGS += $(LDFLAGS) -s -s -Wl,-z,relro,-z,now -Wl,--as-needed -Wl,--no-copy-dt-needed-entries -Wl,-z,noexecheap -Wl,--no-warn-execstack
 
@@ -136,8 +136,8 @@ endif
 RESCOMP = windres
 OBJDIR = ../../build/obj/updater-freebsd-release
 DEFINES += -DME_VERSION=\"1.2.0\"
-ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -O2 -Wall -Wextra -std=gnu11 -Wno-unused-result -Wall -fstack-protector --param=ssp-buffer-size=4 -Wformat -Wformat-security -Wsign-compare
-ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -O2 -Wall -Wextra -Wno-unused-result -Wall -fstack-protector --param=ssp-buffer-size=4 -Wformat -Wformat-security -Wsign-compare
+ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -O2 -Wall -Wextra -std=gnu11 -Wno-unused-parameter -Wno-unused-result -Wall -fstack-protector --param=ssp-buffer-size=4 -Wformat -Wformat-security -Wsign-compare
+ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -O2 -Wall -Wextra -Wno-unused-parameter -Wno-unused-result -Wall -fstack-protector --param=ssp-buffer-size=4 -Wformat -Wformat-security -Wsign-compare
 LIBS += -ldl -lpthread -lm
 ALL_LDFLAGS += $(LDFLAGS) -s -s
 

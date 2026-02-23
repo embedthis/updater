@@ -172,6 +172,7 @@ workspace "updater"
             system  "linux"
             toolset "gcc"
             buildoptions {
+                "-Wno-unused-parameter",
                 "-Wno-unused-result",
                 "-Wall",
                 "-fstack-protector",
@@ -193,6 +194,7 @@ workspace "updater"
             system  "bsd"
             toolset "gcc"
             buildoptions {
+                "-Wno-unused-parameter",
                 "-Wno-unused-result",
                 "-Wall",
                 "-fstack-protector",
