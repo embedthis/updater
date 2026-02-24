@@ -16,6 +16,10 @@
 
 set -e
 
+trace() {
+    printf "%12s %s\n" "[$1]" "$2"
+}
+
 SRC=src
 DST=dist/updaterLib.c
 
@@ -45,39 +49,39 @@ sed '/#include "updater.h"/d' "${SRC}/updater.c" >> "${DST}"
 
 printf '\n#else\nvoid dummyUpdater(){}\n#endif /* ME_COM_UPDATER */\n' >> "${DST}"
 
-echo "Created ${DST}: $(wc -l < "${DST}") lines"
+trace "Create" "${DST}: $(wc -l < "${DST}") lines"
 
 # ---------------------------------------------------------------
 #  2. dist/updater.h (simple copy)
 # ---------------------------------------------------------------
 cp src/updater.h dist/updater.h
-echo "Copied dist/updater.h"
+trace "Copy" "dist/updater.h"
 
 # ---------------------------------------------------------------
 #  3. dist/CLAUDE.md (simple copy)
 # ---------------------------------------------------------------
 cp CLAUDE.md dist/CLAUDE.md
-echo "Copied dist/CLAUDE.md"
+trace "Copy" "dist/CLAUDE.md"
 
 # ---------------------------------------------------------------
 #  4. dist/README.md
 # ---------------------------------------------------------------
 cp README.md dist/README.md
-echo "Copied dist/README.md"
+trace "Copy" "dist/README.md"
 
 # ---------------------------------------------------------------
 #  5. dist/AI/ (LLM documentation)
 # ---------------------------------------------------------------
 mkdir -p dist/AI/designs
 [ -f AI/designs/DESIGN.md ] && cp AI/designs/DESIGN.md dist/AI/designs/
-echo "Copied dist/AI/designs/"
+trace "Copy" "dist/AI/designs/"
 
 if [ -d AI/references ]; then
     mkdir -p dist/AI/references
     for f in AI/references/*.md; do
         [ -f "$f" ] && cp "$f" "dist/AI/references/"
     done
-    echo "Copied dist/AI/references/"
+    trace "Copy" "dist/AI/references/"
 fi
 
 # ---------------------------------------------------------------
@@ -88,9 +92,8 @@ mkdir -p dist/.claude
 for dir in skills commands workflows agents; do
     if [ -d ".claude/${dir}" ] && [ "$(ls -A ".claude/${dir}" 2>/dev/null)" ]; then
         cp -r ".claude/${dir}" "dist/.claude/${dir}"
-        echo "Copied dist/.claude/${dir}/"
+        trace "Copy" "dist/.claude/${dir}/"
     fi
 done
 
-echo ""
-echo "All dist/ files generated successfully."
+trace "Complete" "All dist/ files generated successfully"
