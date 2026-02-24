@@ -139,5 +139,6 @@ See `AI/README.md` for detailed information about the documentation structure.
 ## Additional Resources
 
 - **Parent Project**: See `../CLAUDE.md` for general build commands, testing procedures, and overall EmbedThis architecture
+- **Design Documentation**: See `AI/designs/DESIGN.md` for architecture and design details
 - **API Documentation**: Generated via `make doc` → `doc/index.html`
 - **Project Documentation**: See `AI/` directory for designs, plans, procedures, and context
