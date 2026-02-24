@@ -3,10 +3,12 @@
    updater.js - Node.js Over-The-Air (OTA) software update client
 
    This is a Node.js implementation of the EmbedThis Updater for IoT devices. It provides
-   the same functionality as the C version but using Node.js built-in modules.
+   the same functionality as the C version but using Node.js built-in modules. Compatible
+   with the EmbedThis Builder service by default, or any custom backend implementing the
+   update protocol.
 
    Features:
-   - Secure HTTPS communication with the Builder cloud service
+   - Secure HTTPS communication with the update service
    - SHA-256 checksum verification of downloaded updates
    - Timing-safe checksum comparison to prevent timing attacks
    - Configurable timeouts for downloads and script execution
@@ -44,13 +46,15 @@ function usage() {
     if (!quiet) {
         console.log(
             `usage: update [options] [key=value ...]
+            "--check-path PATH   # API path for update check (default: /tok/provision/update)
             "--cmd script        # Script to invoke to apply the update
             "--device ID         # Unique device ID
             "--file image/path   # Path to save the downloaded update
-            "--host host.domain  # Device cloud endpoint from the Builder cloud edit panel
-            "--product ProductID # ProductID from the Builder token list
+            "--host host.domain  # Update service endpoint
+            "--product ProductID # Product identifier
             "--quiet, -q         # Suppress all output (completely silent)
-            "--token TokenID     # CloudAPI access token from the Builder token list
+            "--report-path PATH  # API path for status report (default: /tok/provision/updateReport)
+            "--token TokenID     # API access token for authentication
             "--version SemVer    # Current device firmware version
             "--verbose, -v       # Trace execution and show errors
             "key=value ...       # Device-specific properties for the distribution policy`
@@ -61,7 +65,7 @@ function usage() {
 
 let file = 'update.bin' // Default update file path
 const properties = {} // Device-specific properties for distribution policy
-let cmd, device, host, product, token, version
+let checkPath, cmd, device, host, product, reportPath, token, version
 let verbose = false // Verbose output flag - emit trace and errors
 let quiet = false // Quiet output flag - suppress all output (stdout and stderr)
 
@@ -70,10 +74,10 @@ let quiet = false // Quiet output flag - suppress all output (stdout and stderr)
 
     Performs the complete OTA update workflow:
     1. Parses command-line arguments
-    2. Checks for available updates from the Builder service
+    2. Checks for available updates from the update service
     3. Downloads and verifies the update if available
     4. Applies the update using the configured script
-    5. Reports the update status back to Builder
+    5. Reports the update status back to the update service
  */
 async function main() {
     parseArgs()
@@ -92,7 +96,8 @@ async function main() {
     if (verbose) {
         console.log('Check for updates\n', JSON.stringify(body, null, 2), '\n')
     }
-    let response = await fetch(`${host}/tok/provision/update`, {
+    let effectiveCheckPath = checkPath || '/tok/provision/update'
+    let response = await fetch(`${host}${effectiveCheckPath}`, {
         method: 'POST',
         headers: {
             Authorization: token,
@@ -177,7 +182,8 @@ async function main() {
                     console.log(`Post update results ${success ? 'success' : 'failed'}`)
                 }
                 try {
-                    let reportResponse = await fetch(`${host}/tok/provision/updateReport`, {
+                    let effectiveReportPath = reportPath || '/tok/provision/updateReport'
+                    let reportResponse = await fetch(`${host}${effectiveReportPath}`, {
                         method: 'POST',
                         headers: {
                             Authorization: token,
@@ -254,7 +260,9 @@ function parseArgs() {
     for (; i < args.length; i++) {
         let arg = args[i]
         if (arg[0] != '-') break
-        if (arg == '--cmd') {
+        if (arg == '--check-path') {
+            checkPath = args[++i]
+        } else if (arg == '--cmd') {
             cmd = args[++i]
         } else if (arg == '--device') {
             device = args[++i]
@@ -278,6 +286,8 @@ function parseArgs() {
             verbose = true
         } else if (arg == '--quiet' || arg == '-q') {
             quiet = true
+        } else if (arg == '--report-path') {
+            reportPath = args[++i]
         } else {
             usage()
         }

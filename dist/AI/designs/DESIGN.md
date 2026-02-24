@@ -184,7 +184,7 @@ The updater operates under the following security assumptions:
 1. **Memory Management**
    - Manual memory management with explicit free() calls
    - Early exits with cleanup on errors
-   - No global allocation handler (returns NULL on failure)
+   - Explicit allocation checks (unlike other Ioto modules, no global allocation handler)
 
 2. **Network Layer**
    - Minimal HTTP client using OpenSSL directly
@@ -209,9 +209,9 @@ The updater operates under the following security assumptions:
 typedef struct Fetch {
     SSL_CTX *ctx;          // TLS context
     SSL     *ssl;          // TLS connection
-    int     fd;            // Socket descriptor
-    ssize   contentLength; // Response size
-    ssize   bodyLength;    // Already-read body bytes
+    Socket  fd;            // Socket descriptor
+    size_t  contentLength; // Response size
+    size_t  bodyLength;    // Already-read body bytes
     char    *body;         // Body fragment
     int     status;        // HTTP status code
 } Fetch;
@@ -229,7 +229,7 @@ int update(cchar *host, cchar *product, cchar *token,
 - Buffer overflow protection (bounds checking on all operations)
 - Integer overflow protection (validates Content-Length)
 - TOCTOU mitigation (exclusive file creation)
-- No shell execution (uses fork/execvp)
+- No shell execution on Unix (uses fork/execvp); Windows uses CreateProcess (invokes bash for .sh files)
 
 **Trade-offs**:
 - ✅ Minimal memory footprint (~10KB code)
@@ -492,7 +492,7 @@ SUM=$(openssl dgst -sha256 "$UPDATE" | awk '{print $2}')
 
 ## Code Organization
 
-### Function Decomposition (October 2025 Refactoring)
+### Function Decomposition
 
 The C implementation was refactored to improve maintainability through better function decomposition:
 
@@ -539,8 +539,8 @@ The monolithic `fetch()` function was decomposed into focused helpers:
 The `osdep.h` layer provides cross-platform compatibility:
 
 - **Linux**: Defines `_POSIX_C_SOURCE 200809L` for POSIX extensions (strdup, etc.)
-- **Windows**: Maps `strtok_r` → `strtok_s`, provides `S_ISREG` macro
-- **All platforms**: Consistent type definitions, socket abstractions, error codes
+- **Windows**: Maps `strtok_r` → `strtok_s`, provides `S_ISREG` macro, `Socket` type, `closesocket`, WSAStartup/WSACleanup
+- **All platforms**: Consistent type definitions (`Socket`, `cchar`, `cvoid`, `ssize`, `uchar`, `uint`, `ulong`), socket abstractions, error codes
 
 ## Protocol Details
 
@@ -557,16 +557,19 @@ Before using the updater, you need to configure your Builder account:
    - CloudAPI token from the Builder token list
    - Cloud endpoint URL from the Builder cloud edit panel
 
-### API Endpoints
+### API Endpoints (Configurable)
 
-1. **Check for Update**: `POST /tok/provision/update`
+The updater uses two API endpoints that can be customized via `--check-path` and `--report-path`.
+Default paths are compatible with the EmbedThis Builder service.
+
+1. **Check for Update**: `POST {host}{checkPath}` (default: `/tok/provision/update`)
    - Headers: `Authorization: <token>`, `Content-Type: application/json`
    - Body: `{"id": "<device>", "product": "<product>", "version": "<version>", ...}`
    - Custom properties can be included for policy evaluation
    - Response (update available): `{"url": "<https://...>", "checksum": "<sha256>", "update": "<id>", "version": "<new>"}`
    - Response (no update): `{}`
 
-2. **Report Update Status**: `POST /tok/provision/updateReport`
+2. **Report Update Status**: `POST {host}{reportPath}` (default: `/tok/provision/updateReport`)
    - Headers: `Authorization: <token>`, `Content-Type: application/json`
    - Body: `{"success": true/false, "id": "<device>", "update": "<id>"}`
    - Response: Ignored (fire-and-forget, best-effort reporting)

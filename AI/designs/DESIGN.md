@@ -557,16 +557,19 @@ Before using the updater, you need to configure your Builder account:
    - CloudAPI token from the Builder token list
    - Cloud endpoint URL from the Builder cloud edit panel
 
-### API Endpoints
+### API Endpoints (Configurable)
 
-1. **Check for Update**: `POST /tok/provision/update`
+The updater uses two API endpoints that can be customized via `--check-path` and `--report-path`.
+Default paths are compatible with the EmbedThis Builder service.
+
+1. **Check for Update**: `POST {host}{checkPath}` (default: `/tok/provision/update`)
    - Headers: `Authorization: <token>`, `Content-Type: application/json`
    - Body: `{"id": "<device>", "product": "<product>", "version": "<version>", ...}`
    - Custom properties can be included for policy evaluation
    - Response (update available): `{"url": "<https://...>", "checksum": "<sha256>", "update": "<id>", "version": "<new>"}`
    - Response (no update): `{}`
 
-2. **Report Update Status**: `POST /tok/provision/updateReport`
+2. **Report Update Status**: `POST {host}{reportPath}` (default: `/tok/provision/updateReport`)
    - Headers: `Authorization: <token>`, `Content-Type: application/json`
    - Body: `{"success": true/false, "id": "<device>", "update": "<id>"}`
    - Response: Ignored (fire-and-forget, best-effort reporting)

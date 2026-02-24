@@ -6,10 +6,11 @@
 
     Usage:
         updater --host Domain --token Token --product ProductID --device DeviceID --version 1.2.3 \
-            [--file path] [--cmd script] [--verbose] [key=value ...]
+            [--file path] [--cmd script] [--check-path path] [--report-path path] [--verbose] [key=value ...]
 
     The utility supports both required parameters (host, token, product, device, version) and
-    optional device-specific properties for update policy matching.
+    optional device-specific properties for update policy matching. API endpoint paths can be
+    customized for use with alternative backend update services.
 
     Copyright (c) EmbedThis Software. All Rights Reserved.
  */
@@ -25,12 +26,14 @@
 #define BUFFER_SIZE 4096         // Maximum size for properties JSON buffer
 
 // Command-line argument values (pointers into argv)
+static cchar *checkPath;         // API path for update check requests
 static cchar *cmd;               // Path to script that applies the update
 static cchar *device;            // Unique device identifier
 static cchar *file;              // Path where update image will be saved
-static cchar *host;              // Builder cloud endpoint URL
-static cchar *product;           // Product ID from Builder token list
-static cchar *token;             // CloudAPI access token for authentication
+static cchar *host;              // Update service endpoint URL
+static cchar *product;           // Product identifier
+static cchar *reportPath;        // API path for update status reports
+static cchar *token;             // API access token for authentication
 static cchar *version;           // Current device firmware version
 
 // Dynamically allocated JSON string of device properties
@@ -64,14 +67,16 @@ static int usage(cchar *argp, int argc, char **argv, int isError)
 {
     if (!quiet) {
         fprintf(stderr, "\nusage: updater [options] [key=value,...]\n"
+                "  --check-path PATH   # API path for update check (default: /tok/provision/update)\n"
                 "  --cmd script        # Script to invoke to apply the update\n"
                 "  --device ID         # Unique device ID\n"
                 "  --file image/path   # Path to save the downloaded update\n"
                 "  --help, -h, -?      # Display this help message\n"
-                "  --host host.domain  # Device cloud endpoint from the Builder cloud edit panel\n"
-                "  --product ProductID # ProductID from the Builder token list\n"
+                "  --host host.domain  # Update service endpoint\n"
+                "  --product ProductID # Product identifier\n"
                 "  --quiet, -q         # Suppress all output (completely silent)\n"
-                "  --token TokenID     # CloudAPI access token from the Builder token list\n"
+                "  --report-path PATH  # API path for status report (default: /tok/provision/updateReport)\n"
+                "  --token TokenID     # API access token for authentication\n"
                 "  --version SemVer    # Current device firmware version\n"
                 "  --verbose, -v       # Trace execution and show errors\n"
                 "  key=value, ...      # Device-specific properties for the distribution policy\n\n");
@@ -116,7 +121,7 @@ int main(int argc, char **argv)
     }
 
     // Perform the OTA update
-    rc = update(host, product, token, device, version, properties, file, cmd, verbose, quiet);
+    rc = update(host, product, token, device, version, properties, file, cmd, verbose, quiet, checkPath, reportPath);
 
     // Clean up dynamically allocated properties string
     free(properties);
@@ -156,7 +161,13 @@ static int parseArgs(int argc, char **argv)
         if (*argp != '-') {
             break;  // End of named options, remaining args are properties
         }
-        if (strcmp(argp, "--cmd") == 0) {
+        if (strcmp(argp, "--check-path") == 0) {
+            if (nextArg + 1 >= argc) {
+                usage(argp, argc, argv, 1);
+            }
+            checkPath = argv[++nextArg];
+
+        } else if (strcmp(argp, "--cmd") == 0) {
             if (nextArg + 1 >= argc) {
                 usage(argp, argc, argv, 1);
             }
@@ -191,6 +202,12 @@ static int parseArgs(int argc, char **argv)
 
         } else if (strcmp(argp, "--quiet") == 0 || strcmp(argp, "-q") == 0) {
             quiet = 1;
+
+        } else if (strcmp(argp, "--report-path") == 0) {
+            if (nextArg + 1 >= argc) {
+                usage(argp, argc, argv, 1);
+            }
+            reportPath = argv[++nextArg];
 
         } else if (strcmp(argp, "--token") == 0) {
             if (nextArg + 1 >= argc) {

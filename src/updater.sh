@@ -4,10 +4,12 @@
 #
 #   This is a sample shell script implementation of the EmbedThis Updater demonstrating the
 #   complete OTA update workflow. It is provided as a reference implementation and starting point.
+#   Compatible with the EmbedThis Builder service by default, or any custom backend implementing
+#   the update protocol.
 #
 #   Features:
 #   - Uses standard Unix tools (curl, jq, openssl)
-#   - Secure HTTPS communication with the Builder service
+#   - Secure HTTPS communication with the update service
 #   - SHA-256 checksum verification
 #   - Secure temporary file handling
 #   - Comprehensive error checking
@@ -33,13 +35,15 @@ usage() {
     if [[ "$QUIET" != "1" ]]; then
         cat <<EOF
 usage: updater.sh [options] [key=value ...]
+        --check-path PATH   # API path for update check (default: /tok/provision/update)
         --cmd script        # Script to invoke to apply the update
         --device ID         # Unique device ID
         --file image/path   # Path to save the downloaded update
-        --host host.domain  # Device cloud endpoint from the Builder cloud edit panel
-        --product ProductID # ProductID from the Builder token list
+        --host host.domain  # Update service endpoint
+        --product ProductID # Product identifier
         --quiet, -q         # Suppress all output (completely silent)
-        --token TokenID     # CloudAPI access token from the Builder token list
+        --report-path PATH  # API path for status report (default: /tok/provision/updateReport)
+        --token TokenID     # API access token for authentication
         --version SemVer    # Current device firmware version
         --verbose, -v       # Trace execution and show errors
         key=value ...       # Device-specific properties for the distribution policy
@@ -74,6 +78,10 @@ parse_args() {
 
     while [[ $# -gt 0 ]]; do
         case "$1" in
+            --check-path)
+                CHECK_PATH="$2"
+                shift 2
+                ;;
             --cmd)
                 APPLY="$2"
                 shift 2
@@ -109,6 +117,10 @@ parse_args() {
             --quiet|-q)
                 QUIET=1
                 shift
+                ;;
+            --report-path)
+                REPORT_PATH="$2"
+                shift 2
                 ;;
             -*)
                 error "Unknown option: $1"
@@ -149,9 +161,11 @@ parse_args() {
 }
 
 # Initialize variables
+CHECK_PATH=""
 DEVICE=""
 ENDPOINT=""
 PRODUCT=""
+REPORT_PATH=""
 TOKEN=""
 VERSION=""
 APPLY=""
@@ -175,6 +189,14 @@ trap "rm -rf '$TMPDIR'" EXIT
 
 # Parse command-line arguments
 parse_args "$@"
+
+# Set default API paths if not provided
+if [[ -z "$CHECK_PATH" ]]; then
+    CHECK_PATH="/tok/provision/update"
+fi
+if [[ -z "$REPORT_PATH" ]]; then
+    REPORT_PATH="/tok/provision/updateReport"
+fi
 
 # Define paths for temporary files
 DATA="$TMPDIR/data.tmp" # Request/response data
@@ -221,7 +243,7 @@ fi
 curl -f $curl_verbose --max-time 30 -X POST \
     -H "Authorization:${TOKEN}" \
     -H "Content-Type:application/json" \
-    -d "@${DATA}" "${ENDPOINT}/tok/provision/update" >"$OUTPUT"
+    -d "@${DATA}" "${ENDPOINT}${CHECK_PATH}" >"$OUTPUT"
 if [ $? -ne 0 ] ; then
     error "Failed to check for update"
     exit 1
@@ -332,7 +354,7 @@ EOF
 curl -f $curl_verbose --max-time 30 -X POST \
     -H "Authorization:${TOKEN}" \
     -H "Content-Type:application/json" \
-    -d "@${DATA}" "${ENDPOINT}/tok/provision/updateReport" >/dev/null 2>&1
+    -d "@${DATA}" "${ENDPOINT}${REPORT_PATH}" >/dev/null 2>&1
 if [ $? -ne 0 ] ; then
     error "Failed to post update report"
     exit 1

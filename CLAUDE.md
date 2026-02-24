@@ -4,14 +4,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-The EmbedThis Updater is a standalone Over-The-Air (OTA) software update utility and library for IoT devices. It provides multiple implementations:
+The EmbedThis Updater is a standalone Over-The-Air (OTA) software update utility and library for IoT devices. It works with the EmbedThis Builder service by default, or with any custom backend implementing the update protocol. It provides multiple implementations:
 
 - **C command-line utility** (`src/main.c` + `src/updater.c/h`) - Primary implementation
 - **Node.js utility** (`src/updater.js`) - Alternative JavaScript implementation
 - **Shell script** (`src/updater.sh`) - Sample script implementation
 - **C library** (`src/updater.c/h`) - For integration into other programs
 
-The updater communicates with the EmbedThis Builder cloud service to check for, download, and apply device firmware updates.
+The updater communicates with a cloud update service to check for, download, and apply device firmware updates. API endpoint paths are configurable via `--check-path` and `--report-path` CLI options (or `checkPath`/`reportPath` parameters in the C library).
 
 ## Embedthis Builder
 
@@ -71,21 +71,23 @@ make cache             # Copy files to dist/ directory
 - **`src/osdep.h`** - Cross-platform OS abstraction layer
 
 ### Update Process Flow
-1. **Check** - Query Builder service for available updates
+1. **Check** - Query update service for available updates
 2. **Download** - Fetch update package if available
 3. **Verify** - Validate checksum of downloaded update
 4. **Apply** - Execute configured script to install update
-5. **Report** - Send status back to Builder service
+5. **Report** - Send status back to update service
 
 ### Key Parameters
 All implementations require these parameters:
-- `--host` - Builder cloud endpoint
-- `--product` - Product ID from Builder
-- `--token` - CloudAPI access token
+- `--host` - Update service endpoint
+- `--product` - Product identifier
+- `--token` - API access token
 - `--device` - Unique device identifier
 - `--version` - Current firmware version
 - `--file` - Path to save downloaded update
 - `--cmd` - Script to apply the update
+- `--check-path` - API path for update check (default: /tok/provision/update)
+- `--report-path` - API path for status report (default: /tok/provision/updateReport)
 - `--verbose, -v` - Trace execution
 - `--quiet, -q` - Suppress all output
 

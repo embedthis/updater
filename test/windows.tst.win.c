@@ -46,7 +46,7 @@ static void test_batch_script(void)
         This tests the Windows-specific code path in run() function
      */
     rc = update(testHost, testProduct, testToken, testDevice, testVersion,
-                NULL, testFile, "./apply-test.bat", 0, 1);
+                NULL, testFile, "./apply-test.bat", 0, 1, NULL, NULL);
     /*
         Should fail on network/auth before trying to run script, but the
         script path should be accepted and the .bat extension recognized
@@ -66,7 +66,7 @@ static void test_shell_script(void)
         The run() function should detect .sh extension and prepend "bash"
      */
     rc = update(testHost, testProduct, testToken, testDevice, testVersion,
-                NULL, testFile, "./apply.sh", 0, 1);
+                NULL, testFile, "./apply.sh", 0, 1, NULL, NULL);
     /*
         Should fail on network/auth, but script path should be accepted
         and .sh extension should trigger bash invocation
@@ -88,7 +88,7 @@ static void test_windows_path(void)
      */
     snprintf(testPath, sizeof(testPath), ".\\windows-test-%d.bin", getpid());
     rc = update(testHost, testProduct, testToken, testDevice, testVersion,
-                NULL, testPath, NULL, 0, 1);
+                NULL, testPath, NULL, 0, 1, NULL, NULL);
     /*
         Should fail on auth/network but accept the Windows path
      */

@@ -10,7 +10,7 @@
   <a href="https://github.com/embedthis/updater/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License"></a>
 </p>
 
-The EmbedThis Updater is a secure, lightweight command-line utility and library for downloading and applying device software updates published on the [EmbedThis Builder](https://admin.embedthis.com).
+The EmbedThis Updater is a secure, lightweight command-line utility and library for downloading and applying device software updates. It works with the [EmbedThis Builder](https://admin.embedthis.com) by default, or with any custom backend service implementing the update protocol.
 
 ## Security for Devices
 
@@ -88,19 +88,21 @@ Where options are:
 
 Option | Description
 -|-
+--check-path PATH   | API path for update check (default: /tok/provision/update)
 --cmd script        | Script to invoke to apply the update
 --device ID         | Unique device ID
 --file image/path   | Path to save the downloaded update (default: update.bin)
 --help, -h, -?      | Display help message
---host host.domain  | Device cloud endpoint from the Builder cloud edit panel
---product ProductID | ProductID from the Builder token list
+--host host.domain  | Update service endpoint
+--product ProductID | Product identifier
 --quiet, -q         | Suppress all output (completely silent)
---token TokenID     | CloudAPI access token from the Builder token list
+--report-path PATH  | API path for status report (default: /tok/provision/updateReport)
+--token TokenID     | API access token for authentication
 --version SemVer    | Current device firmware version
 --verbose, -v       | Trace execution
 
-The key=value pairs can provide device specific properties that can be used by the Builder software
-update policy to determine which devices receive the update.
+The key=value pairs can provide device specific properties that can be used by the update service
+distribution policy to determine which devices receive the update.
 
 ### Example:
 
@@ -125,20 +127,20 @@ You can integrate the updater as a library in your C/C++ programs:
 
 int update(cchar *host, cchar *product, cchar *token, cchar *device,
            cchar *version, cchar *properties, cchar *path, cchar *script,
-           int verbose, int quiet);
+           int verbose, int quiet, cchar *checkPath, cchar *reportPath);
 ```
 
 The `update()` function performs a complete OTA update cycle:
-1. Checks for available updates from the Builder service
+1. Checks for available updates from the update service
 2. Downloads the update package if available
 3. Verifies the SHA-256 checksum
 4. Executes the specified script to apply the update
-5. Reports update status back to Builder
+5. Reports update status back to the update service
 
 **Parameters:**
-- `host` - Builder cloud endpoint URL
-- `product` - Product ID from Builder token list
-- `token` - CloudAPI access token
+- `host` - Update service endpoint URL
+- `product` - Product identifier
+- `token` - API access token for authentication
 - `device` - Unique device identifier
 - `version` - Current firmware version
 - `properties` - JSON string of device properties (can be NULL)
@@ -146,8 +148,93 @@ The `update()` function performs a complete OTA update cycle:
 - `script` - Path to script that applies the update (can be NULL to skip application)
 - `verbose` - Enable verbose logging (0 or 1)
 - `quiet` - Suppress all output (0 or 1). When both verbose and quiet are set, quiet takes precedence.
+- `checkPath` - API path for update check requests (NULL for default: /tok/provision/update)
+- `reportPath` - API path for status report requests (NULL for default: /tok/provision/updateReport)
 
 **Returns:** 0 on success, -1 on error
+
+## Custom Update Backend
+
+The updater works with the EmbedThis Builder by default, but can be configured to use any backend update service by providing custom API paths via `--check-path` and `--report-path`.
+
+### Backend API Contract
+
+Your backend must implement two POST endpoints:
+
+#### Update Check Endpoint
+
+**Request** (POST, Content-Type: application/json):
+
+```json
+{
+    "id": "device-id",
+    "product": "product-id",
+    "version": "1.2.3",
+    "key": "value"
+}
+```
+
+The `id`, `product`, and `version` fields are always present. Additional key-value properties from the command line are included as extra JSON fields.
+
+Authentication is via the `Authorization` header containing the token value.
+
+**Response** (update available):
+
+```json
+{
+    "url": "https://cdn.example.com/firmware-1.3.0.bin",
+    "checksum": "sha256-hex-string-64-chars",
+    "update": "unique-update-id",
+    "version": "1.3.0"
+}
+```
+
+**Response** (no update available):
+
+Return an empty JSON object `{}` or omit the `url` field.
+
+Field | Type | Description
+-|-|-
+url | string | HTTPS download URL for the update package
+checksum | string | SHA-256 hash of the update file (lowercase hex, 64 chars)
+update | string | Unique update identifier (returned in status reports)
+version | string | Version of the update
+
+#### Status Report Endpoint
+
+Called after applying an update to report success or failure.
+
+**Request** (POST, Content-Type: application/json):
+
+```json
+{
+    "success": true,
+    "id": "device-id",
+    "update": "unique-update-id"
+}
+```
+
+The response is ignored. This endpoint is for analytics/tracking only.
+
+### Requirements
+
+- All endpoints must be served over HTTPS
+- Download URLs in the check response must use HTTPS
+- Update files must not exceed 100 MB
+- Checksums must be SHA-256 in lowercase hexadecimal format (64 characters)
+
+### Example with Custom Backend
+
+```bash
+updater --host "https://updates.example.com" \
+    --check-path "/api/v1/updates/check" \
+    --report-path "/api/v1/updates/report" \
+    --product "my-product" \
+    --token "my-api-token" \
+    --device "device-001" \
+    --version "1.2.3" \
+    --cmd ./apply.sh
+```
 
 ## Building
 

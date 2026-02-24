@@ -18,16 +18,19 @@
 /*
     updater.c - Over-The-Air (OTA) software update library implementation
 
-    This module provides a complete OTA update client for IoT devices. It communicates with the
-    EmbedThis Builder cloud service to check for, download, verify, and apply firmware updates.
+    This module provides a complete OTA update client for IoT devices. It communicates with a
+    cloud update service to check for, download, verify, and apply firmware updates. Compatible
+    with the EmbedThis Builder service by default, or any custom backend implementing the
+    update protocol.
 
     Key Features:
     - Secure HTTPS communication with certificate and hostname verification
     - SHA-256 checksum verification of downloaded updates
-    - Minimal dependencies - uses a custom minimal HTTP client for Builder API needs only
+    - Minimal dependencies - uses a custom minimal HTTP client
     - Supports custom device properties for update policy matching
-    - Automatic update status reporting back to Builder service
+    - Automatic update status reporting back to the update service
     - Secure file handling with symlink attack prevention
+    - Configurable API endpoint paths for custom backend services
 
     Architecture:
     - The update() function is the main public API entry point
@@ -94,7 +97,7 @@ static char *json(cchar *jsonText, cchar *key);
 static void *memdup(cvoid *ptr, size_t size);
 static int parseResponseBody(Fetch *fp, char *response, ssize bytes);
 static void parseUrl(char *url, char **hostOut, char **pathOut);
-static int postReport(int success, cchar *host, cchar *device, cchar *update, cchar *token);
+static int postReport(int success, cchar *host, cchar *device, cchar *update, cchar *token, cchar *reportPath);
 static void printSslErrors(void);
 static ssize readAndValidateResponse(Fetch *fp, char *response, size_t responseSize);
 static int run(cchar *script, cchar *path);
@@ -102,24 +105,27 @@ static int sendHttpRequest(Fetch *fp, cchar *method, cchar *path, cchar *host, c
 
 /************************************ Code ************************************/
 /**
-    Check for and apply software updates from the EmbedThis Builder service
+    Check for and apply software updates from a cloud update service
 
     This is the main entry point for the OTA update functionality. It performs the complete update workflow:
-    1. Sends an update check request to the Builder service with device information
+    1. Sends an update check request to the update service with device information
     2. If an update is available, downloads it to the specified path
     3. Verifies the download integrity using SHA-256 checksum
     4. Optionally applies the update using the provided script
-    5. Reports the update result back to the Builder service
+    5. Reports the update result back to the update service
 
-    @param host Builder cloud endpoint URL
-    @param product Product ID from the Builder token list
-    @param token CloudAPI access token for authentication
+    @param host Update service endpoint URL
+    @param product Product identifier
+    @param token API access token for authentication
     @param device Unique device identifier
     @param version Current device firmware version
     @param properties Optional JSON properties for distribution policy (may be NULL)
     @param path File path to save the downloaded update
     @param script Optional script path to apply the update (may be NULL)
     @param verboseArg Non-zero to enable verbose output
+    @param quietArg Non-zero to suppress all output
+    @param checkPath API path for update check requests (NULL for default)
+    @param reportPath API path for update status reports (NULL for default)
     @return 0 on success, -1 on error
 
     SECURITY Acceptable: The developer is responsible for validating the inputs to this function.
@@ -127,7 +133,8 @@ static int sendHttpRequest(Fetch *fp, cchar *method, cchar *path, cchar *host, c
     @ingroup Updater
  */
 int update(cchar *host, cchar *product, cchar *token, cchar *device, cchar *version,
-           cchar *properties, cchar *path, cchar *script, int verboseArg, int quietArg)
+           cchar *properties, cchar *path, cchar *script, int verboseArg, int quietArg,
+           cchar *checkPath, cchar *reportPath)
 {
     Fetch *fp;
     char  body[UBSIZE], url[UBSIZE], headers[256], fileSum[EVP_MAX_MD_SIZE * 2 + 1];
@@ -155,6 +162,13 @@ int update(cchar *host, cchar *product, cchar *token, cchar *device, cchar *vers
         verbose = verboseArg;
         quiet = quietArg;
 
+        if (!checkPath) {
+            checkPath = "/tok/provision/update";
+        }
+        if (!reportPath) {
+            reportPath = "/tok/provision/updateReport";
+        }
+
 #if ME_WIN_LIKE
         if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
             if (!quiet) {
@@ -167,9 +181,8 @@ int update(cchar *host, cchar *product, cchar *token, cchar *device, cchar *vers
 
         /*
             Issue update request to determine if there is an update.
-            Authentication is using the CloudAPI builder token.
          */
-        count = snprintf(url, sizeof(url), "%s/tok/provision/update", host);
+        count = snprintf(url, sizeof(url), "%s%s", host, checkPath);
         if (count < 0 || (size_t) count >= sizeof(url)) {
             if (!quiet) {
                 fprintf(stderr, "Host URL is too long\n");
@@ -271,7 +284,7 @@ int update(cchar *host, cchar *product, cchar *token, cchar *device, cchar *vers
         }
         if (script) {
             status = applyUpdate(path, script);
-            if (postReport(status, host, device, update, token) < 0) {
+            if (postReport(status, host, device, update, token, reportPath) < 0) {
                 break;
             }
         }
@@ -456,20 +469,21 @@ static int run(cchar *script, cchar *path)
 }
 
 /**
-    Post update status report to the Builder service
+    Post update status report to the update service
 
-    Sends the update result (success or failure) back to the Builder service for metrics
+    Sends the update result (success or failure) back to the update service for metrics
     and device version tracking.
 
     @param status Update status (0 for success, non-zero for failure)
-    @param host Builder cloud endpoint URL
+    @param host Update service endpoint URL
     @param device Unique device identifier
-    @param update Update ID from the Builder response
-    @param token CloudAPI access token
+    @param update Update ID from the check response
+    @param token API access token
+    @param reportPath API path for the report endpoint
     @return 0 on success, -1 on error
     @stability Internal
  */
-static int postReport(int status, cchar *host, cchar *device, cchar *update, cchar *token)
+static int postReport(int status, cchar *host, cchar *device, cchar *update, cchar *token, cchar *reportPath)
 {
     Fetch *fp;
     char  body[UBSIZE], url[256], headers[256];
@@ -483,7 +497,7 @@ static int postReport(int status, cchar *host, cchar *device, cchar *update, cch
         }
         return -1;
     }
-    count = snprintf(url, sizeof(url), "%s/tok/provision/updateReport", host);
+    count = snprintf(url, sizeof(url), "%s%s", host, reportPath);
     if (count < 0 || (size_t) count >= sizeof(url)) {
         if (!quiet) {
             fprintf(stderr, "Report URL is too long\n");
@@ -721,7 +735,7 @@ static int parseResponseBody(Fetch *fp, char *response, ssize bytes)
 /**
     Perform an HTTPS request to the specified URL
 
-    This is a minimal HTTPS client designed specifically for the Builder API needs.
+    This is a minimal HTTPS client designed specifically for update API needs.
     It is NOT a general-purpose HTTP library. The function:
     - Establishes a TLS connection with certificate verification
     - Sends the HTTP request with the specified method, headers, and body
@@ -1128,7 +1142,7 @@ static void fetchFree(Fetch *fp)
 /**
     Extract a value from a JSON string
 
-    This is a minimal JSON parser designed specifically for the Builder API responses.
+    This is a minimal JSON parser designed specifically for update API responses.
     It is NOT a general-purpose JSON parser and only handles simple key-value extraction.
     Caller is responsible for freeing the returned string.
 
