@@ -322,7 +322,7 @@ When adding new references:
 5. Add date if time-sensitive
 
 When archiving old references:
-1. Move to `.agent/archive/references/`
+1. Move to `AI/archive/references/`
 2. Note reason for archival
 3. Keep for historical context
 

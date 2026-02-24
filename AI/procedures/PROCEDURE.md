@@ -264,9 +264,9 @@ gh pr create --title "DEV: implement my feature" --body "Description..."
    - Update for option changes
    - Keep synchronized with `--help`
 
-5. **.agent/**: Project context
-   - Update PLAN.md for current status
-   - Update CHANGELOG.md for changes
+5. **AI/**: Project context
+   - Update plans/INDEX.md for current status
+   - Update logs/CHANGELOG.md for changes
    - Archive old documentation
 
 ### Documentation Testing
@@ -361,7 +361,7 @@ Follow [Semantic Versioning 2.0](https://semver.org/):
 
 2. **Update Changelog**:
    ```bash
-   # Add release notes to .agent/logs/CHANGELOG.md
+   # Add release notes to AI/logs/CHANGELOG.md
    ```
 
 3. **Build and Test**:
@@ -488,7 +488,7 @@ sudo apt update && sudo apt upgrade libssl-dev
 ## Archive Policy
 
 When procedures become obsolete:
-1. Move to `.agent/archive/procedures/`
+1. Move to `AI/archive/procedures/`
 2. Add date and reason for archival
 3. Update this index to remove reference
 4. Keep for historical reference
@@ -497,7 +497,7 @@ When procedures become obsolete:
 
 ## Additional Resources
 
-- [Main Design Document](../../doc/DESIGN.md)
-- [Project Plan](./.agent/plans/PLAN.md)
+- [Design Document](../designs/DESIGN.md)
+- [Plans Index](../plans/INDEX.md)
 - [EmbedThis Builder Documentation](https://www.embedthis.com/doc/builder/)
 - [TestMe Documentation](~/.local/share/man/man1/tm.1)
