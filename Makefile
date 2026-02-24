@@ -84,7 +84,9 @@ sync:
 #   Regenerate all premake project files (developer only -- requires premake5)
 #
 projects:
-	cd projects && premake5 gmake2 && premake5 vs2022 && premake5 xcode4
+	@echo "       [Gen] updater gmake2 vs2022 xcode4"
+	@cd projects && premake5 gmake2 >/dev/null && premake5 vs2022 >/dev/null && premake5 xcode4 >/dev/null
+	@fixmake
 
 help:
 	@echo '' >&2
