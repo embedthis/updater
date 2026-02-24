@@ -39,7 +39,7 @@ CDPATH      :=
 
 .EXPORT_ALL_VARIABLES:
 
-.PHONY: all build clean doc format help package projects test
+.PHONY: all build cache clean doc format help package projects publish sync test
 
 ifndef SHOW
 .SILENT:
@@ -64,18 +64,21 @@ test:
 
 doc:
 	cp paks/*/doc/api/* doc/api
-	bun ~/bin/make-doc doc/updater.dox src/updater.h Updater doc/api paks/*/doc/api/*.tags
+	# bun ~/bin/make-doc doc/updater.dox src/updater.h Updater doc/api paks/*/doc/api/*.tags
 
 format:
 	uncrustify -q -c .uncrustify --replace --no-backup src/*.{c,h}
 
 package:
 	bash bin/buildLib.sh
-	cp CLAUDE.md dist/CLAUDE.md
-	cp src/updater.h dist/updater.h
 
-cache: build doc package
+publish: build doc package
 	cache
+
+cache: publish
+
+sync:
+	pak sync
 
 #
 #   Regenerate all premake project files (developer only -- requires premake5)
@@ -94,7 +97,9 @@ help:
 	@echo '  doc                 Generate API documentation' >&2
 	@echo '  format              Format source code' >&2
 	@echo '  package             Build dist/updaterLib.c amalgamated source' >&2
-	@echo '  cache               Build, package and cache' >&2
+	@echo '  publish             Build, package and publish as a pak' >&2
+	@echo '  cache               Alias for publish' >&2
+	@echo '  sync                Import pak dependencies' >&2
 	@echo '  projects            Regenerate premake makefiles (developer only)' >&2
 	@echo '' >&2
 	@echo 'Make variables:' >&2
