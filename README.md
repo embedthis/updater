@@ -56,7 +56,7 @@ The updater client works by periodically checking in with the Builder cloud serv
 **Learn More:**
 - [Builder Documentation](https://www.embedthis.com/doc/builder/) - Complete Builder platform documentation
 - [Software Update Guide](https://www.embedthis.com/blog/builder/software-update.html) - Detailed update workflow and features
-- [Design Document](doc/DESIGN.md) - Architecture and implementation details
+- [Design Document](AI/designs/DESIGN.md) - Architecture and implementation details
 
 ## Variants
 
@@ -91,8 +91,10 @@ Option | Description
 --cmd script        | Script to invoke to apply the update
 --device ID         | Unique device ID
 --file image/path   | Path to save the downloaded update (default: update.bin)
+--help, -h, -?      | Display help message
 --host host.domain  | Device cloud endpoint from the Builder cloud edit panel
 --product ProductID | ProductID from the Builder token list
+--quiet, -q         | Suppress all output (completely silent)
 --token TokenID     | CloudAPI access token from the Builder token list
 --version SemVer    | Current device firmware version
 --verbose, -v       | Trace execution
@@ -123,7 +125,7 @@ You can integrate the updater as a library in your C/C++ programs:
 
 int update(cchar *host, cchar *product, cchar *token, cchar *device,
            cchar *version, cchar *properties, cchar *path, cchar *script,
-           int verbose);
+           int verbose, int quiet);
 ```
 
 The `update()` function performs a complete OTA update cycle:
@@ -143,6 +145,7 @@ The `update()` function performs a complete OTA update cycle:
 - `path` - Local path to save downloaded update
 - `script` - Path to script that applies the update (can be NULL to skip application)
 - `verbose` - Enable verbose logging (0 or 1)
+- `quiet` - Suppress all output (0 or 1). When both verbose and quiet are set, quiet takes precedence.
 
 **Returns:** 0 on success, -1 on error
 
@@ -257,6 +260,10 @@ File | Description
 `bin/buildLib.sh` | Builds amalgamated dist/updaterLib.c
 **Supporting Files** |
 `README.md` | This documentation
+
+## AI Documentation
+
+Machine-readable documentation for LLMs is available in `AI/designs/` and `CLAUDE.md`.
 
 ## Repository
 

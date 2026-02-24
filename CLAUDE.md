@@ -6,22 +6,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 The EmbedThis Updater is a standalone Over-The-Air (OTA) software update utility and library for IoT devices. It provides multiple implementations:
 
-- **C command-line utility** (`main.c` + `updater.c/h`) - Primary implementation
-- **Node.js utility** (`updater.js`) - Alternative JavaScript implementation
-- **Shell script** (`updater.sh`) - Sample script implementation
-- **C library** (`updater.c/h`) - For integration into other programs
+- **C command-line utility** (`src/main.c` + `src/updater.c/h`) - Primary implementation
+- **Node.js utility** (`src/updater.js`) - Alternative JavaScript implementation
+- **Shell script** (`src/updater.sh`) - Sample script implementation
+- **C library** (`src/updater.c/h`) - For integration into other programs
 
 The updater communicates with the EmbedThis Builder cloud service to check for, download, and apply device firmware updates.
 
 ## Embedthis Builder
 
-The Embedthis Builder is a cloud service that provides a platform for managing and distributing software updates to IoT devices. It allows you to create and manage updates, and distribute them to your devices over-the-air. [Embedthis Builder](https://admin.embedthis.com)
-
-## Embedthis Builder API
-
-The Embedthis Builder API is a RESTful API that provides a platform for managing and distributing software updates to IoT devices. It allows you to create and manage updates, and distribute them to your devices over-the-air.
-
-See the [Embedthis Builder API](https://www.embedthis.com/doc) documentation for more information.
+The Embedthis Builder is a cloud service for managing and distributing software updates to IoT devices over-the-air. It provides a RESTful API for update management and distribution. [Embedthis Builder](https://admin.embedthis.com). See the [Builder API Documentation](https://www.embedthis.com/doc) for more information.
 
 ## Build Commands
 
@@ -48,7 +42,7 @@ make test              # Test C updater with configured parameters
 
 ### Package Operations
 ```bash
-make package           # Create update.tgz package from src/
+make package           # Build dist/updaterLib.c amalgamated source
 make cache             # Copy files to dist/ directory
 ```
 
@@ -72,9 +66,9 @@ make cache             # Copy files to dist/ directory
 ## Architecture
 
 ### Core Components
-- **`updater.c/h`** - Main update library with `update()` API
-- **`main.c`** - Command-line interface wrapper
-- **`apply.sh`** - Script template for applying updates (customize as needed)
+- **`src/updater.c/h`** - Main update library with `update()` API
+- **`src/main.c`** - Command-line interface wrapper
+- **`src/osdep.h`** - Cross-platform OS abstraction layer
 
 ### Update Process Flow
 1. **Check** - Query Builder service for available updates
@@ -92,6 +86,8 @@ All implementations require these parameters:
 - `--version` - Current firmware version
 - `--file` - Path to save downloaded update
 - `--cmd` - Script to apply the update
+- `--verbose, -v` - Trace execution
+- `--quiet, -q` - Suppress all output
 
 ## Development Notes
 
@@ -102,9 +98,10 @@ All implementations require these parameters:
 - **Windows**: Requires Git for Windows (includes bash), enabling all shell scripts and tests to run on Windows
 
 ### File Structure
-- **Root** - C implementation and build files
-- **`src/`** - Contains package files and alternative implementations
-- **`dist/`** - Distribution files and copies
+- **Root** - Build files (Makefile) and project configuration
+- **`src/`** - C implementation, JavaScript, and shell script sources
+- **`dist/`** - Distribution files and amalgamated source
+- **`test/`** - Unit tests and test fixtures (including sample apply.sh)
 
 ### Integration Notes
 - Library can be embedded in other C/C++ programs via `updater.h`
@@ -123,21 +120,17 @@ This module maintains structured documentation in the `AI/` directory to assist 
 
 - **AI/designs/** - Architectural and design documentation
 - **AI/context/** - Current status and progress (CONTEXT.md)
-- **AI/plans/** - Implementation plans and roadmaps
+- **AI/plans/** - Plans index and individual plan files
 - **AI/procedures/** - Testing and development procedures
 - **AI/logs/** - Change logs and session activity logs
 - **AI/references/** - External documentation and resources
-- **AI/releases/** - Version release notes
-- **AI/agents/** - Claude sub-agent definitions
-- **AI/skills/** - Claude skill definitions
-- **AI/prompts/** - Reusable prompts
-- **AI/workflows/** - Development workflows
-- **AI/commands/** - Custom commands
+- **AI/archive/** - Historical designs, plans, procedures
 
 See `AI/README.md` for detailed information about the documentation structure.
 
 ## Additional Resources
 
 - **Parent Project**: See `../CLAUDE.md` for general build commands, testing procedures, and overall EmbedThis architecture
+- **Design Documentation**: See `AI/designs/DESIGN.md` for architecture and design details
 - **API Documentation**: Generated via `make doc` → `doc/index.html`
 - **Project Documentation**: See `AI/` directory for designs, plans, procedures, and context
