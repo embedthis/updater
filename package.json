@@ -1,0 +1,23 @@
+{
+    "name": "updater",
+    "description": "Device firmware updater",
+    "title": "EmbedThis Updater",
+    "version": "1.2.0",
+    "keywords": [
+        "updater",
+        "OTA"
+    ],
+    "repository": "git://github.com/embedthis/updater.git",
+    "bugs": "http://github.com/embedthis/updater/issues",
+    "license": "MIT",
+    "paks": {
+        "osdep": "~1"
+    },
+    "pak": {
+        "import": true,
+        "files": [
+            "dist/",
+            "doc/api/r.*"
+        ]
+    }
+}
