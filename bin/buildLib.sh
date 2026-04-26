@@ -76,6 +76,7 @@ mkdir -p dist/doc
 
 for dir in architecture references operations; do
     if [ -d "doc/${dir}" ] && [ "$(ls -A "doc/${dir}" 2>/dev/null)" ]; then
+        rm -rf "dist/doc/${dir}"
         cp -r "doc/${dir}" "dist/doc/${dir}"
         trace "Copy" "dist/doc/${dir}/"
     fi
