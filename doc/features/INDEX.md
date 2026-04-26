@@ -1,14 +1,14 @@
-# EmbedThis Updater - Plans Index
+# EmbedThis Updater - Feature Index
 
-## Active Plans
+## Active Features
 
 None currently active.
 
-## Completed Plans
+## Completed Features
 
-| Plan | Status | Summary |
-|------|--------|---------|
-| [PREMAKE.md](PREMAKE.md) | Completed Feb 2026 | Migrated build system from MakeMe to premake5, version 1.2.0 |
+| Feature | Status | Summary |
+|---------|--------|---------|
+| [premake/](premake/) | Completed Feb 2026 | Migrated build system from MakeMe to premake5, version 1.2.0 |
 | v1.1.4 release prep | Completed Dec 2025 | Version bump, osdep update, project regeneration |
 | Windows compatibility | Completed Oct 2025 | Cross-platform paths, getenv() for credentials, Git Bash requirement |
 | Quiet mode | Completed Oct 2025 | --quiet option across all implementations, updated tests |
