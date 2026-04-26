@@ -49,7 +49,7 @@ all: build
 
 build:
 	@if [ ! -f projects/gmake2/Makefile ] ; then \
-		echo "      [Error] projects/gmake2/Makefile not found. Run: cd projects && premake5 gmake2" ; exit 255 ; \
+		echo "      [Error] projects/gmake2/Makefile not found. Run: cd projects && premake5 gmake" ; exit 255 ; \
 	fi
 	$(MAKE) -C projects/gmake2 config=$(CONFIG) verbose=$(SHOW)
 	@echo "      [Info] Updater $(OPTIMIZE) [$(PLATFORM)]"
@@ -85,7 +85,7 @@ sync:
 #
 projects:
 	@echo "       [Gen] updater gmake2 vs2022 xcode4"
-	@cd projects && premake5 gmake2 >/dev/null && premake5 vs2022 >/dev/null && premake5 xcode4 >/dev/null
+	@cd projects && premake5 gmake >/dev/null && premake5 vs2022 >/dev/null && premake5 xcode4 >/dev/null
 	@fixmake
 
 help:

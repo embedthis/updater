@@ -44,13 +44,11 @@ all: $(PROJECTS)
 
 updater:
 ifneq (,$(updater_config))
-	@echo "==== Building updater ($(updater_config)) ===="
 	@${MAKE} --no-print-directory -C . -f updater.make config=$(updater_config)
 endif
 
 updater-exe: updater
 ifneq (,$(updater_exe_config))
-	@echo "==== Building updater-exe ($(updater_exe_config)) ===="
 	@${MAKE} --no-print-directory -C . -f updater-exe.make config=$(updater_exe_config)
 endif
 

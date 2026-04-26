@@ -164,12 +164,11 @@ all: $(TARGET)
 
 $(TARGET): $(GENERATED) $(OBJECTS) $(LDDEPS) | $(TARGETDIR)
 	$(PRELINKCMDS)
-	@echo Linking updater-exe
+	@echo "      [Link] updater-exe"
 	$(SILENT) $(LINKCMD)
 	$(POSTBUILDCMDS)
 
 $(TARGETDIR):
-	@echo Creating $(TARGETDIR)
 ifeq (posix,$(SHELLTYPE))
 	$(SILENT) mkdir -p $(TARGETDIR)
 else
@@ -177,7 +176,6 @@ else
 endif
 
 $(OBJDIR):
-	@echo Creating $(OBJDIR)
 ifeq (posix,$(SHELLTYPE))
 	$(SILENT) mkdir -p $(OBJDIR)
 else
@@ -185,7 +183,7 @@ else
 endif
 
 clean:
-	@echo Cleaning updater-exe
+	@echo "     [Clean] updater-exe"
 ifeq (posix,$(SHELLTYPE))
 	$(SILENT) rm -f  $(TARGET)
 	$(SILENT) rm -rf $(GENERATED)
@@ -202,7 +200,7 @@ prebuild: | $(OBJDIR)
 ifneq (,$(PCH))
 $(OBJECTS): $(GCH) | $(PCH_PLACEHOLDER)
 $(GCH): $(PCH) | prebuild
-	@echo $(notdir $<)
+	@echo "        [CC] $(notdir $<)"
 	$(SILENT) $(CC) -x c-header $(ALL_CFLAGS) -o "$@" -MF "$(@:%.gch=%.d)" -c "$<"
 $(PCH_PLACEHOLDER): $(GCH) | $(OBJDIR)
 ifeq (posix,$(SHELLTYPE))
@@ -219,7 +217,7 @@ endif
 # #############################################
 
 $(OBJDIR)/main.o: ../../src/main.c
-	@echo "$(notdir $<)"
+	@echo "        [CC] $(notdir $<)"
 	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
 
 -include $(OBJECTS:%.o=%.d)
