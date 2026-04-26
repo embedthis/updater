@@ -1,4 +1,0 @@
-# Ignore all context files except this .gitignore
-# Context files are temporary work-in-progress notes
-*
-!.gitignore
