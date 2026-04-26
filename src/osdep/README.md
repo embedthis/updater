@@ -56,8 +56,6 @@ Compile-time feature flags with sensible defaults:
 
 | Define | Default | Purpose |
 |--------|---------|---------|
-| `ME_COM_SSL` | 0 | SSL/TLS support |
-| `ME_DEBUG` | 0 | Debug build |
 | `ME_FLOAT` | 1 | Floating point support |
 | `ME_ROM` | 0 | Execute from ROM |
 
@@ -100,6 +98,10 @@ Generate HTML API docs from the annotated header:
 make doc
 open doc/api/osdep.html
 ```
+
+## AI Documentation
+
+Machine-readable documentation for LLMs is available in [`doc/`](doc/) (see [`doc/MAP.md`](doc/MAP.md)) and [`CLAUDE.md`](CLAUDE.md).
 
 ## Licensing
 
