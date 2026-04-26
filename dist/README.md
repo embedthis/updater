@@ -56,7 +56,7 @@ The updater client works by periodically checking in with the Builder cloud serv
 **Learn More:**
 - [Builder Documentation](https://www.embedthis.com/doc/builder/) - Complete Builder platform documentation
 - [Software Update Guide](https://www.embedthis.com/blog/builder/software-update.html) - Detailed update workflow and features
-- [Design Document](AI/designs/DESIGN.md) - Architecture and implementation details
+- [Design Document](doc/architecture/system.md) - Architecture and implementation details
 
 ## Variants
 
@@ -350,7 +350,7 @@ File | Description
 
 ## AI Documentation
 
-Machine-readable documentation for LLMs is available in `AI/designs/` and `CLAUDE.md`.
+Machine-readable documentation for LLMs is available in `doc/` (start with `doc/MAP.md`) and `CLAUDE.md`.
 
 ## Repository
 

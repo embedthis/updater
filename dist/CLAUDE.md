@@ -118,21 +118,23 @@ All implementations require these parameters:
 
 ## Project Documentation
 
-This module maintains structured documentation in the `AI/` directory to assist Claude Code and developers:
+This module maintains structured documentation in the `doc/` directory to assist Claude Code and developers:
 
-- **AI/designs/** - Architectural and design documentation
-- **AI/context/** - Current status and progress (CONTEXT.md)
-- **AI/plans/** - Plans index and individual plan files
-- **AI/procedures/** - Testing and development procedures
-- **AI/logs/** - Change logs and session activity logs
-- **AI/references/** - External documentation and resources
-- **AI/archive/** - Historical designs, plans, procedures
+- **doc/overview/** - Product overview and high-level description
+- **doc/architecture/** - Architecture, design, and system documentation (`system.md`)
+- **doc/features/** - Feature plans index and individual feature directories
+- **doc/operations/** - Testing and development procedures
+- **doc/issues/** - Issue tracker (`INDEX.md`, `tickets/NNN.md`)
+- **doc/sessions/** - Change logs (`CHANGELOG.md`) and session activity logs
+- **doc/references/** - External documentation and resources
+- **doc/releases/** - Release notes
+- **doc/archive/** - Historical architecture, features, sessions, operations
 
-See `AI/README.md` for detailed information about the documentation structure.
+See `doc/MAP.md` for top-level navigation across the project documentation.
 
 ## Additional Resources
 
 - **Parent Project**: See `../CLAUDE.md` for general build commands, testing procedures, and overall EmbedThis architecture
-- **Design Documentation**: See `AI/designs/DESIGN.md` for architecture and design details
-- **API Documentation**: Generated via `make doc` → `doc/index.html`
-- **Project Documentation**: See `AI/` directory for designs, plans, procedures, and context
+- **Design Documentation**: See `doc/architecture/system.md` for architecture and design details
+- **API Documentation**: Generated via `make doc` → `doc/api/`
+- **Project Documentation**: See `doc/MAP.md` to navigate features, plans, procedures, and history
