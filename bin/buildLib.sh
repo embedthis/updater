@@ -9,8 +9,8 @@
 #       dist/updater.h             API header (copy)
 #       dist/CLAUDE.md             Project documentation (copy)
 #       dist/README.md             Project overview (copy)
-#       dist/AI/designs/*.md       Architecture and design documents
-#       dist/AI/references/*.md    External references
+#       dist/doc/architecture/*.md Architecture and design documents
+#       dist/doc/references/*.md   External references
 #       dist/.claude/              Claude Code capabilities (skills, commands, etc.)
 #
 
@@ -70,19 +70,18 @@ cp README.md dist/README.md
 trace "Copy" "dist/README.md"
 
 # ---------------------------------------------------------------
-#  5. dist/AI/ (LLM documentation)
+#  5. dist/doc/ (LLM documentation)
 # ---------------------------------------------------------------
-mkdir -p dist/AI/designs
-[ -f AI/designs/DESIGN.md ] && cp AI/designs/DESIGN.md dist/AI/designs/
-trace "Copy" "dist/AI/designs/"
+mkdir -p dist/doc
 
-if [ -d AI/references ]; then
-    mkdir -p dist/AI/references
-    for f in AI/references/*.md; do
-        [ -f "$f" ] && cp "$f" "dist/AI/references/"
-    done
-    trace "Copy" "dist/AI/references/"
-fi
+for dir in architecture references operations; do
+    if [ -d "doc/${dir}" ] && [ "$(ls -A "doc/${dir}" 2>/dev/null)" ]; then
+        cp -r "doc/${dir}" "dist/doc/${dir}"
+        trace "Copy" "dist/doc/${dir}/"
+    fi
+done
+
+[ -f doc/MAP.md ] && cp doc/MAP.md dist/doc/MAP.md && trace "Copy" "dist/doc/MAP.md"
 
 # ---------------------------------------------------------------
 #  6. dist/.claude/ (always created, copy skills/commands/workflows/agents if present)
