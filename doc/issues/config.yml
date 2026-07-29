@@ -1,0 +1,15 @@
+# tickets — id block registry.
+#
+# Each developer owns one or more blocks of issue ids, and "tickets new" allocates
+# only inside the blocks its caller owns, so two clones can never pick the same id.
+# Ids below blockBase predate the registry and are outside the scheme.
+#
+# Claim a block with "tickets claim"; never hand-edit an existing entry. Entries are
+# append-only so two people claiming at once produce a mergeable diff.
+
+blockSize: 1000
+blockBase: 10000
+
+blocks:
+  - owner: dev@embedthis.com
+    start: 10000
