@@ -1,0 +1,5 @@
+# Derived ticket index — rebuildable, never committed.
+.tickets.db
+.tickets.db-shm
+.tickets.db-wal
+.tickets.db-journal

@@ -58,42 +58,8 @@ cp src/updater.h dist/updater.h
 trace "Copy" "dist/updater.h"
 
 # ---------------------------------------------------------------
-#  3. dist/CLAUDE.md (simple copy)
+#  3. dist/ documentation (CLAUDE.md, README.md, LICENSE.md, doc/, .claude/)
 # ---------------------------------------------------------------
-cp CLAUDE.md dist/CLAUDE.md
-trace "Copy" "dist/CLAUDE.md"
-
-# ---------------------------------------------------------------
-#  4. dist/README.md
-# ---------------------------------------------------------------
-cp README.md dist/README.md
-trace "Copy" "dist/README.md"
-
-# ---------------------------------------------------------------
-#  5. dist/doc/ (LLM documentation)
-# ---------------------------------------------------------------
-mkdir -p dist/doc
-
-for dir in architecture references operations; do
-    if [ -d "doc/${dir}" ] && [ "$(ls -A "doc/${dir}" 2>/dev/null)" ]; then
-        rm -rf "dist/doc/${dir}"
-        cp -r "doc/${dir}" "dist/doc/${dir}"
-        trace "Copy" "dist/doc/${dir}/"
-    fi
-done
-
-[ -f doc/MAP.md ] && cp doc/MAP.md dist/doc/MAP.md && trace "Copy" "dist/doc/MAP.md"
-
-# ---------------------------------------------------------------
-#  6. dist/.claude/ (always created, copy skills/commands/workflows/agents if present)
-# ---------------------------------------------------------------
-mkdir -p dist/.claude
-
-for dir in skills commands workflows agents; do
-    if [ -d ".claude/${dir}" ] && [ "$(ls -A ".claude/${dir}" 2>/dev/null)" ]; then
-        cp -r ".claude/${dir}" "dist/.claude/${dir}"
-        trace "Copy" "dist/.claude/${dir}/"
-    fi
-done
+sh ~/bin/buildDoc.sh
 
 trace "Complete" "All dist/ files generated successfully"
