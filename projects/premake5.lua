@@ -49,12 +49,13 @@ newoption {
     description = "Path to MbedTLS installation",
 }
 
--- Detect target OS for platform-specific defaults
+-- Platform defaults. The Visual Studio and Xcode projects target Windows and macOS wherever they
+-- are generated, so their defaults follow the action. gmake2 follows the host it is generated on.
 local hostOS = os.host()
 local defaultOpensslPath
 if isVS then
     defaultOpensslPath = "C:/Program Files/OpenSSL"
-elseif hostOS == "macosx" then
+elseif isXcode or hostOS == "macosx" then
     defaultOpensslPath = "/opt/homebrew"
 else
     defaultOpensslPath = "/usr"
