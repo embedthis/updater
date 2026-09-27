@@ -2,6 +2,19 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Fix Upstream, Where the Defect Lives
+
+**`src/osdep/` is a vendored copy, not this module's code.**
+`pak sync` overwrites them. A fix made in one survives until the next sync and is then silently
+reverted — the build stays clean and the tests stay green, so nothing tells you it is gone.
+
+If the bug is in `src/osdep/`, it is an `osdep` bug: fix it in `~/dev/ioto/osdep/src/`, run that
+module's tests, `make cache` there, then `pak sync` here. See the "Changing Upstream Modules" section
+of `~/dev/ioto/CLAUDE.md` for the dependency order — a fix low in the stack has to be re-imported at
+every level above it.
+
+This module's own code is `src/updater.c` and `src/main.c`. Fix that here.
+
 ## Project Overview
 
 The EmbedThis Updater is a standalone Over-The-Air (OTA) software update utility and library for IoT devices. It works with the EmbedThis Builder service by default, or with any custom backend implementing the update protocol. It provides multiple implementations:
