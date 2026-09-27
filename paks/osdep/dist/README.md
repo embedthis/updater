@@ -99,9 +99,9 @@ make doc
 open doc/api/osdep.html
 ```
 
-## AI Documentation
+## Project Documentation
 
-Machine-readable documentation for LLMs is available in [`doc/`](doc/) (see [`doc/MAP.md`](doc/MAP.md)) and [`CLAUDE.md`](CLAUDE.md).
+Design, architecture and reference documentation is in the [osdep repository](https://github.com/embedthis/osdep/tree/master/doc) under `doc/`. Start at [MAP.md](https://github.com/embedthis/osdep/blob/master/doc/MAP.md).
 
 ## Licensing
 

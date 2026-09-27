@@ -26,6 +26,14 @@
 #ifndef ME_ROM
     #define ME_ROM 0                    /**< Build for execute from ROM */
 #endif
+/*
+    Always defined, so that code may test it as a value and not only in a preprocessor condition.
+    Release configurations define nothing at all, which made "ME_DEBUG ? a : b" an undeclared
+    identifier and broke every release build.
+ */
+#ifndef ME_DEBUG
+    #define ME_DEBUG 0                  /**< Build with debug symbols and assertions */
+#endif
 
 /**
     @section CPU Architecture Detection
@@ -2190,8 +2198,11 @@ typedef int64 Ticks;
     #define chdir       _chdir
     #define chmod       _chmod
     #define close       _close
+    #define dup         _dup
+    #define dup2        _dup2
     #define fileno      _fileno
     #define fstat       _fstat
+    #define fsync       _commit
     #define getcwd      _getcwd
     #define getpid      _getpid
     #define gettimezone _gettimezone
@@ -2201,6 +2212,9 @@ typedef int64 Ticks;
     #define open        _open
     #define putenv      _putenv
     #define read        _read
+    //  SECURITY Acceptable: - the overwrite parameter is ignored on Windows; _putenv_s always sets
+    #define setenv(n, v, o) _putenv_s(n, v)
+    #define unsetenv(n)     _putenv_s(n, "")
     #define rmdir(a)    _rmdir(a)
     #define stat        _stat
     #define strdup      _strdup
